@@ -11,12 +11,10 @@
 #include <utils/system/path.h>
 #include <utils/system/file.h>
 #include <opengl/element_count.h>
-
-#include <uv.h>
-
-#include "timer.h"
-#include "settings.h"
-#include "io/loop.h"
+#include <settings.h>
+#include <timer.h>
+#include <io/handlers.h>
+#include <io/fs.h>
 
 using namespace runa::runtime;
 
@@ -81,15 +79,16 @@ int main(int argc, char** argv) {
     shader->set_uniform_location("tex0", 0);
 
     loop_c loop = loop_c();
-    idle_c idle = idle_c(loop.get());
+    
 
+    bool should_close = false;
     Render.event_cb = [&](SDL_Event &event) {
         if (event.type == SDL_EVENT_WINDOW_RESIZED) {
             SDL_GetWindowSizeInPixels(Render.get_backend().window_ptr, &viewport_width, &viewport_height);
         }
         if (event.type == SDL_EVENT_QUIT)
         {
-            idle.stop();
+            should_close = true;
         }
         camera.inputs(event);
     };
@@ -110,13 +109,11 @@ int main(int argc, char** argv) {
         glDrawElements(GL_TRIANGLES, GL_ELEMENT_COUNT, GL_UNSIGNED_INT, 0);
     };
     
-    //int code = render.init();
-    idle.start([](uv_idle_t* handle)
+    while (!should_close) 
     {
+        loop.run(UV_RUN_NOWAIT);
         Render.poll();
-    });
-    loop.run(UV_RUN_DEFAULT);
-    loop.stop();
+    }
 
     Render.destroy();
     /*

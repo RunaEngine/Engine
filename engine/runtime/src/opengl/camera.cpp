@@ -1,6 +1,8 @@
 #include "opengl/camera.h"
 #include "opengl/render.h"
 #include "input.h"
+#include<glm/gtx/vector_angle.hpp>
+#include <opengl/render.h>
 
 
 namespace runa::runtime {
@@ -36,6 +38,41 @@ namespace runa::runtime {
         float y_axis = runtime::Input.get_input_axis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
         direction.y = y_axis;
         speed = runtime::Input.is_key_pressed(SDL_SCANCODE_LSHIFT) ? 8.0f : 4.0f;
+
+        if (runtime::Input.is_mouse_button_pressed(SDL_BUTTON_RIGHT))
+        {
+            SDL_SetWindowMouseGrab(runtime::Render.get_backend().window_ptr, true);
+            SDL_SetWindowRelativeMouseMode(runtime::Render.get_backend().window_ptr, true);
+            SDL_HideCursor();
+            
+
+            if (event.type == SDL_EVENT_MOUSE_MOTION)
+            {
+
+                int xrel = event.motion.xrel;
+                int yrel = event.motion.yrel;
+
+                float rotX = sensitivity * (float)yrel / height;
+                float rotY = sensitivity * (float)xrel / width;
+
+                glm::vec3 newOrientation = glm::rotate(orientation, glm::radians(-rotX), glm::normalize(glm::cross(orientation, up)));
+
+                
+                if (abs(glm::angle(newOrientation, up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+                {
+                    orientation = newOrientation;
+                }
+                
+
+                orientation = glm::rotate(orientation, glm::radians(-rotY), up);
+            }
+        }
+        else
+        {
+            SDL_SetWindowMouseGrab(runtime::Render.get_backend().window_ptr, false);
+            SDL_SetWindowRelativeMouseMode(runtime::Render.get_backend().window_ptr, false);
+            SDL_ShowCursor();
+        }
     }
 
     void camera_c::tick(float delta) {

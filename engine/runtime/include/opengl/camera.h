@@ -28,7 +28,7 @@ namespace runa::runtime {
 
         // Camera speed
         float speed = 4.0f;
-        float sensitivity = 100.0f;
+        float sensitivity = 120.0f;
 
         // Updates and exports the camera matrix to the Vertex Shader
         void matrix(float FOVdeg, float nearPlane, float farPlane, shader_c &shader, const char *uniform);

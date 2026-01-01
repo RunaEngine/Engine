@@ -39,6 +39,7 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
     - automake 
     - libtool
     - Perl
+    - Zlib
   
   - Python packages
     - Jinja2 ``` pip install Jinja2 ```

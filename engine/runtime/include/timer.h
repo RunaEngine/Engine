@@ -3,11 +3,11 @@
 
 namespace runa::runtime
 {
-    class timer_c
+    class time_c
     {
     public:
-        timer_c();
-        ~timer_c();
+        time_c();
+        ~time_c();
 
         void update_current_time();
         void update_end_time();
@@ -21,5 +21,5 @@ namespace runa::runtime
         uint64_t delta_time_ns = 0;
     };
 
-    extern timer_c Time;
+    extern time_c Time;
 }
