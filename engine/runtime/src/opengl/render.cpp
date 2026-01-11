@@ -133,7 +133,7 @@ namespace runa::runtime {
         if (should_limit) {
             frame_time = 1000000000 / GameUserSettings.get_framerate_limit();
         }
-
+        
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL3_ProcessEvent(&event);

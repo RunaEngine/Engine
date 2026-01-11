@@ -19,11 +19,14 @@
 using namespace runa::runtime;
 
 int main(int argc, char** argv) {
+    loop_c loop;
+    events_c event;
+
     Render.init();
     GameUserSettings.set_vsync(disable);
     GameUserSettings.set_framerate_limit(300);
 
-    GLfloat vertices[] =
+    const GLfloat vertices[] =
     { //     COORDINATES     /        COLORS      /   TexCoord  //
         -0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
         -0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
@@ -33,7 +36,7 @@ int main(int argc, char** argv) {
     };
 
     // Indices for vertices order
-    GLuint indices[] =
+    const GLuint indices[] =
     {
         0, 1, 2,
         0, 2, 3,
@@ -42,6 +45,8 @@ int main(int argc, char** argv) {
         2, 3, 4,
         3, 0, 4
     };
+
+    
 
     std::unique_ptr<shader_c> shader;
     std::unique_ptr<element_buffer_c> EBO;
@@ -58,7 +63,6 @@ int main(int argc, char** argv) {
     const std::string currentDir = runa::runtime::current_dir();
     const std::string vert_shader = currentDir + "resources/shaders/default.vert";
     const std::string frag_shader = currentDir + "resources/shaders/default.frag";
-    const std::string src = runa::runtime::load_text_file(frag_shader);
     shader = std::make_unique<shader_c>(vert_shader, frag_shader);
     VAO = std::make_unique<vertex_array_c>();
     VAO->bind();
@@ -76,14 +80,12 @@ int main(int argc, char** argv) {
     uniID = glGetUniformLocation(shader->get_id(), "scale");
     std::string albedodir = currentDir + "resources/textures/brick.png";
     tex = std::make_unique<texture_c>(albedodir, GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-    shader->set_uniform_location("tex0", 0);
-
-    loop_c loop = loop_c();
-    
+    shader->set_uniform_location("tex0", 0);    
 
     bool should_close = false;
     Render.event_cb = [&](SDL_Event &event) {
-        if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+        if (event.type == SDL_EVENT_WINDOW_RESIZED) 
+        {
             SDL_GetWindowSizeInPixels(Render.get_backend().window_ptr, &viewport_width, &viewport_height);
         }
         if (event.type == SDL_EVENT_QUIT)
@@ -94,8 +96,8 @@ int main(int argc, char** argv) {
     };
     Render.imgui_render_cb = [&](ImGuiIO &io) {
         ImGui::Begin("teste");
-        ImGui::Text(std::to_string(Time.delta()).c_str());
-        ImGui::End();
+        ImGui::Text("FPS: %f", 1.0f / io.DeltaTime);
+        ImGui::End(); 
     };
     Render.render_cb = [&](double delta) {
         shader->use();
@@ -106,12 +108,12 @@ int main(int argc, char** argv) {
         glUniform1f(uniID, 0.5f);
         tex->bind();
         VAO->bind();
-        glDrawElements(GL_TRIANGLES, GL_ELEMENT_COUNT, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, GL_ELEMENT_COUNT, GL_UNSIGNED_INT, nullptr);
     };
     
     while (!should_close) 
     {
-        loop.run(UV_RUN_NOWAIT);
+
         Render.poll();
     }
 

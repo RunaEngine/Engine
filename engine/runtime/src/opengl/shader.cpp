@@ -7,8 +7,8 @@ namespace runa::runtime {
         id = 0;
 
         // Convert the shader source strings into character arrays
-        std::string vertex_source = runtime::load_text_file(vertexfile);
-        std::string fragment_source = runtime::load_text_file(fragmentfile);
+        std::string vertex_source = runtime::read_text_file(vertexfile);
+        std::string fragment_source = runtime::read_text_file(fragmentfile);
 
         // Create Vertex Shader Object and get its reference
         GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);

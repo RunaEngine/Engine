@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 
 namespace runa::runtime {
-    std::vector<uint8_t> load_file(const std::string &filepath) {
+    std::vector<uint8_t> read_file(const std::string &filepath) {
         std::vector<uint8_t> buffer;
         if (filepath.empty()) {
             SDL_Log("Error checking file existence: Invalid filepath (null or empty)");
@@ -50,7 +50,7 @@ namespace runa::runtime {
         return buffer;
     }
 
-    std::string load_text_file(const std::string &filepath) {
+    std::string read_text_file(const std::string &filepath) {
         std::string text;
         if (filepath.empty()) {
             SDL_Log("Error checking file existence: Invalid filepath (null or empty)");

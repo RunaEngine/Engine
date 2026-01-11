@@ -1,10 +1,61 @@
 #include "io/handlers.h"
 #include <utility>
-#include <cstring>
 
 namespace runa::runtime
 {
-   // ========== loop_c ==========
+    void events_c::run(run_mode_t mode)
+    {
+        while ((mode == POLL ? SDL_PollEvent(&e) : SDL_WaitEvent(&e)))
+        {
+            if (callback) callback(e);
+        }
+    }
+
+    bool events_c::push(SDL_Event &user_event)
+    {
+        return SDL_PushEvent(&user_event);
+    }
+
+    uint32_t timer_c::add(uint32_t interval)
+    {
+        if (id != 0) return -1;
+        id = SDL_AddTimer(interval, timer_cb, this);
+        return id;
+    }
+
+    uint32_t timer_c::addNS(uint64_t interval)
+    {
+        if (id != 0) return 0;
+        id = SDL_AddTimerNS(interval, ns_timer_cb, this);
+        return id;
+    }
+
+    bool timer_c::remove()
+    {
+        bool result = SDL_RemoveTimer(id);
+        if (result) id = 0;
+        return result;
+    }
+
+    uint32_t timer_c::get_id() 
+    {
+        return id;
+    }
+
+    uint32_t timer_c::timer_cb(void* userdata, SDL_TimerID timerID, Uint32 interval)
+    {
+        auto* self = (timer_c*)userdata;
+        if (self->callback) self->callback();
+        return timerID;
+    }
+
+    uint64_t timer_c::ns_timer_cb(void* userdata, SDL_TimerID timerID, Uint64 interval)
+    {
+        auto* self = (timer_c*)userdata;
+        if (self->callback) self->callback();
+        return timerID;
+    }
+
     loop_c::loop_c() : is_owner(true)
     {
         loop = new uv_loop_t;
@@ -12,16 +63,11 @@ namespace runa::runtime
         if (status < 0)
         {
             delete loop;
-            throw uv_error(status);
         }
     }
 
     loop_c::loop_c(uv_loop_t* existing_loop) : loop(existing_loop), is_owner(false)
     {
-        if (!loop)
-        {
-            throw std::invalid_argument("Loop cannot be null");
-        }
     }
 
     loop_c::~loop_c()
@@ -59,7 +105,7 @@ namespace runa::runtime
         return *this;
     }
 
-    void loop_c::close()
+    int loop_c::close()
     {
         if (loop)
         {
@@ -80,11 +126,9 @@ namespace runa::runtime
                 status = uv_loop_close(loop);
             }
             
-            if (status < 0 && status != UV_EBUSY)
-            {
-                throw uv_error(status);
-            }
+            return status;
         }
+        return 0;
     }
 
     int loop_c::run(uv_run_mode mode)
@@ -102,36 +146,15 @@ namespace runa::runtime
         return loop;
     }
 
-    bool loop_c::is_alive() const
+    int loop_c::is_alive() const
     {
-        return uv_loop_alive(loop) != 0;
+        return uv_loop_alive(loop);
     }
 
-    uint64_t loop_c::now() const
-    {
-        return uv_now(loop);
-    }
-
-    void loop_c::update_time()
-    {
-        uv_update_time(loop);
-    }
-
-    int loop_c::backend_fd() const
-    {
-        return uv_backend_fd(loop);
-    }
-
-    int loop_c::backend_timeout() const
-    {
-        return uv_backend_timeout(loop);
-    }
-
-    // ========== handler_c ==========
     template <typename T>
     handler_c<T>::handler_c()
     {
-        memset(&handle, 0, sizeof(T));
+        SDL_memset(&handle, 0, sizeof(T));
         handle.data = this;
     }
 
@@ -217,163 +240,14 @@ namespace runa::runtime
     {
         if (result < 0)
         {
-            throw uv_error(result);
+            SDL_Log("%s: %s\n", uv_err_name(result), uv_strerror(result));
         }
     }
 
     // Instantiate templates
-    template class handler_c<uv_timer_t>;
-    template class handler_c<uv_prepare_t>;
-    template class handler_c<uv_idle_t>;
-    template class handler_c<uv_check_t>;
     template class handler_c<uv_async_t>;
     template class handler_c<uv_signal_t>;
 
-    // ========== timer_c ==========
-    timer_c::timer_c(loop_c& loop)
-    {
-        check_error(uv_timer_init(loop.get(), &handle));
-    }
-
-    timer_c::timer_c(uv_loop_t* loop)
-    {
-        check_error(uv_timer_init(loop, &handle));
-    }
-
-    void timer_c::start(std::function<void()> cb, uint64_t timeout, uint64_t repeat)
-    {
-        callback = std::move(cb);
-        check_error(uv_timer_start(&handle, timer_cb, timeout, repeat));
-    }
-
-    void timer_c::stop()
-    {
-        check_error(uv_timer_stop(&handle));
-    }
-
-    void timer_c::again()
-    {
-        check_error(uv_timer_again(&handle));
-    }
-
-    void timer_c::set_repeat(uint64_t repeat)
-    {
-        uv_timer_set_repeat(&handle, repeat);
-    }
-
-    uint64_t timer_c::get_repeat() const
-    {
-        return uv_timer_get_repeat(&handle);
-    }
-
-    uint64_t timer_c::get_due_in() const
-    {
-        return uv_timer_get_due_in(&handle);
-    }
-
-    void timer_c::timer_cb(uv_timer_t* h)
-    {
-        auto* self = static_cast<timer_c*>(h->data);
-        if (self && self->callback)
-        {
-            self->callback();
-        }
-    }
-
-    // ========== prepare_c ==========
-    prepare_c::prepare_c(loop_c& loop)
-    {
-        check_error(uv_prepare_init(loop.get(), &handle));
-    }
-
-    prepare_c::prepare_c(uv_loop_t* loop)
-    {
-        check_error(uv_prepare_init(loop, &handle));
-    }
-
-    void prepare_c::start(std::function<void()> cb)
-    {
-        callback = std::move(cb);
-        check_error(uv_prepare_start(&handle, prepare_cb));
-    }
-
-    void prepare_c::stop()
-    {
-        check_error(uv_prepare_stop(&handle));
-    }
-
-    void prepare_c::prepare_cb(uv_prepare_t* h)
-    {
-        auto* self = static_cast<prepare_c*>(h->data);
-        if (self && self->callback)
-        {
-            self->callback();
-        }
-    }
-
-    // ========== idle_c ==========
-    idle_c::idle_c(loop_c& loop)
-    {
-        check_error(uv_idle_init(loop.get(), &handle));
-    }
-
-    idle_c::idle_c(uv_loop_t* loop)
-    {
-        check_error(uv_idle_init(loop, &handle));
-    }
-
-    void idle_c::start(std::function<void()> cb)
-    {
-        callback = std::move(cb);
-        check_error(uv_idle_start(&handle, idle_cb));
-    }
-
-    void idle_c::stop()
-    {
-        check_error(uv_idle_stop(&handle));
-    }
-
-    void idle_c::idle_cb(uv_idle_t* h)
-    {
-        auto* self = static_cast<idle_c*>(h->data);
-        if (self && self->callback)
-        {
-            self->callback();
-        }
-    }
-
-    // ========== check_c ==========
-    check_c::check_c(loop_c& loop)
-    {
-        check_error(uv_check_init(loop.get(), &handle));
-    }
-
-    check_c::check_c(uv_loop_t* loop)
-    {
-        check_error(uv_check_init(loop, &handle));
-    }
-
-    void check_c::start(std::function<void()> cb)
-    {
-        callback = std::move(cb);
-        check_error(uv_check_start(&handle, check_cb));
-    }
-
-    void check_c::stop()
-    {
-        check_error(uv_check_stop(&handle));
-    }
-
-    void check_c::check_cb(uv_check_t* h)
-    {
-        auto* self = static_cast<check_c*>(h->data);
-        if (self && self->callback)
-        {
-            self->callback();
-        }
-    }
-
-    // ========== async_c ==========
     async_c::async_c(loop_c& loop, std::function<void()> cb)
     {
         callback = std::move(cb);
@@ -400,7 +274,6 @@ namespace runa::runtime
         }
     }
 
-    // ========== signal_c ==========
     signal_c::signal_c(loop_c& loop)
     {
         check_error(uv_signal_init(loop.get(), &handle));
@@ -442,16 +315,6 @@ namespace runa::runtime
         }
     }
 
-    thread_c::thread_c()
-    {
-    }
-
-    thread_c::~thread_c()
-    {
-    }
-
-    // ========== Thread ==========
-
     int thread_c::create(const std::function<void()>& cb)
     {
         callback = cb;
@@ -477,7 +340,6 @@ namespace runa::runtime
         }
     }
 
-    // ========== work_c ==========
     work_c::work_c(loop_c& loop) : loop_handler(loop.get()), req(new uv_work_t())
     {
         req->data = this;
@@ -493,16 +355,13 @@ namespace runa::runtime
         delete req;
     }
 
-    void work_c::queue(std::function<void()> work_cb, std::function<void(int)> after_cb)
+    int work_c::queue(std::function<void()> work_cb, std::function<void(int)> after_cb)
     {
         work_callback = std::move(work_cb);
         after_callback = std::move(after_cb);
         
         int result = uv_queue_work(loop_handler, req, _work_cb, after_work_cb);
-        if (result < 0)
-        {
-            throw uv_error(result);
-        }
+        return result;
     }
 
     void work_c::_work_cb(uv_work_t* req)
