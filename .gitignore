@@ -12,6 +12,12 @@ _deps
 build/*
 .idea/*
 out/*
-.vscode/*
 .vs/*
 .cache/*
+.zig-cache/
+zig-out/
+/release/
+/debug/
+/build/
+/build-*/
+/docgen_tmp/

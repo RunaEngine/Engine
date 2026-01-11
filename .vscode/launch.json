@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Zig Debug (LLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/zig-out/bin/Runa.exe",
+            "args": [],
+            "cwd": "${workspaceRoot}/zig-out/bin/",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "sourceLanguages": ["zig"],
+        },
+        {
+            "name": "Zig Debug (GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/zig-out/bin/Runa.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

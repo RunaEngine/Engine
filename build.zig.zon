@@ -1,0 +1,22 @@
+.{
+    .name = .Runa,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.15.2",
+    .paths = .{""},
+    .fingerprint = 0xd3b1a569c26045c0,
+    .dependencies = .{
+        .vulkan = .{ .url = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.335.0.tar.gz", .hash = "N-V-__8AADIiFAJfrWhQBPEi9LPInaZNnXV15Ca887-ty4M1" },
+        .stb = .{
+            .url = "https://github.com/nothings/stb/archive/refs/heads/master.zip",
+            .hash = "N-V-__8AABQ7TgCnPlp8MP4YA8znrjd6E-ZjpF1rvrS8J_2I",
+        },
+        .zalgebra = .{
+            .url = "git+https://github.com/kooparse/zalgebra.git#fe19b7816f03d86d56d4fa62f943664edf5d367f",
+            .hash = "zalgebra-0.0.0-aaiVSrp2AQBLjd3lvhR0ILaVDHeqOpwNFCp0ZJHj0xhk",
+        },
+        .sdl = .{
+            .url = "git+https://github.com/castholm/SDL.git?ref=release-3.4.x#ae5deb068787bd71d9aadbc054ff1af54f5d058c",
+            .hash = "sdl-0.4.0+3.4.0-SDL--u6yowGyvoiJ5qkFm_T1-MpmvnHShh2q2mTZf1fo",
+        },
+    },
+}
