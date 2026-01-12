@@ -3,6 +3,7 @@ const runtime = @import("runtime.zig");
 const log = runtime.log;
 const io = runtime.io;
 const za = @import("zalgebra");
+const zm = @import("zmath");
 const c = @cImport({
     @cInclude("SDL3/SDL.h");
     @cInclude("glad/glad.h");
@@ -97,7 +98,8 @@ pub const Backend = struct {
 
     pub fn deinit(self: *Backend) void {
         if (self.context) |ctx|
-            c.SDL_GL_DestroyContext(ctx);
+            if (!c.SDL_GL_DestroyContext(ctx))
+                log.sdlErr();
         if (self.window) |window|
             c.SDL_DestroyWindow(window);
         self.glslVersion = "";
@@ -127,7 +129,6 @@ pub const Render = struct {
     pub fn initBackend(self: *Render, driver: Driver) bool {
         const bend = Backend.init(driver);
         self.backend = bend.backend;
-        c.glEnable(c.GL_DEPTH_TEST);
         return bend.status;
     }
 
@@ -155,7 +156,7 @@ pub const Render = struct {
         c.glClearColor(0.07, 0.13, 0.17, 1.0);
         c.glClear(c.GL_COLOR_BUFFER_BIT | c.GL_DEPTH_BUFFER_BIT);
 
-        if (self.callback) |cb| cb(self.context, time.delta());            
+        if (self.callback) |cb| cb(self.context, time.delta());
 
         if (!c.SDL_GL_SwapWindow(self.backend.window))
             log.sdlErr();
@@ -178,6 +179,7 @@ pub const Camera = struct {
     position: za.Vec3,
     orientation: za.Vec3,
     direction: za.Vec3,
+    camMatrix: za.Mat4,
     speed: f32,
     sensitivity: f32,
 
@@ -185,16 +187,22 @@ pub const Camera = struct {
         var self: Camera = undefined;
         self.position = position;
         self.orientation = za.Vec3.new(0.0, 0.0, -1.0);
+        self.camMatrix = za.Mat4.set(1.0);
         self.direction = za.Vec3.zero();
         self.sensitivity = 120.0;
-        self.speed = 4.0;
+        self.speed = 2.0;
         return self;
     }
 
     pub fn editorInput(self: *Camera, event: *const c.SDL_Event, w: i32, h: i32) void {
         var input = &runtime.input;
         var inputDir = input.vector(c.SDL_SCANCODE_D, c.SDL_SCANCODE_A, c.SDL_SCANCODE_W, c.SDL_SCANCODE_S);
-        self.direction = za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up())).mul(za.Vec3.set(inputDir.x())).add(za.Vec3.norm(self.orientation).mul(za.Vec3.set(inputDir.y())));
+        self.direction = za.Vec3.norm(
+            za.Vec3.cross(self.orientation, za.Vec3.up()))
+            .mul(za.Vec3.set(inputDir.x()))
+            .add(za.Vec3.norm(self.orientation)
+            .mul(za.Vec3.set(inputDir.y()))
+        );
         self.direction = za.Vec3.add(
             za.Vec3.mul(za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up())), za.Vec3.set(inputDir.x())),
             za.Vec3.mul(za.Vec3.norm(self.orientation), za.Vec3.set(inputDir.y())),
@@ -202,7 +210,7 @@ pub const Camera = struct {
 
         const yAxis = input.axis(c.SDL_SCANCODE_SPACE, c.SDL_SCANCODE_LCTRL);
         self.direction.yMut().* = yAxis;
-        self.speed = if (input.keyPressed(c.SDL_SCANCODE_LSHIFT)) 8.0 else 4.0;
+        self.speed = if (input.keyPressed(c.SDL_SCANCODE_LSHIFT)) 6.0 else 2.0;
 
         if (input.mouseButtonPressed(c.SDL_BUTTON_RIGHT)) {
             if (!c.SDL_SetWindowMouseGrab(@ptrCast(runtime.render.backend.window), true)) {
@@ -252,27 +260,32 @@ pub const Camera = struct {
     pub fn editorTick(self: *Camera) void {
         var time = &runtime.time;
         self.direction = za.Vec3.new(std.math.clamp(self.direction.x(), -1.0, 1.0), std.math.clamp(self.direction.y(), -1.0, 1.0), std.math.clamp(self.direction.z(), -1.0, 1.0));
-        self.position = self.position.add(self.direction.mul(za.Vec3.set(self.speed)).mul(za.Vec3.set(@floatCast(time.delta()))));
+        const dt_f32: f32 = @as(f32, @floatCast(time.delta()));
+        self.position = self.position.add(self.direction.mul(za.Vec3.set(self.speed)).mul(za.Vec3.set(dt_f32)));
     }
 
-    pub fn matrix(self: *Camera, fovDeg: f32, nearPlane: f32, farPlane: f32, shader: *Shader, uniform: []const u8) void {
-        // Initializes matrices since otherwise they will be the null matrix
+    pub fn updateMatrix(self: *Camera, fovDeg: f32, nearPlane: f32, farPlane: f32) void {
         var view: za.Mat4 = za.Mat4.set(1.0);
         var projection: za.Mat4 = za.Mat4.set(1.0);
 
         // Makes camera look in the right direction from the right position
         view = za.lookAt(self.position, self.position.add(self.orientation), za.Vec3.up());
 
+        var width: i32 = 0;
+        var height: i32 = 0;
         // Adds perspective to the scene
-        var w: i32 = 0;
-        var h: i32 = 0;
         if (runtime.render.backend.window) |window| {
-            _ = c.SDL_GetWindowSizeInPixels(window, &w, &h);
+            if (!c.SDL_GetWindowSizeInPixels(window, &width, &height)) {
+                log.sdlErr();
+            }
         }
-        projection = za.perspective(fovDeg, @as(f32, @floatFromInt(w)) / @as(f32, @floatFromInt(h)), nearPlane, farPlane);
+        projection = za.perspective(fovDeg, @as(f32, @floatFromInt(width)) / @as(f32, @floatFromInt(height)), nearPlane, farPlane);
+        
+        self.camMatrix = projection.mul(view);
+    }
 
-        const uniformMat = projection.mul(view);
-        c.glUniformMatrix4fv(c.glGetUniformLocation(shader.id, uniform.ptr), 1, c.GL_FALSE, &uniformMat.data[0][0]);
+    pub fn matrix(self: *Camera, shader: *Shader, uniform: []const u8) void {
+        c.glUniformMatrix4fv(c.glGetUniformLocation(shader.id, uniform.ptr), 1, c.GL_FALSE, &self.camMatrix.data[0][0]);
     }
 };
 
@@ -378,7 +391,6 @@ pub const Shader = struct {
 pub const Texture = struct {
     id: u32,
     texType: u32,
-    isLoaded: bool,
 
     pub fn init(textureFile: []const u8, textype: u32, slot: u32, format: u32, pixeltype: u32) struct { status: bool, texture: Texture } {
         var self: Texture = undefined;
@@ -423,17 +435,23 @@ pub const Texture = struct {
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
         c.glBindTexture(textype, 0);
 
-        self.isLoaded = true;
-
         self.texType = textype;
         return .{ .status = true, .texture = self };
     }
 
     pub fn deinit(self: *Texture) void {
         c.glDeleteTextures(1, &self.id);
-        self.id = 0;
-        self.isLoaded = false;
         self.texType = 0;
+    }
+
+    pub fn texUnit(self: *Texture, shader: *Shader, uniform: []const u8, unit: i32) void {
+        _ = self;
+        // Gets the location of the uniform
+        const texUniform = c.glGetUniformLocation(shader.id, uniform.ptr);
+        // Shader needs to be activated before changing the value of a uniform
+        shader.use();
+        // Sets the value of the uniform
+        c.glUniform1i(texUniform, unit);
     }
 
     pub fn bind(self: *const Texture) void {

@@ -44,6 +44,10 @@ pub fn build(b: *std.Build) !void {
     mod.addImport("zalgebra", zalgebra.module("zalgebra"));
     exe.root_module.addImport("zalgebra", zalgebra.module("zalgebra"));
 
+    const zmath = b.dependency("zmath", .{});
+    mod.addImport("zmath", zmath.module("root"));
+    exe.root_module.addImport("zmath", zmath.module("root"));
+
     try thirdparty.build(b, &target, &optimize, mod, exe);
 
     // This declares intent for the executable to be installed into the
@@ -88,5 +92,5 @@ pub fn build(b: *std.Build) !void {
     test_step.dependOn(&run_mod_tests.step);
     test_step.dependOn(&run_exe_tests.step);
 
-    try content.afterBuild(b);
+    //try content.afterBuild(b);
 }

@@ -11,8 +11,12 @@ const c = @cImport({
 var shouldClose = false;
 
 fn onEvent(e: c.SDL_Event, ctx: ?*anyopaque) void {
-    //_ = ctx;
-    const context: ?*RenderContext = @ptrCast(@alignCast(ctx));
+    _ = ctx;
+    //const context: ?*RenderContext = @ptrCast(@alignCast(ctx));
+
+    if (e.type == c.SDL_EVENT_QUIT) {
+        shouldClose = true;
+    }
 
     var w: i32 = 0;
     var h: i32 = 0;
@@ -20,51 +24,36 @@ fn onEvent(e: c.SDL_Event, ctx: ?*anyopaque) void {
         runtime.log.sdlErr();
     }
 
-    if (context) |contxt| {
-        contxt.cam.editorInput(@ptrCast(&e), w, h);
-    }
-
     if (e.type == c.SDL_EVENT_WINDOW_RESIZED) {
         c.glViewport(0, 0, w, h);
     }
 
-    if (e.type == c.SDL_EVENT_QUIT) {
-        shouldClose = true;
-    }
+    //if (context) |contxt| {
+    //    contxt.cam.editorInput(@ptrCast(&e), w, h);
+    //}
 }
 
-const RenderContext = struct { 
-    uniID: i32, 
-    shader: *gl.Shader, 
-    vao: *gl.VertexArray, 
-    ebo: *gl.ElementBuffer, 
-    tex: *gl.Texture, 
-    lightShader: *gl.Shader, 
-    lightVao: *gl.VertexArray, 
-    lightEbo: *gl.ElementBuffer, 
-    cam: *gl.Camera 
-};
+const RenderContext = struct { shader: *gl.Shader, vao: *gl.VertexArray, ebo: *gl.ElementBuffer, tex: *gl.Texture, lightShader: *gl.Shader, lightVao: *gl.VertexArray, lightEbo: *gl.ElementBuffer, cam: *gl.Camera };
 
-fn onRender(ctx: ?*anyopaque, delta: f32) void {
+fn onRender(ctx: ?*anyopaque, delta: f64) void {
     _ = delta;
     const context: ?*RenderContext = @ptrCast(@alignCast(ctx));
 
     if (context) |contxt| {
+        //contxt.cam.editorTick();
+        contxt.cam.updateMatrix(60.0, 0.1, 100);
+
         contxt.shader.use();
-
-        contxt.cam.matrix(60.0, 0.1, 100, contxt.shader, "camMatrix");
-        contxt.cam.editorTick();
-
-        c.glUniform1f(contxt.uniID, 0.5);
+        c.glUniform3f(c.glGetUniformLocation(contxt.shader.id, "camPos"), contxt.cam.position.x(), contxt.cam.position.y(), contxt.cam.position.z());
+        contxt.cam.matrix(contxt.shader, "camMatrix");
         contxt.tex.bind();
         contxt.vao.bind();
-
         c.glDrawElements(c.GL_TRIANGLES, @as(i32, @intCast(@divTrunc(contxt.ebo.size, @sizeOf(u32)))), c.GL_UNSIGNED_INT, null);
 
-        //contxt.lightShader.use();
-        //contxt.cam.matrix(60.0, 0.1, 100, contxt.lightShader, "camMatrix");
-        //contxt.lightVao.bind();
-        //c.glDrawElements(c.GL_TRIANGLES, @as(i32, @intCast(@divTrunc(contxt.lightEbo.size, @sizeOf(u32)))), c.GL_UNSIGNED_INT, null);
+        contxt.lightShader.use();
+        contxt.cam.matrix(contxt.lightShader, "camMatrix");
+        contxt.lightVao.bind();
+        c.glDrawElements(c.GL_TRIANGLES, @as(i32, @intCast(@divTrunc(contxt.lightEbo.size, @sizeOf(u32)))), c.GL_UNSIGNED_INT, null);
     }
 }
 
@@ -73,56 +62,46 @@ pub fn main() !void {
     if (!runtime.render.initBackend(.core))
         return;
 
+    defer runtime.render.deinitBackend();
+
     //runtime.gameUserSettings.setVsync(.disable);
     //runtime.gameUserSettings.setFramerateLimit(300);
 
-    const vertices: [40]f32 = .{
-        -0.5,  0.0,  0.5,  0.83, 0.70, 0.44, 0.0, 0.0,
-        -0.5,  0.0, -0.5,  0.83, 0.70, 0.44, 5.0, 0.0,
-         0.5,  0.0, -0.5,  0.83, 0.70, 0.44, 0.0, 0.0,
-         0.5,  0.0,  0.5,  0.83, 0.70, 0.44, 5.0, 0.0,
-         0.0,  0.8,  0.0,  0.92, 0.86, 0.76, 2.5, 5.0,
-    };
+    const vertices: [176]f32 =
+        .{
+            -0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 0.0, 0.0, 0.0, -1.0, 0.0, // Bottom side
+            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 5.0, 0.0, -1.0, 0.0, // Bottom side
+            0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 5.0, 0.0, -1.0, 0.0, // Bottom side
+            0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 5.0, 0.0, 0.0, -1.0, 0.0, // Bottom side
+            -0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 0.0, 0.0, -0.8, 0.5, 0.0, // Left Side
+            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 0.0, -0.8, 0.5, 0.0, // Left Side
+            0.0, 0.8, 0.0, 0.92, 0.86, 0.76, 2.5, 5.0, -0.8, 0.5, 0.0, // Left Side
+            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 0.0, 0.0, 0.5, -0.8, // Non-facing side
+            0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 0.0, 0.0, 0.5, -0.8, // Non-facing side
+            0.0, 0.8, 0.0, 0.92, 0.86, 0.76, 2.5, 5.0, 0.0, 0.5, -0.8, // Non-facing side
+            0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 0.0, 0.8, 0.5, 0.0, // Right side
+            0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 5.0, 0.0, 0.8, 0.5, 0.0, // Right side
+            0.0, 0.8, 0.0, 0.92, 0.86, 0.76, 2.5, 5.0, 0.8, 0.5, 0.0, // Right side
+            0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 5.0, 0.0, 0.0, 0.5, 0.8, // Facing side
+            -0.5, 0.0, 0.5, 0.83, 0.70, 0.44, 0.0, 0.0, 0.0, 0.5, 0.8, // Facing side
+            0.0, 0.8, 0.0, 0.92, 0.86, 0.76, 2.5, 5.0, 0.0, 0.5, 0.8, // Facing side
+        };
 
     const indices: [18]u32 =
         .{
-            0, 1, 2,
-            0, 2, 3,
-            0, 1, 4,
-            1, 2, 4,
-            2, 3, 4,
-            3, 0, 4,
+            0, 1, 2, // Bottom side
+            0, 2, 3, // Bottom side
+            4, 6, 5, // Left side
+            7, 9, 8, // Non-facing side
+            10, 12, 11, // Right side
+            13, 15, 14, // Facing side
         };
 
-    const lightVertices: [24]f32 = .{ 
-        -0.1, -0.1,  0.1, 
-        -0.1, -0.1, -0.1, 
-         0.1, -0.1, -0.1, 
-         0.1, -0.1,  0.1, 
-        -0.1,  0.1,  0.1, 
-        -0.1,  0.1, -0.1, 
-         0.1,  0.1, -0.1, 
-         0.1,  0.1,  0.1 
-    };
+    const lightVertices: [24]f32 =
+        .{ -0.1, -0.1, 0.1, -0.1, -0.1, -0.1, 0.1, -0.1, -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, 0.1, -0.1, 0.1, -0.1, 0.1, 0.1, -0.1, 0.1, 0.1, 0.1 };
 
-    const lightIndices: [36]u32 = .{ 
-        0, 1, 2, 
-        0, 2, 3, 
-        0, 4, 7, 
-        0, 7, 3, 
-        3, 7, 6, 
-        3, 6, 2, 
-        2, 6, 5, 
-        2, 5, 1, 
-        1, 5, 4, 
-        1, 4, 0, 
-        4, 5, 6, 
-        4, 6, 7 
-    };
-
-    // Position camera to view the pyramid: slightly back and up
-    // Camera position: (0, 0.5, 3.0) looking towards origin (0, 0, 0)
-    var camera = gl.Camera.init(za.Vec3.new(0.0, 0.5, 2.0));
+    const lightIndices: [36]u32 =
+        .{ 0, 1, 2, 0, 2, 3, 0, 4, 7, 0, 7, 3, 3, 7, 6, 3, 6, 2, 2, 6, 5, 2, 5, 1, 1, 5, 4, 1, 4, 0, 4, 5, 6, 4, 6, 7 };
 
     const currentPath = runtime.path.currentPath();
 
@@ -133,8 +112,7 @@ pub fn main() !void {
     defer allocator.free(fragmentFile);
 
     const shaderInit = gl.Shader.init(vertexFile, fragmentFile);
-    allocator.free(vertexFile);
-    allocator.free(fragmentFile);
+    // `vertexFile` and `fragmentFile` are freed by the defers above
     if (!shaderInit.status) {
         return;
     }
@@ -153,9 +131,10 @@ pub fn main() !void {
     defer ebo.deinit();
     ebo.bind();
 
-    vao.enableAttrib(&vbo, 0, 3, c.GL_FLOAT, @sizeOf(f32) * 8, @ptrFromInt(0));
-    vao.enableAttrib(&vbo, 1, 3, c.GL_FLOAT, @sizeOf(f32) * 8, @ptrFromInt(3 * @sizeOf(f32)));
-    vao.enableAttrib(&vbo, 2, 2, c.GL_FLOAT, @sizeOf(f32) * 8, @ptrFromInt(6 * @sizeOf(f32)));
+    vao.enableAttrib(&vbo, 0, 3, c.GL_FLOAT, @sizeOf(f32) * 11, @ptrFromInt(0));
+    vao.enableAttrib(&vbo, 1, 3, c.GL_FLOAT, @sizeOf(f32) * 11, @ptrFromInt(3 * @sizeOf(f32)));
+    vao.enableAttrib(&vbo, 2, 2, c.GL_FLOAT, @sizeOf(f32) * 11, @ptrFromInt(6 * @sizeOf(f32)));
+    vao.enableAttrib(&vbo, 3, 3, c.GL_FLOAT, @sizeOf(f32) * 11, @ptrFromInt(8 * @sizeOf(f32)));
 
     vao.unbind();
     vbo.unbind();
@@ -186,51 +165,58 @@ pub fn main() !void {
     defer lightEbo.deinit();
     lightEbo.bind();
 
-    //var lightColor = za.Vec4.new(1.0, 1.0, 1.0, 1.0);
-    const lightPos = za.Vec3.set(0.5);
-    var lightModel = za.Mat4.set(1.0);
-    lightModel = za.Mat4.translate(lightModel, lightPos);
+    lightVao.enableAttrib(&lightVbo, 0, 3, c.GL_FLOAT, @sizeOf(f32) * 3, @ptrFromInt(0));
 
-    const pyramidPos = za.Vec3.new(0.0, 0.0, 0.0);
-    var pyramidModel = za.Mat4.set(1.0);
-    pyramidModel = za.Mat4.translate(pyramidModel, pyramidPos);
+    lightVao.unbind();
+    lightVbo.unbind();
+    lightEbo.unbind();
+
+    const lightColor: za.Vec4 = za.Vec4.set(1.0);
+    const lightPos: za.Vec3 = za.Vec3.set(0.5);
+    var lightModel: za.Mat4 = za.Mat4.set(1.0);
+    lightModel = lightModel.translate(lightPos);
+
+    const pyramidPos: za.Vec3 = za.Vec3.set(0.0);
+    var pyramidModel: za.Mat4 = za.Mat4.set(1.0);
+    pyramidModel = pyramidModel.translate(pyramidPos);
 
     lightShader.use();
     c.glUniformMatrix4fv(c.glGetUniformLocation(lightShader.id, "model"), 1, c.GL_FALSE, &lightModel.data[0][0]);
+    c.glUniform4f(c.glGetUniformLocation(lightShader.id, "lightColor"), lightColor.x(), lightColor.y(), lightColor.z(), lightColor.w());
 
     shader.use();
     c.glUniformMatrix4fv(c.glGetUniformLocation(shader.id, "model"), 1, c.GL_FALSE, &pyramidModel.data[0][0]);
+    c.glUniform4f(c.glGetUniformLocation(shader.id, "lightColor"), lightColor.x(), lightColor.y(), lightColor.z(), lightColor.w());
+    c.glUniform3f(c.glGetUniformLocation(shader.id, "lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 
-    const uniId: i32 = c.glGetUniformLocation(shader.id, "scale");
 
     const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources\\textures\\brick.png", &[_]u8{0} });
     defer allocator.free(albedoFile);
-    const texInit = gl.Texture.init(albedoFile, c.GL_TEXTURE_2D, c.GL_TEXTURE0, c.GL_RGB, c.GL_UNSIGNED_BYTE);
+    const texInit = gl.Texture.init(albedoFile, c.GL_TEXTURE_2D, c.GL_TEXTURE0, c.GL_RGBA, c.GL_UNSIGNED_BYTE);
     if (!texInit.status) {
         return;
     }
     var tex = texInit.texture;
     defer tex.deinit();
 
-    shader.setUniformLocation("tex0", 0);
+    tex.texUnit(&shader, "tex0", 0);
 
-    var context = RenderContext{ 
-        .uniID = uniId, 
-        .shader = &shader, 
-        .vao = &vao, 
-        .ebo = &ebo, 
-        .tex = &tex, 
-        .lightShader = &lightShader, 
-        .lightVao = &lightVao, 
-        .lightEbo = &lightEbo, 
-        .cam = &camera 
-    };
+    // Enables the Depth Buffer
+    c.glEnable(c.GL_DEPTH_TEST);
+
+    // Position camera to view the pyramid: slightly back and up
+    // Camera position: (0, 0.5, 3.0) looking towards origin (0, 0, 0)
+    var camera = gl.Camera.init(za.Vec3.new(0.0, 0.0, 2.0));
+
+    var context = RenderContext{ .shader = &shader, .vao = &vao, .ebo = &ebo, .tex = &tex, .lightShader = &lightShader, .lightVao = &lightVao, .lightEbo = &lightEbo, .cam = &camera };
     runtime.render.setCallback(@ptrCast(&onRender), @ptrCast(&context));
     runtime.event.setCallback(@ptrCast(&onEvent), @ptrCast(&context));
 
     while (!shouldClose) {
         runtime.render.pool(.pool);
     }
+
+
 }
 
 test "runa test" {
