@@ -9,8 +9,6 @@ const c = @cImport({
     @cInclude("stb_image.h");
 });
 
-pub var GL_ELEMENT_COUNT: i64 = 0;
-
 pub const Driver = enum(u8) { core = 0, es = 1 };
 
 pub const Backend = struct {
@@ -35,15 +33,15 @@ pub const Backend = struct {
                     log.sdlErr();
                     return .{ .status = false, .backend = self };
                 }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MAJOR_VERSION, 4)) {
+                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MAJOR_VERSION, 3)) {
                     log.sdlErr();
                     return .{ .status = false, .backend = self };
                 }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MINOR_VERSION, 6)) {
+                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MINOR_VERSION, 3)) {
                     log.sdlErr();
                     return .{ .status = false, .backend = self };
                 }
-                self.glslVersion = "#version 460 core";
+                self.glslVersion = "#version 330 core";
             },
             .es => {
                 if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_PROFILE_MASK, c.SDL_GL_CONTEXT_PROFILE_ES)) {
@@ -157,10 +155,7 @@ pub const Render = struct {
         c.glClearColor(0.07, 0.13, 0.17, 1.0);
         c.glClear(c.GL_COLOR_BUFFER_BIT | c.GL_DEPTH_BUFFER_BIT);
 
-        if (self.callback) |cb| cb(self.context, time.delta());
-
-        if (GL_ELEMENT_COUNT > 0)
-            c.glDrawElements(c.GL_TRIANGLES, @intCast(runtime.gl.GL_ELEMENT_COUNT), c.GL_UNSIGNED_INT, null);
+        if (self.callback) |cb| cb(self.context, time.delta());            
 
         if (!c.SDL_GL_SwapWindow(self.backend.window))
             log.sdlErr();
@@ -291,13 +286,10 @@ pub const ElementBuffer = struct {
         c.glGenBuffers(1, &self.id);
         c.glBindBuffer(c.GL_ELEMENT_ARRAY_BUFFER, self.id);
         c.glBufferData(c.GL_ELEMENT_ARRAY_BUFFER, size, indices.ptr, c.GL_STATIC_DRAW);
-        GL_ELEMENT_COUNT += @divTrunc(size, @sizeOf(u32));
         return self;
     }
 
     pub fn deinit(self: *ElementBuffer) void {
-        GL_ELEMENT_COUNT -= @divTrunc(self.size, @sizeOf(u32));
-        if (GL_ELEMENT_COUNT < 0) GL_ELEMENT_COUNT = 0;
         c.glDeleteBuffers(1, &self.id);
     }
 

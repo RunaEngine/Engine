@@ -1,4 +1,4 @@
-#version 460 core
+#version 330 core
 
 // Positions/Coordinates
 layout (location = 0) in vec3 aPos;

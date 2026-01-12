@@ -5,13 +5,13 @@ pub fn afterBuild(b: *std.Build) !void {
 
     const src_path = "content/resources";
     const dst_path = "zig-out/bin/resources";
-    const cwd = std.fs.cwd();
-
-    if (cwd.access(dst_path, .{})) |_| {
-        return;
-    } else |err| {
-        if (err != error.FileNotFound) return err;
-    }
+    //const cwd = std.fs.cwd();
+//
+    //if (cwd.access(dst_path, .{})) |_| {
+    //    return;
+    //} else |err| {
+    //    if (err != error.FileNotFound) return err;
+    //}
 
     std.debug.print("Coping resources from '{s}' to '{s}'...\n", .{ src_path, dst_path });
     try copyDir(src_path, dst_path);
