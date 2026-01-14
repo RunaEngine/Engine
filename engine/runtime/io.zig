@@ -1,95 +1,134 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
 const log = runtime.log;
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-});
+const sdl = @import("sdl3");
 
 pub const Mode = enum(u8) { pool = 0, wait = 1 };
+pub const EventCallback = ?*const fn (event: sdl.events.Event, ctx: ?*anyopaque) void;
 
 pub const Event = struct {
-    event: c.SDL_Event,
-    callback: ?*const fn (e: c.SDL_Event, ctx: ?*anyopaque) void,
+    callback: EventCallback,
     context: ?*anyopaque,
 
     pub fn init() Event {
         var self: Event = undefined;
-        self.event = undefined;
         self.callback = null;
         self.context = null;
         return self;
     }
 
-    pub fn setCallback(self: *Event, cb: ?*const fn (e: c.SDL_Event, ctx: ?*anyopaque) void, ctx: ?*anyopaque) void {
+    pub fn setCallback(self: *Event, cb: EventCallback, ctx: ?*anyopaque) void {
         self.callback = cb;
         self.context = ctx;
     }
 
-    pub fn run(self: *Event, mode: Mode) void {
+    pub fn run(self: *Event, wait: bool) void {
         const input = &runtime.input;
-        if (mode == .pool) {
-            while (c.SDL_PollEvent(&self.event)) {
-                input.updateEvent(@ptrCast(&self.event));
-                if (self.callback) |callback| {
-                    callback(self.event, self.context);
-                }
-            }
-            return;
-        }
 
-        if (c.SDL_WaitEvent(&self.event)) {
-            input.updateEvent(@ptrCast(&self.event));
+        if (wait) sdl.events.wait() catch {};
+        while (sdl.events.poll()) |event| {
+            input.updateEvent(event);
             if (self.callback) |callback| {
-                callback(self.event, self.context);
+                callback(event, self.context);
             }
         }
     }
 };
 
-pub fn readFile(filepath: []const u8) ?[]u8 {
+pub fn readFile(filepath: [:0]const u8, mode: sdl.io_stream.FileMode) ![]u8 {
     const allocator = runtime.defaultAllocator();
 
     if (filepath.len == 0) {
-        log.err("Error: Path is empty");
-        return null;
+        log.err("Error: Path is empty", .{});
+        return error.PathNull;
     }
 
-    var file: *c.SDL_IOStream = undefined;
-    if (c.SDL_IOFromFile(filepath.ptr, "rb")) |ioFile| {
-        file = ioFile;
-    } else {
+    var file = sdl.io_stream.Stream.initFromFile(filepath, mode) catch {
         log.sdlErr();
-        return null;
-    }
-    defer _ = c.SDL_CloseIO(file);
-
-    if (c.SDL_SeekIO(file, 0, c.SDL_IO_SEEK_END) < 0) {
+        return sdl.errors.Error.SdlError;
+    };
+    defer file.deinit() catch {
         log.sdlErr();
-        return null;
-    }
-
-    const filesize = c.SDL_TellIO(file);
-    if (filesize < 0) {
-        log.sdlErr();
-        return null;
-    }
-
-    if (c.SDL_SeekIO(file, 0, c.SDL_IO_SEEK_SET) < 0) {
-        log.sdlErr();
-        return null;
-    }
-
-    const buffer = allocator.alloc(u8, @intCast(filesize)) catch |err| {
-        log.err(@errorName(err));
-        return null;
     };
 
-    const bytes_read = c.SDL_ReadIO(file, buffer.ptr, @intCast(filesize));
-    if (bytes_read != filesize) {
+    _ = file.seek(0, .end) catch {
         log.sdlErr();
-        allocator.free(buffer);
-        return null;
+        return sdl.errors.Error.SdlError;
+    };
+
+    const filesize = file.tell() catch {
+        log.sdlErr();
+        return sdl.errors.Error.SdlError;
+    };
+
+    _ = file.seek(0, .set) catch {
+        log.sdlErr();
+        return sdl.errors.Error.SdlError;
+    };
+
+    const buffer = allocator.alloc(u8, @intCast(filesize)) catch |err| {
+        log.err("{any}", .{@errorName(err)});
+        return sdl.errors.Error.SdlError;
+    };
+
+    var eof = false;
+    while (!eof) {
+        const buf = file.read(buffer) catch {
+            allocator.free(buffer);
+            log.sdlErr();
+            return sdl.errors.Error.SdlError;
+        };
+
+        if (buf == null) {
+            eof = true;
+        }
     }
 
     return buffer;
+}
+
+pub fn readTextFile(filepath: [:0]const u8) ![:0]u8 {
+    const allocator = runtime.defaultAllocator();
+
+    if (std.mem.len(filepath) == 0) {
+        log.err("Error: Path is empty", .{});
+        return error.PathNull;
+    }
+
+    var file = sdl.io_stream.Stream.initFromFile(filepath, .read_text) catch {
+        log.sdlErr();
+        return sdl.errors.Error.SdlError;
+    };
+    defer file.deinit();
+
+    const filesize = file.tell() catch {
+        log.sdlErr();
+        return sdl.errors.Error.SdlError;
+    };
+
+    const buffer = allocator.alloc(u8, @intCast(filesize)) catch |err| {
+        log.err("{any}", @errorName(err));
+        return sdl.errors.Error.SdlError;
+    };
+    defer allocator.free(buffer);
+
+    var eof = false;
+    while (!eof) {
+        const buf = file.read(buffer) catch {
+            allocator.free(buffer);
+            log.sdlErr();
+            return sdl.errors.Error.SdlError;
+        };
+
+        if (buf == null) {
+            eof = true;
+        }
+    }
+
+    const dupezBuf = allocator.dupeZ(u8, buffer) catch |err| {
+        log.err("{any}", .{@errorName(err)});
+        return err;
+    };
+
+    return dupezBuf;
 }

@@ -1,23 +1,29 @@
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-});
+const sdl = @import("sdl3");
 
-pub fn log(msg: []const u8) void {
-    c.SDL_Log("%*s\n", msg.len, msg.ptr);
+pub fn log(comptime fmt: []const u8, args: anytype) void {
+    sdl.log.log(fmt, args) catch {};
 }
 
-pub fn success(msg: []const u8) void {
-    c.SDL_Log("\x1b[32m%*s\x1b[0m\n", msg.len, msg.ptr);
+pub fn success(comptime fmt: []const u8, args: anytype) void {
+    sdl.log.log("\x1b[32m", .{}) catch {};
+    sdl.log.log(fmt, args) catch {};
+    sdl.log.log("\x1b[0m\n", .{}) catch {};
 }
 
-pub fn warn(msg: []const u8) void {
-    c.SDL_Log("\x1b[33m%*s\x1b[0m\n", msg.len, msg.ptr);
+pub fn warn(comptime fmt: []const u8, args: anytype) void {
+    sdl.log.log("\x1b[33m", .{}) catch {};
+    sdl.log.log(fmt, args) catch {};
+    sdl.log.log("\x1b[0m\n", .{}) catch {};
 }
 
-pub fn err(msg: []const u8) void {
-    c.SDL_Log("\x1b[31m%*s\x1b[0m\n", msg.len, msg.ptr);
+pub fn err(comptime fmt: []const u8, args: anytype) void {
+    sdl.log.log("\x1b[31m", .{}) catch {};
+    sdl.log.log(fmt, args) catch {};
+    sdl.log.log("\x1b[0m\n", .{}) catch {};
 }
 
 pub fn sdlErr() void {
-    c.SDL_Log("\x1b[31m%s\x1b[0m\n", c.SDL_GetError());
+    if (sdl.errors.get()) |errLog| {
+        sdl.log.log("\x1b[31m{s}\x1b[0m\n", .{errLog}) catch {};
+    }
 }

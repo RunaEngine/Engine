@@ -1,7 +1,5 @@
 const runtime = @import("runtime");
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-});
+const sdl = @import("sdl3");
 
 pub const Time = struct {
     currentTimeNS: u64,
@@ -15,13 +13,13 @@ pub const Time = struct {
         return self;
     }
     pub fn updateCurrentTime(self: *Time) void {
-        self.currentTimeNS = c.SDL_GetTicksNS();
+        self.currentTimeNS = sdl.timer.getNanosecondsSinceInit();
     }
     pub fn updateEndTime(self: *Time) void {
-        self.deltaTimeNS = c.SDL_GetTicksNS() - self.currentTimeNS;
+        self.deltaTimeNS = sdl.timer.getNanosecondsSinceInit() - self.currentTimeNS;
     }
     pub fn elapsedNS(self: *Time) u64 {
-        return c.SDL_GetTicksNS() - self.currentTimeNS;
+        return sdl.timer.getNanosecondsSinceInit() - self.currentTimeNS;
     }
     pub fn deltaNS(self: *Time) u64 {
         return self.deltaTimeNS;

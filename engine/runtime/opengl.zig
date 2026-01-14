@@ -2,107 +2,92 @@ const std = @import("std");
 const runtime = @import("runtime.zig");
 const log = runtime.log;
 const io = runtime.io;
+const utils = @import("utils.zig");
+const sdl = @import("sdl3");
+const zgl = @import("zgl");
 const za = @import("zalgebra");
-const zm = @import("zmath");
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-    @cInclude("glad/glad.h");
-    @cInclude("stb_image.h");
-});
 
 pub const Driver = enum(u8) { core = 0, es = 1 };
 
 pub const Backend = struct {
-    window: ?*c.SDL_Window,
-    context: c.SDL_GLContext,
-    glslVersion: []const u8,
+    window: sdl.video.Window,
+    context: sdl.video.gl.Context,
+    glslVersion: [:0]const u8,
 
-    pub fn init(driver: Driver) struct { status: bool, backend: Backend } {
+    pub fn init(driver: Driver) !Backend {
         var self: Backend = undefined;
 
-        if (c.SDL_WasInit(c.SDL_INIT_VIDEO) != 0)
-            return .{ .status = false, .backend = self };
+        const wasInit = sdl.wasInit(.{ .video = true });
+        if (wasInit.video == true)
+            return sdl.errors.Error.SdlError;
 
-        if (!c.SDL_InitSubSystem(c.SDL_INIT_VIDEO)) {
+        sdl.init(.{ .video = true }) catch {
             log.sdlErr();
-            return .{ .status = false, .backend = self };
-        }
+            return sdl.errors.Error.SdlError;
+        };
 
         switch (driver) {
             .core => {
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_PROFILE_MASK, c.SDL_GL_CONTEXT_PROFILE_CORE)) {
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_profile_mask, @intFromEnum(sdl.video.gl.Profile.core)) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MAJOR_VERSION, 3)) {
+                    return sdl.errors.Error.SdlError;
+                };
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_major_version, 4) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MINOR_VERSION, 3)) {
+                    return sdl.errors.Error.SdlError;
+                };
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_minor_version, 6) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                self.glslVersion = "#version 330 core";
+                    return sdl.errors.Error.SdlError;
+                };
+                self.glslVersion = "#version 460 core";
             },
             .es => {
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_PROFILE_MASK, c.SDL_GL_CONTEXT_PROFILE_ES)) {
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_profile_mask, @intFromEnum(sdl.video.gl.Profile.es)) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MAJOR_VERSION, 3)) {
+                    return sdl.errors.Error.SdlError;
+                };
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_major_version, 3) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                if (!c.SDL_GL_SetAttribute(c.SDL_GL_CONTEXT_MINOR_VERSION, 2)) {
+                    return sdl.errors.Error.SdlError;
+                };
+                sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_minor_version, 2) catch {
                     log.sdlErr();
-                    return .{ .status = false, .backend = self };
-                }
-                self.glslVersion = "#version 300 es";
+                    return sdl.errors.Error.SdlError;
+                };
+                self.glslVersion = "#version 320 es";
             },
         }
 
-        self.window = c.SDL_CreateWindow("Runa", 1024, 576, c.SDL_WINDOW_RESIZABLE | c.SDL_WINDOW_OPENGL);
-        if (self.window == null) {
+        self.window = sdl.video.Window.init("Runa", 1024, 576, .{.resizable = true, .open_gl = true}) catch {
             log.sdlErr();
-            return .{ .status = false, .backend = self };
-        }
+            return sdl.errors.Error.SdlError;
+        }; 
 
-        // Create a SDL renderer
-        self.context = c.SDL_GL_CreateContext(self.window);
-        if (self.context == null) {
-            c.SDL_DestroyWindow(self.window);
+        self.context = sdl.video.gl.Context.init(self.window) catch {
+            self.window.deinit();
             log.sdlErr();
-            return .{ .status = false, .backend = self };
-        }
+            return sdl.errors.Error.SdlError;
+        };
 
-        if (driver == .es) {
-            if (c.gladLoadGLES2Loader(@ptrCast(&c.SDL_GL_GetProcAddress)) == 0) {
-                log.err("Failed to initialize GLAD.");
-                c.SDL_DestroyWindow(self.window);
-                if (!c.SDL_GL_DestroyContext(self.context))
-                    log.sdlErr();
-                return .{ .status = false, .backend = self };
-            }
-        } else {
-            if (c.gladLoadGLLoader(@ptrCast(&c.SDL_GL_GetProcAddress)) == 0) {
-                log.err("Failed to initialize GLAD.");
-                c.SDL_DestroyWindow(self.window);
-                if (!c.SDL_GL_DestroyContext(self.context))
-                    log.sdlErr();
-                return .{ .status = false, .backend = self };
-            }
-        }
+        try zgl.loadExtensions({}, Backend.loader);
 
-        return .{ .status = true, .backend = self };
+        zgl.enable(.depth_test);
+
+        return self;
     }
 
     pub fn deinit(self: *Backend) void {
-        if (self.context) |ctx|
-            if (!c.SDL_GL_DestroyContext(ctx))
-                log.sdlErr();
-        if (self.window) |window|
-            c.SDL_DestroyWindow(window);
+        self.context.deinit() catch {
+            log.sdlErr();
+        };
+        self.window.deinit();
         self.glslVersion = "";
+        sdl.quit(.{ .video = true });
+    }
+
+    fn loader(_: void, name: [:0]const u8) ?*const anyopaque {
+        return sdl.video.gl.getProcAddress(name);
     }
 };
 
@@ -126,10 +111,8 @@ pub const Render = struct {
         self.context = null;
     }
 
-    pub fn initBackend(self: *Render, driver: Driver) bool {
-        const bend = Backend.init(driver);
-        self.backend = bend.backend;
-        return bend.status;
+    pub fn initBackend(self: *Render, driver: Driver) !void {
+        self.backend = try Backend.init(driver);
     }
 
     pub fn deinitBackend(self: *Render) void {
@@ -141,37 +124,34 @@ pub const Render = struct {
         self.context = ctx;
     }
 
-    pub fn pool(self: *Render, eventMode: io.Mode) void {
+    pub fn pool(self: *Render, wait: bool) void {
         const time = &runtime.time;
         time.updateCurrentTime();
 
-        const shouldLimitFPS: bool = runtime.gameUserSettings.getFramerateLimit() > 0 and runtime.gameUserSettings.getVsync() == .disable;
+        const shouldLimitFPS: bool = runtime.gameUserSettings.getFramerateLimit() > 0 and runtime.gameUserSettings.getVsync() == .immediate;
         var frameTime: u64 = 0;
         if (shouldLimitFPS) {
             frameTime = 1000000000 / @as(u64, runtime.gameUserSettings.getFramerateLimit());
         }
 
-        runtime.event.run(eventMode);
+        runtime.event.run(wait);
 
-        c.glClearColor(0.07, 0.13, 0.17, 1.0);
-        c.glClear(c.GL_COLOR_BUFFER_BIT | c.GL_DEPTH_BUFFER_BIT);
+        zgl.clearColor(0.07, 0.13, 0.17, 1.0);
+        zgl.clear(.{ .color = true, .depth = true });
 
         if (self.callback) |cb| cb(self.context, time.delta());
 
-        if (!c.SDL_GL_SwapWindow(self.backend.window))
+        sdl.video.gl.swapWindow(self.backend.window) catch {
             log.sdlErr();
+        };
 
         if (shouldLimitFPS) {
             if (frameTime > 0 and frameTime > time.elapsedNS()) {
-                c.SDL_DelayPrecise(frameTime - time.elapsedNS());
+                sdl.timer.delayNanoseconds(frameTime - time.elapsedNS());
             }
         }
 
         time.updateEndTime();
-    }
-
-    pub fn getBackend(self: *Render) *Backend {
-        return self.backend;
     }
 };
 
@@ -187,337 +167,354 @@ pub const Camera = struct {
         var self: Camera = undefined;
         self.position = position;
         self.orientation = za.Vec3.new(0.0, 0.0, -1.0);
-        self.camMatrix = za.Mat4.set(1.0);
         self.direction = za.Vec3.zero();
+        self.camMatrix = za.Mat4.identity();
         self.sensitivity = 120.0;
         self.speed = 2.0;
         return self;
     }
 
-    pub fn editorInput(self: *Camera, event: *const c.SDL_Event, w: i32, h: i32) void {
+    pub fn editorInput(self: *Camera, event: sdl.events.Event) void {
         var input = &runtime.input;
-        var inputDir = input.vector(c.SDL_SCANCODE_D, c.SDL_SCANCODE_A, c.SDL_SCANCODE_W, c.SDL_SCANCODE_S);
+        const inputDir: za.Vec2 = input.vector(.a, .d, .w, .s);
         self.direction = za.Vec3.norm(
             za.Vec3.cross(self.orientation, za.Vec3.up()))
             .mul(za.Vec3.set(inputDir.x()))
             .add(za.Vec3.norm(self.orientation)
             .mul(za.Vec3.set(inputDir.y()))
         );
+
         self.direction = za.Vec3.add(
-            za.Vec3.mul(za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up())), za.Vec3.set(inputDir.x())),
+            za.Vec3.mul(za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up())), za.Vec3.set(-inputDir.x())),
             za.Vec3.mul(za.Vec3.norm(self.orientation), za.Vec3.set(inputDir.y())),
         );
 
-        const yAxis = input.axis(c.SDL_SCANCODE_SPACE, c.SDL_SCANCODE_LCTRL);
+        const yAxis = input.axis(.space, .left_ctrl);
         self.direction.yMut().* = yAxis;
-        self.speed = if (input.keyPressed(c.SDL_SCANCODE_LSHIFT)) 6.0 else 2.0;
+        self.speed = if (input.keyPressed(.left_shift)) 6.0 else 2.0;
 
-        if (input.mouseButtonPressed(c.SDL_BUTTON_RIGHT)) {
-            if (!c.SDL_SetWindowMouseGrab(@ptrCast(runtime.render.backend.window), true)) {
+        if (input.mouseButtonPressed(.right)) {
+            const windowSize = runtime.render.backend.window.getSize() catch return;
+            sdl.mouse.setWindowGrab(runtime.render.backend.window, true) catch {
                 runtime.log.sdlErr();
-            }
-            if (!c.SDL_SetWindowRelativeMouseMode(@ptrCast(runtime.render.backend.window), true)) {
+            };
+            sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, true) catch {
                 runtime.log.sdlErr();
-            }
-            if (!c.SDL_HideCursor()) {
+            };
+            sdl.mouse.hide() catch {
                 runtime.log.sdlErr();
-            }
+            };
 
-            if (event.type == c.SDL_EVENT_MOUSE_MOTION) {
-                const xrel: f32 = event.motion.xrel;
-                const yrel: f32 = event.motion.yrel;
+            switch (event) {
+                .mouse_motion => |e| {
+                    const xrel: f32 = e.x_rel;
+                    const yrel: f32 = e.y_rel;
 
-                const rotX: f32 = self.sensitivity * yrel / @as(f32, @floatFromInt(h));
-                const rotY: f32 = self.sensitivity * xrel / @as(f32, @floatFromInt(w));
+                    const rotX: f32 = self.sensitivity * yrel / @as(f32, @floatFromInt(windowSize.@"1"));
+                    const rotY: f32 = self.sensitivity * xrel / @as(f32, @floatFromInt(windowSize.@"0"));
 
-                // newOrientation = rotate(orientation, -rotX, normalize(cross(orientation, up)))
-                const right = za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up()));
-                const qx = za.Quat.fromAxis(-rotX, right);
-                const newOrientation = qx.rotateVec(self.orientation);
+                    // newOrientation = rotate(orientation, -rotX, normalize(cross(orientation, up)))
+                    const right = za.Vec3.norm(za.Vec3.cross(self.orientation, za.Vec3.up()));
+                    const qx = za.Quat.fromAxis(-rotX, right);
+                    const newOrientation = qx.rotateVec(self.orientation);
 
-                // checa ângulo
-                if (@abs(newOrientation.getAngle(za.Vec3.up()) - 90.0) <= 85.0) {
-                    self.orientation = newOrientation;
-                }
+                    // checa ângulo
+                    if (@abs(newOrientation.getAngle(za.Vec3.up()) - 90.0) <= 85.0) {
+                        self.orientation = newOrientation;
+                    }
 
-                // orientation = rotate(orientation, -rotY, up)
-                const qy = za.Quat.fromAxis(-rotY, za.Vec3.up());
-                self.orientation = qy.rotateVec(self.orientation);
+                    // orientation = rotate(orientation, -rotY, up)
+                    const qy = za.Quat.fromAxis(-rotY, za.Vec3.up());
+                    self.orientation = qy.rotateVec(self.orientation);
+                },
+                else => {}
             }
         } else {
-            if (!c.SDL_SetWindowMouseGrab(@ptrCast(runtime.render.backend.window), false)) {
+            sdl.mouse.setWindowGrab(runtime.render.backend.window, false) catch {
                 runtime.log.sdlErr();
-            }
-            if (!c.SDL_SetWindowRelativeMouseMode(@ptrCast(runtime.render.backend.window), false)) {
+            };
+            sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, false) catch {
                 runtime.log.sdlErr();
-            }
-            if (!c.SDL_ShowCursor()) {
+            };
+            sdl.mouse.show() catch {
                 runtime.log.sdlErr();
-            }
+            };
         }
     }
 
     pub fn editorTick(self: *Camera) void {
         var time = &runtime.time;
-        self.direction = za.Vec3.new(std.math.clamp(self.direction.x(), -1.0, 1.0), std.math.clamp(self.direction.y(), -1.0, 1.0), std.math.clamp(self.direction.z(), -1.0, 1.0));
+        self.direction = za.Vec3.new(
+            std.math.clamp(self.direction.x(), -1.0, 1.0), 
+            std.math.clamp(self.direction.y(), -1.0, 1.0), 
+            std.math.clamp(self.direction.z(), -1.0, 1.0)
+        );
         const dt_f32: f32 = @as(f32, @floatCast(time.delta()));
-        self.position = self.position.add(self.direction.mul(za.Vec3.set(self.speed)).mul(za.Vec3.set(dt_f32)));
+        self.position = self.position.add(
+            self.direction.mul(za.Vec3.set(self.speed))
+            .mul(za.Vec3.set(dt_f32))
+        );
     }
 
-    pub fn updateMatrix(self: *Camera, fovDeg: f32, nearPlane: f32, farPlane: f32) void {
-        var view: za.Mat4 = za.Mat4.set(1.0);
-        var projection: za.Mat4 = za.Mat4.set(1.0);
+    pub fn updateMatrix(self: *Camera, fov: f32, nearPlane: f32, farPlane: f32) void {
+        const windowSize = runtime.render.backend.window.getSize() catch return;
+
+        var view: za.Mat4 = za.Mat4.identity();
+        var projection: za.Mat4 = za.Mat4.identity();
 
         // Makes camera look in the right direction from the right position
         view = za.lookAt(self.position, self.position.add(self.orientation), za.Vec3.up());
-
-        var width: i32 = 0;
-        var height: i32 = 0;
-        // Adds perspective to the scene
-        if (runtime.render.backend.window) |window| {
-            if (!c.SDL_GetWindowSizeInPixels(window, &width, &height)) {
-                log.sdlErr();
-            }
-        }
-        projection = za.perspective(fovDeg, @as(f32, @floatFromInt(width)) / @as(f32, @floatFromInt(height)), nearPlane, farPlane);
+        projection = za.perspective(fov, @as(f32, @floatFromInt(windowSize.@"0")) / @as(f32, @floatFromInt(windowSize.@"1")), nearPlane, farPlane);
         
         self.camMatrix = projection.mul(view);
     }
 
-    pub fn matrix(self: *Camera, shader: *Shader, uniform: []const u8) void {
-        c.glUniformMatrix4fv(c.glGetUniformLocation(shader.id, uniform.ptr), 1, c.GL_FALSE, &self.camMatrix.data[0][0]);
-    }
-};
-
-pub const ElementBuffer = struct {
-    id: u32,
-    size: i64,
-
-    pub fn init(indices: []const u32, size: i64) ElementBuffer {
-        var self: ElementBuffer = undefined;
-        self.size = size;
-        c.glGenBuffers(1, &self.id);
-        c.glBindBuffer(c.GL_ELEMENT_ARRAY_BUFFER, self.id);
-        c.glBufferData(c.GL_ELEMENT_ARRAY_BUFFER, size, indices.ptr, c.GL_STATIC_DRAW);
-        return self;
-    }
-
-    pub fn deinit(self: *ElementBuffer) void {
-        c.glDeleteBuffers(1, &self.id);
-    }
-
-    pub fn bind(self: *const ElementBuffer) void {
-        c.glBindBuffer(c.GL_ELEMENT_ARRAY_BUFFER, self.id);
-    }
-
-    pub fn unbind(self: *const ElementBuffer) void {
-        _ = self;
-        c.glBindBuffer(c.GL_ELEMENT_ARRAY_BUFFER, 0);
+    pub fn matrix(self: *Camera, shader: *Shader, uniform: [:0]const u8) void {
+        zgl.uniformMatrix4fv(zgl.getUniformLocation(shader.id, uniform), false, &.{self.camMatrix.data});
     }
 };
 
 pub const Shader = struct {
-    id: u32,
+    id: zgl.Program,
 
-    pub fn init(vertexFile: []const u8, fragmentFile: []const u8) struct { status: bool, shader: Shader } {
+    pub fn init(vertexFile: [:0]const u8, fragmentFile: [:0]const u8) !Shader {
         const allocator = runtime.defaultAllocator();
 
         var self: Shader = undefined;
         // Convert the shader source strings into character arrays
-        var vertexSource: []u8 = undefined;
-        if (io.readFile(vertexFile)) |data| {
-            vertexSource = data;
-        } else {
-            return .{ .status = false, .shader = self };
-        }
+        const vertexSource: []u8 = try io.readFile(vertexFile, .read_text);
         defer allocator.free(vertexSource);
 
-        var fragmentSource: []u8 = undefined;
-        if (io.readFile(fragmentFile)) |data| {
-            fragmentSource = data;
-        } else {
-            return .{ .status = false, .shader = self };
-        }
+        const fragmentSource: []u8 = try io.readFile(fragmentFile, .read_text);
         defer allocator.free(fragmentSource);
 
         // Create Vertex Shader Object and get its reference
-        const vertexShader = c.glCreateShader(c.GL_VERTEX_SHADER);
+        var vertexShader = zgl.createShader(.vertex);
         // Attach Vertex Shader source to the Vertex Shader Object
-        c.glShaderSource(vertexShader, 1, &vertexSource.ptr, null);
+        vertexShader.source(1, &.{vertexSource});
         // Compile the Vertex Shader into machine code
-        c.glCompileShader(vertexShader);
+        vertexShader.compile();
+        // Checks if Shader compiled succesfully
+	    try Shader.shaderCompLog(vertexShader, .vertex);
 
         // Create Fragment Shader Object and get its reference
-        const fragmentShader = c.glCreateShader(c.GL_FRAGMENT_SHADER);
+        var fragmentShader = zgl.createShader(.fragment);
         // Attach Fragment Shader source to the Fragment Shader Object
-        c.glShaderSource(fragmentShader, 1, &fragmentSource.ptr, null);
+        fragmentShader.source(1, &.{fragmentSource});
         // Compile the Vertex Shader into machine code
-        c.glCompileShader(fragmentShader);
+        fragmentShader.compile();
+        // Checks if Shader compiled succesfully
+	    try Shader.shaderCompLog(vertexShader, .fragment);
 
         // Create Shader Program Object and get its reference
-        self.id = c.glCreateProgram();
+        self.id = zgl.createProgram();
         // Attach the Vertex and Fragment Shaders to the Shader Program
-        c.glAttachShader(self.id, vertexShader);
-        c.glAttachShader(self.id, fragmentShader);
+        self.id.attach(vertexShader);
+        self.id.attach(fragmentShader);
         // Wrap-up/Link all the shaders together into the Shader Program
-        c.glLinkProgram(self.id);
+        self.id.link();
+        // Checks if Shader compiled succesfully
+	    try Shader.shaderCompLog(vertexShader, .compute);
 
         // Delete the now useless Vertex and Fragment Shader objects
-        c.glDeleteShader(vertexShader);
-        c.glDeleteShader(fragmentShader);
+        vertexShader.delete();
+        fragmentShader.delete();
 
-        return .{ .status = true, .shader = self };
+        return self;
     }
 
     pub fn deinit(self: *Shader) void {
-        c.glDeleteProgram(self.id);
-        self.id = 0;
+        self.id.delete();
+        self.id = .invalid;
     }
 
-    pub fn use(self: *const Shader) void {
-        c.glUseProgram(self.id);
+    pub fn use(self: *Shader) void {
+        self.id.use();
     }
 
-    pub fn setUniformLocation(self: *const Shader, uniform: []const u8, unit: u32) void {
+    pub fn setUniformLocation(self: *const Shader, uniform: [:0]const u8, unit: u32) void {
         // Gets the location of the uniform
-        const texuni = c.glGetUniformLocation(self.id, uniform.ptr);
+        const textuni = zgl.getUniformLocation(self.id, uniform);
         // Shader needs to be activated before changing the value of a uniform
         self.use();
         // Sets the value of the uniform
-        c.glUniform1i(texuni, @intCast(unit));
+        zgl.uniform1i(textuni, unit);
+    }
+
+    fn shaderCompLog(shader: zgl.Shader, shaderType: zgl.ShaderType) !void {
+        const allocator = runtime.defaultAllocator();
+        // Stores status of compilation
+        const hasCompiled: i32 = zgl.getShader(shader, .compile_status);
+
+        if (hasCompiled == 0)
+        {
+            const infoLog = try zgl.getShaderInfoLog(shader, allocator);
+            defer allocator.free(infoLog);
+            log.err("SHADER_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
+        }
+    }
+
+    fn programCompLog(shader: zgl.Program, shaderType: zgl.ShaderType) !void {
+        const allocator = runtime.defaultAllocator();
+        // Stores status of compilation
+        const hasCompiled: i32 = zgl.getProgram(shader, .link_status);
+
+        if (hasCompiled == 0)
+        {
+            const infoLog = try zgl.getShaderInfoLog(shader, allocator);
+            defer allocator.free(infoLog);
+            log.err("PROGRAM_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
+        }
     }
 };
 
 pub const Texture = struct {
-    id: u32,
-    texType: u32,
+    id: zgl.Texture,
+    texType: zgl.TextureTarget,
 
-    pub fn init(textureFile: []const u8, textype: u32, slot: u32, format: u32, pixeltype: u32) struct { status: bool, texture: Texture } {
+    pub fn init(textureFile: [:0]const u8, textype: zgl.TextureTarget, slot: zgl.TextureUnit, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
         var self: Texture = undefined;
 
-        var width: i32 = undefined;
-        var height: i32 = undefined;
-        var channels: i32 = undefined;
-
-        const data = c.stbi_load(textureFile.ptr, &width, &height, &channels, 0);
-        if (data == null) {
-            log.err("Failed to load image data.");
-            return .{ .status = false, .texture = self };
-        }
-        defer c.stbi_image_free(data);
+        const surface = try sdl.image.loadFile(textureFile);
+        // Deletes the image data as it is already in the OpenGL Texture object
+        defer surface.deinit();
 
         // Generates an OpenGL texture object
-        c.glGenTextures(1, &self.id);
+        self.id = zgl.genTexture();
         // Assigns the texture to a Texture Unit
-        c.glActiveTexture(slot);
-        c.glBindTexture(textype, self.id);
+        zgl.activeTexture(slot);
+        zgl.bindTexture(self.id , textype);
 
         // Configures the type of algorithm that is used to make the image smaller or bigger
-        c.glTexParameteri(textype, c.GL_TEXTURE_MIN_FILTER, c.GL_NEAREST_MIPMAP_LINEAR);
-        c.glTexParameteri(textype, c.GL_TEXTURE_MAG_FILTER, c.GL_NEAREST);
+        zgl.texParameter(textype, .min_filter, .nearest_mipmap_linear);
+        zgl.texParameter(textype, .mag_filter, .nearest);
 
         // Configures the way the texture repeats (if it does at all)
-        c.glTexParameteri(textype, c.GL_TEXTURE_WRAP_S, c.GL_REPEAT);
-        c.glTexParameteri(textype, c.GL_TEXTURE_WRAP_T, c.GL_REPEAT);
+        zgl.texParameter(textype, .wrap_r, .repeat);
+        zgl.texParameter(textype, .wrap_t, .repeat);
 
         // Extra lines in case you choose to use GL_CLAMP_TO_BORDER
         // float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
         // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
         // Assigns the image to the OpenGL Texture object
-        c.glTexImage2D(textype, 0, c.GL_RGBA, width, height, 0, format, pixeltype, data);
+        zgl.textureImage2D(textype, 0, .rgba, surface.getWidth(), surface.getHeight(), format, pixeltype, surface.getPixels().?.ptr);
         // Generates MipMaps
-        c.glGenerateMipmap(textype);
-
-        // Deletes the image data as it is already in the OpenGL Texture object
-        //stbi_image_free(bytes);
+        zgl.generateMipmap(textype);
 
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
-        c.glBindTexture(textype, 0);
+        zgl.bindTexture(.invalid, textype);
 
         self.texType = textype;
-        return .{ .status = true, .texture = self };
+        return self;
     }
 
     pub fn deinit(self: *Texture) void {
-        c.glDeleteTextures(1, &self.id);
-        self.texType = 0;
+        self.id.delete();
     }
 
-    pub fn texUnit(self: *Texture, shader: *Shader, uniform: []const u8, unit: i32) void {
+    pub fn texUnit(self: *Texture, shader: *Shader, uniform: [:0]const u8, unit: i32) void {
         _ = self;
         // Gets the location of the uniform
-        const texUniform = c.glGetUniformLocation(shader.id, uniform.ptr);
+        const texUniform = zgl.getUniformLocation(shader.id, uniform);
         // Shader needs to be activated before changing the value of a uniform
         shader.use();
         // Sets the value of the uniform
-        c.glUniform1i(texUniform, unit);
+        zgl.uniform1i(texUniform, unit);
     }
 
     pub fn bind(self: *const Texture) void {
-        c.glBindTexture(self.texType, self.id);
+        zgl.bindTexture(self.id, self.texType);
     }
 
     pub fn unbind(self: *const Texture) void {
-        c.glBindTexture(self.texType, 0);
+        _ = self;
+        zgl.bindTexture(.invalid, 0);
+    }
+};
+
+pub const ElementBuffer = struct {
+    id: zgl.Buffer,
+    size: usize,
+
+    pub fn init(indices: []const u32, size: usize) ElementBuffer {
+        var self: ElementBuffer = undefined;
+        self.id = zgl.genBuffer();
+        zgl.bindBuffer(self.id, .element_array_buffer);
+        zgl.bufferData(.element_array_buffer, u32, indices, .static_draw);
+        self.size = size;
+        return self;
+    }
+
+    pub fn deinit(self: *ElementBuffer) void {
+        self.id.delete();
+    }
+
+    pub fn bind(self: *const ElementBuffer) void {
+        zgl.bindBuffer(self.id, .element_array_buffer);
+    }
+
+    pub fn unbind(self: *const ElementBuffer) void {
+        _ = self;
+        zgl.bindBuffer(.invalid, .element_array_buffer);
     }
 };
 
 pub const VertexBuffer = struct {
-    id: u32,
+    id: zgl.Buffer,
 
-    pub fn init(vertices: []const f32, size: i64) VertexBuffer {
+    pub fn init(vertices: []const f32) VertexBuffer {
         var self: VertexBuffer = undefined;
-        c.glGenBuffers(1, &self.id);
-        c.glBindBuffer(c.GL_ARRAY_BUFFER, self.id);
-        c.glBufferData(c.GL_ARRAY_BUFFER, size, vertices.ptr, c.GL_STATIC_DRAW);
+        self.id = zgl.genBuffer();
+        zgl.bindBuffer(self.id, .array_buffer);
+        zgl.bufferData(.array_buffer, f32, vertices, .static_draw);
         return self;
     }
 
     pub fn deinit(self: *VertexBuffer) void {
-        c.glDeleteBuffers(1, &self.id);
-        self.id = 0;
+        self.id.delete();
+        self.id = .invalid;
     }
 
     pub fn bind(self: *const VertexBuffer) void {
-        c.glBindBuffer(c.GL_ARRAY_BUFFER, self.id);
+        zgl.bindBuffer(self.id, .array_buffer);
     }
 
     pub fn unbind(self: *const VertexBuffer) void {
         _ = self;
-        c.glBindBuffer(c.GL_ARRAY_BUFFER, 0);
+        zgl.bindBuffer(.invalid, .array_buffer);
     }
 };
 
 pub const VertexArray = struct {
-    id: u32,
+    id: zgl.VertexArray,
 
     pub fn init() VertexArray {
         var self: VertexArray = undefined;
-        c.glGenVertexArrays(1, &self.id);
+        self.id = zgl.genVertexArray();
 
         return self;
     }
 
     pub fn deinit(self: *VertexArray) void {
-        c.glDeleteVertexArrays(1, &self.id);
-        self.id = 0;
+        self.id.delete();
+        self.id = .invalid;
     }
 
     pub fn bind(self: *const VertexArray) void {
-        c.glBindVertexArray(self.id);
+        zgl.bindVertexArray(self.id);
     }
 
     pub fn unbind(self: *const VertexArray) void {
         _ = self;
-        c.glBindVertexArray(0);
+        zgl.bindVertexArray(.invalid);
     }
 
-    pub fn enableAttrib(self: *const VertexArray, vertexBuf: *VertexBuffer, layout: u32, num: u32, attribType: u32, stride: i64, offset: ?*const anyopaque) void {
+    pub fn enableAttrib(self: *const VertexArray, vertexBuf: *VertexBuffer, layout: u32, num: u32, attribType: zgl.Type, stride: usize, offset: usize) void {
         _ = self;
         vertexBuf.bind();
-        c.glVertexAttribPointer(layout, @intCast(num), attribType, c.GL_FALSE, @intCast(stride), offset);
-        c.glEnableVertexAttribArray(layout);
+        zgl.vertexAttribPointer(layout, num, attribType, false, stride, offset);
+        zgl.enableVertexAttribArray(layout);
         vertexBuf.unbind();
     }
 };

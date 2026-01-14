@@ -26,27 +26,39 @@ pub fn build(b: *std.Build) !void {
             },
             .link_libc = true,
         }),
+        .use_llvm = true
     });
 
-    const sdl = b.dependency("sdl", .{
-        .optimize = optimize,
+    //const sdl = b.dependency("sdl", .{
+    //    .optimize = optimize,
+    //    .target = target,
+    //});
+    //
+    //mod.linkLibrary(sdl.artifact("SDL3"));
+    //exe.root_module.linkLibrary(sdl.artifact("SDL3"));
+
+    const sdl3 = b.dependency("sdl3", .{
         .target = target,
+        .optimize = optimize,
+        .ext_image = true,
     });
 
-    mod.linkLibrary(sdl.artifact("SDL3"));
-    exe.root_module.linkLibrary(sdl.artifact("SDL3"));
+    mod.addImport("sdl3", sdl3.module("sdl3"));
+    exe.root_module.addImport("sdl3", sdl3.module("sdl3"));
+
+    const zgl = b.dependency("zgl", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    mod.addImport("zgl", zgl.module("zgl"));
+    exe.root_module.addImport("zgl", zgl.module("zgl"));
 
     const zalgebra = b.dependency("zalgebra", .{
         .target = target,
         .optimize = optimize,
     });
-
     mod.addImport("zalgebra", zalgebra.module("zalgebra"));
     exe.root_module.addImport("zalgebra", zalgebra.module("zalgebra"));
-
-    const zmath = b.dependency("zmath", .{});
-    mod.addImport("zmath", zmath.module("root"));
-    exe.root_module.addImport("zmath", zmath.module("root"));
 
     try thirdparty.build(b, &target, &optimize, mod, exe);
 
@@ -92,5 +104,5 @@ pub fn build(b: *std.Build) !void {
     test_step.dependOn(&run_mod_tests.step);
     test_step.dependOn(&run_exe_tests.step);
 
-    //try content.afterBuild(b);
+    try content.afterBuild(b);
 }

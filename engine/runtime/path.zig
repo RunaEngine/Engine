@@ -1,8 +1,11 @@
 const std = @import("std");
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-});
+const log = @import("log.zig");
+const sdl = @import("sdl3");
 
-pub fn currentPath() []const u8 {
-    return std.mem.span(c.SDL_GetBasePath());
+pub fn basePath() [:0]const u8 {
+    const path = sdl.filesystem.getBasePath() catch {
+        log.sdlErr();
+        return "";
+    };
+    return path;
 }

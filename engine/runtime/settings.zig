@@ -1,9 +1,7 @@
 const runtime = @import("runtime.zig");
-const render = runtime.render;
+const render = &runtime.render;
 const log = runtime.log;
-const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-});
+const sdl = @import("sdl3");
 
 pub const WindowMode = enum(u8) { fullscreen = 0, windowed = 1 };
 
@@ -18,35 +16,41 @@ pub const GameUserSettings = struct {
         return self;
     }
 
-    pub fn setVsync(self: *GameUserSettings, mode: VsyncMode) void {
+    pub fn setVsync(self: *GameUserSettings, mode: sdl.video.gl.SwapInterval) !void {
         _ = self;
-        const status = c.SDL_GL_SetSwapInterval(@intFromEnum(mode));
-        if (!status) log.sdlErr();
+        sdl.video.gl.setSwapInterval(mode) catch {
+            log.sdlErr();
+            return sdl.errors.Error.SdlError;
+        };
     }
 
-    pub fn getVsync(self: *GameUserSettings) VsyncMode {
+    pub fn getVsync(self: *GameUserSettings) sdl.video.gl.SwapInterval {
         _ = self;
-        var swapInterval: i32 = 0;
-        const status = c.SDL_GL_GetSwapInterval(&swapInterval);
-        if (!status) log.sdlErr();
-        return @enumFromInt(swapInterval);
+        const interval = sdl.video.gl.getSwapInterval() catch {
+            log.sdlErr();
+            return .immediate;
+        };
+
+        return interval;
     }
 
-    pub fn setWindowMode(self: *GameUserSettings, mode: WindowMode) void {
+    pub fn setWindowMode(self: *GameUserSettings, fullscreen: bool) void {
         _ = self;
-        const status = c.SDL_SetWindowFullscreen(render.backend.window, @intFromEnum(mode));
-        if (!status) log.sdlErr();
+        render.backend.window.setFullscreen(fullscreen) catch {
+            log.sdlErr();
+            return sdl.errors.Error.SdlError;
+        };
     }
 
-    pub fn getWindowMode(self: *GameUserSettings) WindowMode {
+    pub fn isFullScreen(self: *GameUserSettings) bool {
         _ = self;
-        const mode = c.SDL_GetWindowFullscreenMode(render.backend.window);
-        if (mode) |m| {
-            if ((m.flags & c.SDL_WINDOW_FULLSCREEN) != 0) {
-                return .fullscreen;
-            }
+        const mode = sdl.video.Window.getFullscreenMode(render.backend.window);
+
+        if (mode) {
+            return true;
         }
-        return .windowed;
+
+        return false;
     }
 
     pub fn setFramerateLimit(self: *GameUserSettings, limit: u16) void {
