@@ -1,6 +1,6 @@
 const runtime = @import("runtime.zig");
 const render = &runtime.render;
-const log = runtime.log;
+const logs = runtime.utils.logs;
 const sdl = @import("sdl3");
 
 pub const WindowMode = enum(u8) { fullscreen = 0, windowed = 1 };
@@ -19,7 +19,7 @@ pub const GameUserSettings = struct {
     pub fn setVsync(self: *GameUserSettings, mode: sdl.video.gl.SwapInterval) !void {
         _ = self;
         sdl.video.gl.setSwapInterval(mode) catch {
-            log.sdlErr();
+            logs.sdlErr();
             return sdl.errors.Error.SdlError;
         };
     }
@@ -27,7 +27,7 @@ pub const GameUserSettings = struct {
     pub fn getVsync(self: *GameUserSettings) sdl.video.gl.SwapInterval {
         _ = self;
         const interval = sdl.video.gl.getSwapInterval() catch {
-            log.sdlErr();
+            logs.sdlErr();
             return .immediate;
         };
 
@@ -37,7 +37,7 @@ pub const GameUserSettings = struct {
     pub fn setWindowMode(self: *GameUserSettings, fullscreen: bool) void {
         _ = self;
         render.backend.window.setFullscreen(fullscreen) catch {
-            log.sdlErr();
+            logs.sdlErr();
             return sdl.errors.Error.SdlError;
         };
     }

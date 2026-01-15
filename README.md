@@ -18,9 +18,7 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
 
 - [Git](https://git-scm.com)
 
-- [CMake 3.20 or above](https://cmake.org/download/)
-
-- [VCPKG](https://vcpkg.io/en/)
+- [Zig 0.15.x or above](https://ziglang.org/download/)
 
 - Windows only
   - Build With Visual Studio 2019/2022
@@ -38,11 +36,6 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
     - autoconf 
     - automake 
     - libtool
-    - Perl
-    - Zlib
-  
-  - Python packages
-    - Jinja2 ``` pip install Jinja2 ```
   
 ## Setup Repository
 
@@ -56,20 +49,11 @@ git clone https://github.com/Cesio137/Runa.git
 
 ---
 
-#### Setup Enviroment Variables
-VCPKG_ROOT
-* Setup VCPKG  
-  * Create a variable called `VCPKG_ROOT` if do not exist:
-    * ```Path
-      <Path to VCPKG>/x.x.x/
-      ```
-
 #### Any OS
 
 * Setup Project.
-  * Create a `build` folder and open terminal inside.
-  * Commands to generate project
+  * Commands
     * ```bash
-      cmake .. --preset=debug
-      cmake .. --preset=release
+      zig build
+      zig build run
       ``` 

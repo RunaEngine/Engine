@@ -1,6 +1,6 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
-const log = @import("log.zig");
+const logs = runtime.utils.logs;
 const sdl = @import("sdl3");
 const za = @import("zalgebra");
 
@@ -21,25 +21,25 @@ pub const InputSystem = struct {
             .key_up => |e| {
                 if (e.key) |key| {
                     self.keyboardevent.put(key, e) catch |err| {
-                        log.err("{any}", .{@errorName(err)});
+                        logs.err("{any}", .{@errorName(err)});
                     };
                 }
             },
             .key_down => |e| {
                 if (e.key) |key| {
                     self.keyboardevent.put(key, e) catch |err| {
-                        log.err("{any}", .{@errorName(err)});
+                        logs.err("{any}", .{@errorName(err)});
                     };
                 }
             },
             .mouse_button_up => |e| {
                 self.mousevent.put(e.button, e) catch |err| {
-                    log.err("{any}", .{@errorName(err)});
+                    logs.err("{any}", .{@errorName(err)});
                 };
             },
             .mouse_button_down => |e| {
                 self.mousevent.put(e.button, e) catch |err| {
-                    log.err("{any}", .{@errorName(err)});
+                    logs.err("{any}", .{@errorName(err)});
                 };
             },
             else => {}

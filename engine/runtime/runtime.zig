@@ -1,10 +1,10 @@
 const std = @import("std");
-pub const gl = @import("opengl.zig");
-pub const timer = @import("timer.zig");
 pub const io = @import("io.zig");
-pub const inputSystem = @import("input.zig");
+pub const input = @import("input.zig");
+pub const gl = @import("opengl.zig");
 pub const settings = @import("settings.zig");
-pub const log = @import("log.zig");
+pub const timer = @import("timer.zig");
+pub const utils = @import("utils.zig");
 pub const path = @import("path.zig");
 
 pub fn defaultAllocator() std.mem.Allocator {
@@ -15,7 +15,7 @@ pub var gameUserSettings: settings.GameUserSettings = settings.GameUserSettings.
 
 pub var time: timer.Time = timer.Time.init();
 
-pub var input: inputSystem.InputSystem = inputSystem.InputSystem.init();
+pub var inputSystem: input.InputSystem = input.InputSystem.init();
 
 pub var event: io.Event = io.Event.init();
 

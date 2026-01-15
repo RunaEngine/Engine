@@ -1,6 +1,6 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
-const log = runtime.log;
+const logs = runtime.utils.logs;
 const io = runtime.io;
 const utils = @import("utils.zig");
 const sdl = @import("sdl3");
@@ -22,37 +22,37 @@ pub const Backend = struct {
             return sdl.errors.Error.SdlError;
 
         sdl.init(.{ .video = true }) catch {
-            log.sdlErr();
+            logs.sdlErr();
             return sdl.errors.Error.SdlError;
         };
 
         switch (driver) {
             .core => {
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_profile_mask, @intFromEnum(sdl.video.gl.Profile.core)) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_major_version, 4) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_minor_version, 6) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 self.glslVersion = "#version 460 core";
             },
             .es => {
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_profile_mask, @intFromEnum(sdl.video.gl.Profile.es)) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_major_version, 3) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 sdl.video.gl.setAttribute(sdl.video.gl.Attribute.context_minor_version, 2) catch {
-                    log.sdlErr();
+                    logs.sdlErr();
                     return sdl.errors.Error.SdlError;
                 };
                 self.glslVersion = "#version 320 es";
@@ -60,13 +60,13 @@ pub const Backend = struct {
         }
 
         self.window = sdl.video.Window.init("Runa", 1024, 576, .{.resizable = true, .open_gl = true}) catch {
-            log.sdlErr();
+            logs.sdlErr();
             return sdl.errors.Error.SdlError;
         }; 
 
         self.context = sdl.video.gl.Context.init(self.window) catch {
             self.window.deinit();
-            log.sdlErr();
+            logs.sdlErr();
             return sdl.errors.Error.SdlError;
         };
 
@@ -79,7 +79,7 @@ pub const Backend = struct {
 
     pub fn deinit(self: *Backend) void {
         self.context.deinit() catch {
-            log.sdlErr();
+            logs.sdlErr();
         };
         self.window.deinit();
         self.glslVersion = "";
@@ -142,7 +142,7 @@ pub const Render = struct {
         if (self.callback) |cb| cb(self.context, time.delta());
 
         sdl.video.gl.swapWindow(self.backend.window) catch {
-            log.sdlErr();
+            logs.sdlErr();
         };
 
         if (shouldLimitFPS) {
@@ -175,7 +175,7 @@ pub const Camera = struct {
     }
 
     pub fn editorInput(self: *Camera, event: sdl.events.Event) void {
-        var input = &runtime.input;
+        var input = &runtime.inputSystem;
         const inputDir: za.Vec2 = input.vector(.a, .d, .w, .s);
         self.direction = za.Vec3.norm(
             za.Vec3.cross(self.orientation, za.Vec3.up()))
@@ -196,13 +196,13 @@ pub const Camera = struct {
         if (input.mouseButtonPressed(.right)) {
             const windowSize = runtime.render.backend.window.getSize() catch return;
             sdl.mouse.setWindowGrab(runtime.render.backend.window, true) catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
             sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, true) catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
             sdl.mouse.hide() catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
 
             switch (event) {
@@ -231,13 +231,13 @@ pub const Camera = struct {
             }
         } else {
             sdl.mouse.setWindowGrab(runtime.render.backend.window, false) catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
             sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, false) catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
             sdl.mouse.show() catch {
-                runtime.log.sdlErr();
+                logs.sdlErr();
             };
         }
     }
@@ -350,7 +350,7 @@ pub const Shader = struct {
         {
             const infoLog = try zgl.getShaderInfoLog(shader, allocator);
             defer allocator.free(infoLog);
-            log.err("SHADER_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
+            logs.err("SHADER_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
         }
     }
 
@@ -363,7 +363,7 @@ pub const Shader = struct {
         {
             const infoLog = try zgl.getShaderInfoLog(shader, allocator);
             defer allocator.free(infoLog);
-            log.err("PROGRAM_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
+            logs.err("PROGRAM_COMPILATION_ERROR - {any}: {s}\n", .{shaderType, infoLog});
         }
     }
 };
