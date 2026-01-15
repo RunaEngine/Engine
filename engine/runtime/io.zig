@@ -35,7 +35,7 @@ pub const Event = struct {
     }
 };
 
-pub fn readFile(filepath: [:0]const u8, mode: sdl.io_stream.FileMode) ![]u8 {
+pub fn readFile(filepath: []const u8, mode: sdl.io_stream.FileMode) ![]u8 {
     const allocator = runtime.defaultAllocator();
 
     if (filepath.len == 0) {
@@ -43,13 +43,20 @@ pub fn readFile(filepath: [:0]const u8, mode: sdl.io_stream.FileMode) ![]u8 {
         return error.PathNull;
     }
 
-    var file = sdl.io_stream.Stream.initFromFile(filepath, mode) catch {
+    const dupezPath = allocator.dupeZ(u8, filepath) catch |err| {
+        logs.err("{any}", .{@errorName(err)});
+        return err;
+    };
+
+    var file = sdl.io_stream.Stream.initFromFile(dupezPath, mode) catch {
         logs.sdlErr();
         return sdl.errors.Error.SdlError;
     };
     defer file.deinit() catch {
         logs.sdlErr();
     };
+
+    allocator.free(dupezPath);
 
     _ = file.seek(0, .end) catch {
         logs.sdlErr();
@@ -85,50 +92,4 @@ pub fn readFile(filepath: [:0]const u8, mode: sdl.io_stream.FileMode) ![]u8 {
     }
 
     return buffer;
-}
-
-pub fn readTextFile(filepath: [:0]const u8) ![:0]u8 {
-    const allocator = runtime.defaultAllocator();
-
-    if (std.mem.len(filepath) == 0) {
-        logs.err("Error: Path is empty", .{});
-        return error.PathNull;
-    }
-
-    var file = sdl.io_stream.Stream.initFromFile(filepath, .read_text) catch {
-        logs.sdlErr();
-        return sdl.errors.Error.SdlError;
-    };
-    defer file.deinit();
-
-    const filesize = file.tell() catch {
-        logs.sdlErr();
-        return sdl.errors.Error.SdlError;
-    };
-
-    const buffer = allocator.alloc(u8, @intCast(filesize)) catch |err| {
-        logs.err("{any}", @errorName(err));
-        return sdl.errors.Error.SdlError;
-    };
-    defer allocator.free(buffer);
-
-    var eof = false;
-    while (!eof) {
-        const buf = file.read(buffer) catch {
-            allocator.free(buffer);
-            logs.sdlErr();
-            return sdl.errors.Error.SdlError;
-        };
-
-        if (buf == null) {
-            eof = true;
-        }
-    }
-
-    const dupezBuf = allocator.dupeZ(u8, buffer) catch |err| {
-        logs.err("{any}", .{@errorName(err)});
-        return err;
-    };
-
-    return dupezBuf;
 }

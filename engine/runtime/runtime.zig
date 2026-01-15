@@ -5,7 +5,6 @@ pub const gl = @import("opengl.zig");
 pub const settings = @import("settings.zig");
 pub const timer = @import("timer.zig");
 pub const utils = @import("utils.zig");
-pub const path = @import("path.zig");
 
 pub fn defaultAllocator() std.mem.Allocator {
     return std.heap.c_allocator;

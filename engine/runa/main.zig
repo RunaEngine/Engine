@@ -143,20 +143,13 @@ pub fn main() !void {
             4, 6, 7 
         };
 
-    const currentPath = runtime.path.basePath();
-    var concat = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.vert" });
+    const currentPath = try runtime.utils.path.basePath();
 
-    const vertexFile = try allocator.dupeZ(u8, concat);
+    const vertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.vert" });
     defer allocator.free(vertexFile);
 
-    allocator.free(concat);
-
-    concat = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.frag" });
-
-    const fragmentFile = try allocator.dupeZ(u8, concat);
+    const fragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.frag" });
     defer allocator.free(fragmentFile);
-
-    allocator.free(concat);
 
     var shader = try gl.Shader.init(vertexFile, fragmentFile);
     defer shader.deinit();
@@ -182,19 +175,11 @@ pub fn main() !void {
     vbo.unbind();
     ebo.unbind();
 
-    concat = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.vert" });
-
-    const lightVertexFile = try allocator.dupeZ(u8, concat);
+    const lightVertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.vert" });
     defer allocator.free(lightVertexFile);
 
-    allocator.free(concat);
-
-    concat = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.frag" });
-
-    const lightFragmentFile = try allocator.dupeZ(u8, concat);
+    const lightFragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.frag" });
     defer allocator.free(lightFragmentFile);
-
-    allocator.free(concat);
 
     var lightShader = try gl.Shader.init(lightVertexFile, lightFragmentFile);
     defer lightShader.deinit();
@@ -235,16 +220,12 @@ pub fn main() !void {
     zgl.uniform4f(zgl.getUniformLocation(shader.id, "lightColor"), lightColor.x(), lightColor.y(), lightColor.z(), lightColor.w());
     zgl.uniform3f(zgl.getUniformLocation(shader.id, "lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 
-    concat = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/brick.png" });
-
-    const albedoFile = try allocator.dupeZ(u8, concat);
+    const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/brick.png" });
     defer allocator.free(albedoFile);
     var tex = try gl.Texture.init(albedoFile, .@"2d", .texture_0, .rgba, .unsigned_byte);
     defer tex.deinit();
 
     tex.texUnit(&shader, "tex0", 0);
-
-    allocator.free(concat);
 
     // Position camera to view the pyramid: slightly back and up
     // Camera position: (0, 0.5, 3.0) looking towards origin (0, 0, 0)

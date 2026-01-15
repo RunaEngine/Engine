@@ -277,7 +277,7 @@ pub const Camera = struct {
 pub const Shader = struct {
     id: zgl.Program,
 
-    pub fn init(vertexFile: [:0]const u8, fragmentFile: [:0]const u8) !Shader {
+    pub fn init(vertexFile: []const u8, fragmentFile: []const u8) !Shader {
         const allocator = runtime.defaultAllocator();
 
         var self: Shader = undefined;
@@ -372,12 +372,20 @@ pub const Texture = struct {
     id: zgl.Texture,
     texType: zgl.TextureTarget,
 
-    pub fn init(textureFile: [:0]const u8, textype: zgl.TextureTarget, slot: zgl.TextureUnit, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
+    pub fn init(textureFile: []const u8, textype: zgl.TextureTarget, slot: zgl.TextureUnit, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
+        const allocator = runtime.defaultAllocator();
         var self: Texture = undefined;
+        
+        const dupezPath = allocator.dupeZ(u8, textureFile) catch |err| {
+            logs.err("{any}", .{@errorName(err)});
+            return err;
+        };
 
-        const surface = try sdl.image.loadFile(textureFile);
+        const surface = try sdl.image.loadFile(dupezPath);
         // Deletes the image data as it is already in the OpenGL Texture object
         defer surface.deinit();
+
+        allocator.free(dupezPath);
 
         // Generates an OpenGL texture object
         self.id = zgl.genTexture();
