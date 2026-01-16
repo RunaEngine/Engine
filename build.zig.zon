@@ -5,10 +5,7 @@
     .paths = .{""},
     .fingerprint = 0xd3b1a569c26045c0,
     .dependencies = .{
-        .vulkan = .{ 
-            .url = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.335.0.tar.gz", 
-            .hash = "N-V-__8AADIiFAJfrWhQBPEi9LPInaZNnXV15Ca887-ty4M1" 
-        },
+        .vulkan = .{ .url = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.335.0.tar.gz", .hash = "N-V-__8AADIiFAJfrWhQBPEi9LPInaZNnXV15Ca887-ty4M1" },
         .stb = .{
             .url = "https://github.com/nothings/stb/archive/refs/heads/master.zip",
             .hash = "N-V-__8AABQ7TgCnPlp8MP4YA8znrjd6E-ZjpF1rvrS8J_2I",
@@ -24,6 +21,10 @@
         .zalgebra = .{
             .url = "git+https://github.com/kooparse/zalgebra.git?ref=main#fe19b7816f03d86d56d4fa62f943664edf5d367f",
             .hash = "zalgebra-0.0.0-aaiVSrp2AQBLjd3lvhR0ILaVDHeqOpwNFCp0ZJHj0xhk",
+        },
+        .libuv = .{
+            .url = "git+https://github.com/RunaEngine/libuv.git#42b4759ef96ea7ca892f8e90ccf71065a435f99a",
+            .hash = "libuv-1.51.0-htqqvwFnAACFBo-O65-KUmJ_eLGiFylpkBBvlSgKYgba",
         },
     },
 }

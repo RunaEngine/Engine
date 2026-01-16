@@ -1,7 +1,9 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
-const logs = runtime.utils.logs;
+const allocator = runtime.defaultAllocator();
 const io = runtime.io;
+const logs = runtime.utils.logs;
+const render = &runtime.render;
 const utils = @import("utils.zig");
 const sdl = @import("sdl3");
 const zgl = @import("zgl");
@@ -18,9 +20,11 @@ pub const Backend = struct {
         var self: Backend = undefined;
 
         const wasInit = sdl.wasInit(.{ .video = true });
-        if (wasInit.video == true)
+        if (wasInit.video == true) {
+            logs.err("Video subsystem has already been initilized", .{});
             return sdl.errors.Error.SdlError;
-
+        }
+        
         sdl.init(.{ .video = true }) catch {
             logs.sdlErr();
             return sdl.errors.Error.SdlError;
@@ -194,11 +198,11 @@ pub const Camera = struct {
         self.speed = if (input.keyPressed(.left_shift)) 6.0 else 2.0;
 
         if (input.mouseButtonPressed(.right)) {
-            const windowSize = runtime.render.backend.window.getSize() catch return;
-            sdl.mouse.setWindowGrab(runtime.render.backend.window, true) catch {
+            const windowSize = render.backend.window.getSize() catch return;
+            sdl.mouse.setWindowGrab(render.backend.window, true) catch {
                 logs.sdlErr();
             };
-            sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, true) catch {
+            sdl.mouse.setWindowRelativeMode(render.backend.window, true) catch {
                 logs.sdlErr();
             };
             sdl.mouse.hide() catch {
@@ -230,10 +234,10 @@ pub const Camera = struct {
                 else => {}
             }
         } else {
-            sdl.mouse.setWindowGrab(runtime.render.backend.window, false) catch {
+            sdl.mouse.setWindowGrab(render.backend.window, false) catch {
                 logs.sdlErr();
             };
-            sdl.mouse.setWindowRelativeMode(runtime.render.backend.window, false) catch {
+            sdl.mouse.setWindowRelativeMode(render.backend.window, false) catch {
                 logs.sdlErr();
             };
             sdl.mouse.show() catch {
@@ -257,7 +261,7 @@ pub const Camera = struct {
     }
 
     pub fn updateMatrix(self: *Camera, fov: f32, nearPlane: f32, farPlane: f32) void {
-        const windowSize = runtime.render.backend.window.getSize() catch return;
+        const windowSize = render.backend.window.getSize() catch return;
 
         var view: za.Mat4 = za.Mat4.identity();
         var projection: za.Mat4 = za.Mat4.identity();
@@ -278,8 +282,6 @@ pub const Shader = struct {
     id: zgl.Program,
 
     pub fn init(vertexFile: []const u8, fragmentFile: []const u8) !Shader {
-        const allocator = runtime.defaultAllocator();
-
         var self: Shader = undefined;
         // Convert the shader source strings into character arrays
         const vertexSource: []u8 = try io.readFile(vertexFile, .read_text);
@@ -342,7 +344,6 @@ pub const Shader = struct {
     }
 
     fn shaderCompLog(shader: zgl.Shader, shaderType: zgl.ShaderType) !void {
-        const allocator = runtime.defaultAllocator();
         // Stores status of compilation
         const hasCompiled: i32 = zgl.getShader(shader, .compile_status);
 
@@ -355,7 +356,6 @@ pub const Shader = struct {
     }
 
     fn programCompLog(shader: zgl.Program, shaderType: zgl.ShaderType) !void {
-        const allocator = runtime.defaultAllocator();
         // Stores status of compilation
         const hasCompiled: i32 = zgl.getProgram(shader, .link_status);
 
@@ -371,9 +371,9 @@ pub const Shader = struct {
 pub const Texture = struct {
     id: zgl.Texture,
     texType: zgl.TextureTarget,
+    unit: u32,
 
-    pub fn init(textureFile: []const u8, textype: zgl.TextureTarget, slot: zgl.TextureUnit, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
-        const allocator = runtime.defaultAllocator();
+    pub fn init(textureFile: []const u8, textype: zgl.TextureTarget, slot: u32, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
         var self: Texture = undefined;
         
         const dupezPath = allocator.dupeZ(u8, textureFile) catch |err| {
@@ -381,7 +381,10 @@ pub const Texture = struct {
             return err;
         };
 
-        const surface = try sdl.image.loadFile(dupezPath);
+        const surface = sdl.image.loadFile(dupezPath) catch |err| {
+            logs.sdlErr();
+            return err;
+        };
         // Deletes the image data as it is already in the OpenGL Texture object
         defer surface.deinit();
 
@@ -390,7 +393,8 @@ pub const Texture = struct {
         // Generates an OpenGL texture object
         self.id = zgl.genTexture();
         // Assigns the texture to a Texture Unit
-        zgl.activeTexture(slot);
+        zgl.binding.activeTexture(@as(u32, @intFromEnum(zgl.TextureUnit.texture_0) + slot));
+        self.unit = slot;
         zgl.bindTexture(self.id , textype);
 
         // Configures the type of algorithm that is used to make the image smaller or bigger
@@ -432,6 +436,7 @@ pub const Texture = struct {
     }
 
     pub fn bind(self: *const Texture) void {
+        zgl.binding.activeTexture(@as(u32, @intFromEnum(zgl.TextureUnit.texture_0) + self.unit));
         zgl.bindTexture(self.id, self.texType);
     }
 

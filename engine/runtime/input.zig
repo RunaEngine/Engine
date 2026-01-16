@@ -1,5 +1,6 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
+const allocator = runtime.defaultAllocator();
 const logs = runtime.utils.logs;
 const sdl = @import("sdl3");
 const za = @import("zalgebra");
@@ -9,11 +10,15 @@ pub const InputSystem = struct {
     mousevent: std.AutoHashMap(sdl.mouse.Button, sdl.events.MouseButton),
 
     pub fn init() InputSystem {
-        const allocator = runtime.defaultAllocator();
         var self: InputSystem = undefined;
         self.keyboardevent = .init(allocator);
         self.mousevent = .init(allocator);
         return self;
+    }
+
+    pub fn deinit(self: *InputSystem) void {
+        self.keyboardevent.deinit();
+        self.mousevent.deinit();
     }
 
     pub fn updateEvent(self: *InputSystem, event: sdl.events.Event) void {

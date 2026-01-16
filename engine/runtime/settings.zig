@@ -44,7 +44,7 @@ pub const GameUserSettings = struct {
 
     pub fn isFullScreen(self: *GameUserSettings) bool {
         _ = self;
-        const mode = sdl.video.Window.getFullscreenMode(render.backend.window);
+        const mode = render.backend.window.getFullscreenMode();
 
         if (mode) {
             return true;

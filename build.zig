@@ -60,6 +60,13 @@ pub fn build(b: *std.Build) !void {
     mod.addImport("zalgebra", zalgebra.module("zalgebra"));
     exe.root_module.addImport("zalgebra", zalgebra.module("zalgebra"));
 
+    const libuv = b.dependency("libuv", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    mod.linkLibrary(libuv.artifact("uv"));
+    exe.root_module.linkLibrary(libuv.artifact("uv"));
+
     try thirdparty.build(b, &target, &optimize, mod, exe);
 
     // This declares intent for the executable to be installed into the

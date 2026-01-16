@@ -1,6 +1,6 @@
 const std = @import("std");
 const runtime = @import("runtime");
-const String = @import("string").String;
+const allocator = runtime.defaultAllocator();
 const gl = runtime.gl;
 const sdl = @import("sdl3");
 const zgl = @import("zgl");
@@ -16,8 +16,8 @@ const windowsSize = struct {
 fn onEvent(event: sdl.events.Event, ctx: ?*anyopaque) void {
     //_ = ctx;
     var context: *RenderContext = undefined;
-    if (@as(?*RenderContext, @ptrCast(@alignCast(ctx)))) |c| {
-        context = c;
+    if (@as(?*RenderContext, @ptrCast(@alignCast(ctx)))) |renderContext| {
+        context = renderContext;
     } else {
         return;
     }
@@ -44,7 +44,8 @@ const RenderContext = struct {
     shader: *gl.Shader, 
     vao: *gl.VertexArray, 
     ebo: *gl.ElementBuffer, 
-    tex: *gl.Texture, 
+    tex: *gl.Texture,
+    specTex: *gl.Texture,
     lightShader: *gl.Shader, 
     lightVao: *gl.VertexArray, 
     lightEbo: *gl.ElementBuffer, 
@@ -55,8 +56,8 @@ fn onRender(ctx: ?*anyopaque, delta: f64) void {
     _ = delta;
 
     var context: *RenderContext = undefined;
-    if (@as(?*RenderContext, @ptrCast(@alignCast(ctx)))) |c| {
-        context = c;
+    if (@as(?*RenderContext, @ptrCast(@alignCast(ctx)))) |renderContext| {
+        context = renderContext;
     } else {
         return;
     }
@@ -68,6 +69,7 @@ fn onRender(ctx: ?*anyopaque, delta: f64) void {
     zgl.uniform3f(zgl.getUniformLocation(context.shader.id, "camPos"), context.cam.position.x(), context.cam.position.y(), context.cam.position.z());
     context.cam.matrix(context.shader, "camMatrix");
     context.tex.bind();
+    context.specTex.bind();
     context.vao.bind();
     zgl.drawElements(.triangles, @as(usize, context.ebo.size / @sizeOf(u32)), .unsigned_int, 0);
 
@@ -78,41 +80,28 @@ fn onRender(ctx: ?*anyopaque, delta: f64) void {
 }
 
 pub fn main() !void {
-    const allocator = runtime.defaultAllocator();
     try runtime.render.initBackend(.core);
-    defer runtime.render.deinitBackend();
+
+    defer {
+        runtime.inputSystem.deinit();
+        runtime.render.deinit();
+    }
 
     //runtime.gameUserSettings.setVsync(.disable);
     //runtime.gameUserSettings.setFramerateLimit(300);
 
-    const vertices: [176]f32 =
-        .{
-            -0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 0.0, 0.0,  0.0, -1.0,  0.0, // Bottom side
-            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 5.0,  0.0, -1.0,  0.0, // Bottom side
-             0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 5.0,  0.0, -1.0,  0.0, // Bottom side
-             0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 5.0, 0.0,  0.0, -1.0,  0.0, // Bottom side
-            -0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 0.0, 0.0, -0.8,  0.5,  0.0, // Left Side
-            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 0.0, -0.8,  0.5,  0.0, // Left Side
-             0.0, 0.8,  0.0, 0.92, 0.86, 0.76, 2.5, 5.0, -0.8,  0.5,  0.0, // Left Side
-            -0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 5.0, 0.0,  0.0,  0.5, -0.8, // Non-facing side
-             0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 0.0,  0.0,  0.5, -0.8, // Non-facing side
-             0.0, 0.8,  0.0, 0.92, 0.86, 0.76, 2.5, 5.0,  0.0,  0.5, -0.8, // Non-facing side
-             0.5, 0.0, -0.5, 0.83, 0.70, 0.44, 0.0, 0.0,  0.8,  0.5,  0.0, // Right side
-             0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 5.0, 0.0,  0.8,  0.5,  0.0, // Right side
-             0.0, 0.8,  0.0, 0.92, 0.86, 0.76, 2.5, 5.0,  0.8,  0.5,  0.0, // Right side
-             0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 5.0, 0.0,  0.0,  0.5,  0.8, // Facing side
-            -0.5, 0.0,  0.5, 0.83, 0.70, 0.44, 0.0, 0.0,  0.0,  0.5,  0.8, // Facing side
-             0.0, 0.8,  0.0, 0.92, 0.86, 0.76, 2.5, 5.0,  0.0,  0.5,  0.8, // Facing side
+    const vertices: [44]f32 =
+        .{//   COORDINATES   /    COLORS   /  TexCoord /    NORMALS
+            -1.0, 0.0,  1.0,  0.0, 0.0, 0.0,  0.0, 0.0,  0.0, 1.0, 0.0,
+            -1.0, 0.0, -1.0,  0.0, 0.0, 0.0,  0.0, 1.0,  0.0, 1.0, 0.0,
+             1.0, 0.0, -1.0,  0.0, 0.0, 0.0,  1.0, 1.0,  0.0, 1.0, 0.0,
+             1.0, 0.0,  1.0,  0.0, 0.0, 0.0,  1.0, 0.0,  0.0, 1.0, 0.0
         };
 
-    const indices: [18]u32 =
+    const indices: [6]u32 =
         .{
-            0, 1, 2, // Bottom side
-            0, 2, 3, // Bottom side
-            4, 6, 5, // Left side
-            7, 9, 8, // Non-facing side
-            10, 12, 11, // Right side
-            13, 15, 14, // Facing side
+            0, 1, 2,
+            0, 2, 3
         };
 
     const lightVertices: [24]f32 =
@@ -220,12 +209,20 @@ pub fn main() !void {
     zgl.uniform4f(zgl.getUniformLocation(shader.id, "lightColor"), lightColor.x(), lightColor.y(), lightColor.z(), lightColor.w());
     zgl.uniform3f(zgl.getUniformLocation(shader.id, "lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 
-    const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/brick.png" });
+    const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/planks.png" });
     defer allocator.free(albedoFile);
-    var tex = try gl.Texture.init(albedoFile, .@"2d", .texture_0, .rgba, .unsigned_byte);
+    var tex = try gl.Texture.init(albedoFile, .@"2d", 0, .rgba, .unsigned_byte);
     defer tex.deinit();
 
     tex.texUnit(&shader, "tex0", 0);
+
+    const specularFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/planksSpec.png" });
+    defer allocator.free(specularFile);
+
+    var specularTex = try gl.Texture.init(specularFile, .@"2d", 1, .red, .unsigned_byte);
+    defer specularTex.deinit();
+
+    specularTex.texUnit(&shader, "tex1", 1);
 
     // Position camera to view the pyramid: slightly back and up
     // Camera position: (0, 0.5, 3.0) looking towards origin (0, 0, 0)
@@ -235,7 +232,8 @@ pub fn main() !void {
         .shader = &shader, 
         .vao = &vao, 
         .ebo = &ebo, 
-        .tex = &tex, 
+        .tex = &tex,
+        .specTex = &specularTex,
         .lightShader = &lightShader, 
         .lightVao = &lightVao, 
         .lightEbo = &lightEbo, 

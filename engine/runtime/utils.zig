@@ -1,17 +1,22 @@
 const std = @import("std");
 const runtime = @import("runtime.zig");
+const allocator = runtime.defaultAllocator();
 const sdl = @import("sdl3");
 
+const PATH_SEPARATOR: u8 = if (std.Target.Os.Tag == .windows) '\\' else '/';
+const PATH_SEPARATOR_OTHER: u8 =  if (std.Target.Os.Tag == .windows) '/' else '\\';
+
 pub const env = struct {
-    pub fn getVar(name: []const u8) ![:0]const u8 {
+    pub fn getVar(name: []const u8) ![]const u8 {
         const envi = try sdl.Environment.init(true);
         defer envi.deinit();
-
-        return envi.getVariable(name);
+        
+        const dupezName = try allocator.dupeZ(u8, name);
+        defer allocator.free(dupezName);
+        return std.mem.span(envi.getVariable(name));
     }
 
     pub fn getVars() !std.ArrayList([]const u8) {
-        const allocator = runtime.defaultAllocator();
         const envi = try sdl.Environment.init(true);
         defer envi.deinit();
 
@@ -62,6 +67,14 @@ pub const logs = struct {
             std.debug.print("\x1b[31m{s}\x1b[0m\n", .{errLog});
         }
     }
+
+    pub fn uvErr(code: i32) error{UvError}!void {
+        if (code == 0) return;
+
+        std.debug.print("\x1b[31mUv error code: {}\n{s} -> {s}\x1b[0m\n", .{code, c.uv_err_name(code), c.uv_strerror(code)});
+
+        return error.UvError;
+    }
 };
 
 pub const path = struct {
@@ -82,5 +95,35 @@ pub const path = struct {
 
     pub fn prefPath(org: [:0]const u8, app: [:0]const u8) ![:0]u8 {
         return try sdl.filesystem.getPrefPath(org, app);
+    }
+
+    pub fn join(paths: []const []const u8) ![]u8 {
+        if (paths.len == 0) {
+            logs.err("Error: array of path is empty", .{});
+            return error{PathArrayIsNull};
+        }
+
+        var joinedPaths: u8 = undefined;
+        for (paths) |p| {
+            if (p.len == 0) continue;
+
+            if (p[p.len] == PATH_SEPARATOR or p[p.len] == PATH_SEPARATOR_OTHER) {
+                joinedPaths = std.mem.concat(allocator, u8, &.{p}) catch |err| {
+                    logs.err("{any}", .{@errorName(err)});
+                    return err;
+                };
+            } else joinedPaths = std.mem.concat(allocator, u8, &.{p, "/"}) catch |err| {
+                logs.err("{any}", .{@errorName(err)});
+                return err;
+            };
+        }
+
+        return joinedPaths;
+    }
+
+    pub fn nativeSeparator(p: []const u8) []const u8 {
+        const nativePath = p;
+        std.mem.replaceScalar(u8, nativePath, PATH_SEPARATOR_OTHER, PATH_SEPARATOR);
+        return nativePath;
     }
 };
