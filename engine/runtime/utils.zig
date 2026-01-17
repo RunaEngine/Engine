@@ -2,35 +2,33 @@ const std = @import("std");
 const runtime = @import("runtime.zig");
 const allocator = runtime.defaultAllocator();
 const sdl = @import("sdl3");
+const c = @cImport({
+    @cInclude("uv.h");
+});
 
 const PATH_SEPARATOR: u8 = if (std.Target.Os.Tag == .windows) '\\' else '/';
 const PATH_SEPARATOR_OTHER: u8 =  if (std.Target.Os.Tag == .windows) '/' else '\\';
 
 pub const env = struct {
-    pub fn getVar(name: []const u8) ![]const u8 {
-        const envi = try sdl.Environment.init(true);
-        defer envi.deinit();
-        
-        const dupezName = try allocator.dupeZ(u8, name);
-        defer allocator.free(dupezName);
-        return std.mem.span(envi.getVariable(name));
+    pub fn getVar(name: []const u8) ![]u8 {
+        return std.process.getEnvVarOwned(allocator, name);
     }
 
     pub fn getVars() !std.ArrayList([]const u8) {
-        const envi = try sdl.Environment.init(true);
-        defer envi.deinit();
+        var env_map = try std.process.getEnvMap(allocator);
+        defer env_map.deinit();
 
-        const envVars = try envi.getVariables();
-        var vars = std.ArrayList([]const u8).empty;
-        
-        for (envVars) |var_str| {
-            try vars.append(allocator, var_str);
+        var vars = std.ArrayList([]const u8).init(allocator);
+        var it = env_map.iterator();
+        while (it.next()) |entry| {
+            const pair = try std.fmt.allocPrint(allocator, "{s}={s}", .{ entry.key_ptr.*, entry.value_ptr.* });
+            try vars.append(pair);
         }
         
         return vars;
     }
 
-    pub fn getUserName() ![:0]const u8 {
+    pub fn getUserName() ![]u8 {
         if (comptime std.Target.Os.Tag == .windows) {
             return try getVar("USERNAME");
         }
@@ -78,47 +76,36 @@ pub const logs = struct {
 };
 
 pub const path = struct {
-    pub fn basePath() ![:0]const u8 {
-        return try sdl.filesystem.getBasePath();
+    pub fn basePath() ![]u8 {
+        const exe_path = try std.fs.selfExePathAlloc(allocator);
+        defer allocator.free(exe_path);
+        const dir = std.fs.path.dirname(exe_path) orelse ".";
+        return try allocator.dupe(u8, dir);
     }
 
-    pub fn currentDir() ![:0]u8 {
-        return try sdl.filesystem.getCurrentDirectory();
+    pub fn currentDir() ![]u8 {
+        return try std.process.getCwdAlloc(allocator);
     }
 
-    pub fn homeDir() ![:0]u8 {
+    pub fn homeDir() ![]u8 {
         if (comptime std.Target.Os.Tag == .windows) {
             return try env.getVar("USERPROFILE");
+        } else {
+            return try env.getVar("HOME");
         }
-        return try env.getVar("HOME");
     }
 
-    pub fn prefPath(org: [:0]const u8, app: [:0]const u8) ![:0]u8 {
-        return try sdl.filesystem.getPrefPath(org, app);
+    pub fn prefPath(app: []const u8) ![]u8 {
+        return (try std.fs.getAppDataDir(allocator, app)) orelse error.AppDataDirNotFound;
     }
 
     pub fn join(paths: []const []const u8) ![]u8 {
         if (paths.len == 0) {
             logs.err("Error: array of path is empty", .{});
-            return error{PathArrayIsNull};
+            return error.PathArrayIsEmpty;
         }
 
-        var joinedPaths: u8 = undefined;
-        for (paths) |p| {
-            if (p.len == 0) continue;
-
-            if (p[p.len] == PATH_SEPARATOR or p[p.len] == PATH_SEPARATOR_OTHER) {
-                joinedPaths = std.mem.concat(allocator, u8, &.{p}) catch |err| {
-                    logs.err("{any}", .{@errorName(err)});
-                    return err;
-                };
-            } else joinedPaths = std.mem.concat(allocator, u8, &.{p, "/"}) catch |err| {
-                logs.err("{any}", .{@errorName(err)});
-                return err;
-            };
-        }
-
-        return joinedPaths;
+        return std.fs.path.join(allocator, paths);
     }
 
     pub fn nativeSeparator(p: []const u8) []const u8 {

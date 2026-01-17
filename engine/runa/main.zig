@@ -134,10 +134,10 @@ pub fn main() !void {
 
     const currentPath = try runtime.utils.path.basePath();
 
-    const vertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.vert" });
+    const vertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/shaders/default.vert" });
     defer allocator.free(vertexFile);
 
-    const fragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/default.frag" });
+    const fragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/shaders/default.frag" });
     defer allocator.free(fragmentFile);
 
     var shader = try gl.Shader.init(vertexFile, fragmentFile);
@@ -164,10 +164,10 @@ pub fn main() !void {
     vbo.unbind();
     ebo.unbind();
 
-    const lightVertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.vert" });
+    const lightVertexFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/shaders/light.vert" });
     defer allocator.free(lightVertexFile);
 
-    const lightFragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/shaders/light.frag" });
+    const lightFragmentFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/shaders/light.frag" });
     defer allocator.free(lightFragmentFile);
 
     var lightShader = try gl.Shader.init(lightVertexFile, lightFragmentFile);
@@ -209,14 +209,14 @@ pub fn main() !void {
     zgl.uniform4f(zgl.getUniformLocation(shader.id, "lightColor"), lightColor.x(), lightColor.y(), lightColor.z(), lightColor.w());
     zgl.uniform3f(zgl.getUniformLocation(shader.id, "lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 
-    const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/planks.png" });
+    const albedoFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/textures/planks.png" });
     defer allocator.free(albedoFile);
     var tex = try gl.Texture.init(albedoFile, .@"2d", 0, .rgba, .unsigned_byte);
     defer tex.deinit();
 
     tex.texUnit(&shader, "tex0", 0);
 
-    const specularFile = try std.mem.concat(allocator, u8, &.{ currentPath, "resources/textures/planksSpec.png" });
+    const specularFile = try std.mem.concat(allocator, u8, &.{ currentPath, "/resources/textures/planksSpec.png" });
     defer allocator.free(specularFile);
 
     var specularTex = try gl.Texture.init(specularFile, .@"2d", 1, .red, .unsigned_byte);

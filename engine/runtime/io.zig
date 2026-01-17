@@ -47,10 +47,16 @@ pub fn readFile(filepath: []const u8, mode: sdl.io_stream.FileMode) ![]u8 {
         return error.PathNull;
     }
 
-    var file = std.fs.cwd().openFile(filepath, .{}) catch |err| {
-        logs.err("Failed to open file: {any}", .{@errorName(err)});
-        return err;
-    };
+    var file = if (!std.fs.path.isAbsolute(filepath))
+        std.fs.cwd().openFile(filepath, .{}) catch |err| {
+            logs.err("Error: {s}\nTrying to open {s}", .{@errorName(err), filepath});
+            return err;
+        }
+    else
+        std.fs.openFileAbsolute(filepath, .{}) catch |err| {
+            logs.err("Error: {s}\nTrying to open {s}", .{@errorName(err), filepath});
+            return err;
+        };
     defer file.close();
 
     const filesize = try file.getEndPos();
