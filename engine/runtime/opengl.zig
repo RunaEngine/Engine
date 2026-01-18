@@ -159,6 +159,100 @@ pub const Render = struct {
     }
 };
 
+pub const Mesh = struct {
+    vertices: []Vertex,
+    indices: []u32,
+    textures: []Texture,
+    vao: VertexArray,
+
+    pub fn init(vertices: []const Vertex, indices: []const u32, textures: []const Texture) !Mesh {
+        var self: Mesh = undefined;
+        self.vertices = allocator.dupe(Vertex, vertices) catch |err| {
+            logs.err("Mesh init error: {s}", .{@errorName(err)});
+            return err;
+        };
+        self.indices = allocator.dupe(u32, indices) catch |err| {
+            allocator.free(self.vertices);
+            logs.err("Mesh init error: {s}", .{@errorName(err)});
+            return err;
+        };
+        self.textures = allocator.dupe(Texture, textures) catch |err| {
+            allocator.free(self.vertices);
+            allocator.free(self.indices);
+            logs.err("Mesh init error: {s}", .{@errorName(err)});
+            return err;
+        };
+
+        self.vao = VertexArray.init();
+        self.vao.bind();
+        var vbo = VertexBuffer.init(vertices);
+        defer vbo.deinit();
+        var ebo = ElementBuffer.init(indices);
+        defer ebo.deinit();
+
+        self.vao.enableAttrib(&vbo, 0, 3, .float, @sizeOf(Vertex), 0);
+        self.vao.enableAttrib(&vbo, 1, 3, .float, @sizeOf(Vertex), 3 * @sizeOf(f32));
+        self.vao.enableAttrib(&vbo, 2, 3, .float, @sizeOf(Vertex), 6 * @sizeOf(f32));
+        self.vao.enableAttrib(&vbo, 3, 2, .float, @sizeOf(Vertex), 9 * @sizeOf(f32));
+
+        self.vao.unbind();
+        vbo.unbind();
+        ebo.unbind();
+
+        return self;
+    }
+
+    pub fn deinit(self: *Mesh) void {
+        allocator.free(self.vertices);
+        allocator.free(self.indices);
+        for (self.textures) |*texture| {
+            texture.deinit();
+        }
+        allocator.free(self.textures);
+        self.vao.deinit();
+    }
+
+    pub fn draw(self: *Mesh, shader: *Shader, camera: *Camera) void {
+        shader.use();
+        self.vao.bind();
+
+        var numDiffuse: u32 = 0;
+        var numSpecular: u32 = 0;
+
+        for (self.textures, 0..) |texture, i| {
+            var num: []u8 = undefined;
+            const textype = texture.texType;
+
+            var numBuf: [126:0]u8 = undefined;
+            var uniformBuf: [128:0]u8 = undefined;
+            if (std.mem.eql(u8, texture.texType, "diffuse")) {
+                numDiffuse += 1;
+                num = std.fmt.bufPrintZ(&numBuf, "{}", .{numDiffuse}) catch |err| {
+                    logs.err("Mesh draw error: {s}", .{@errorName(err)});
+                    return;
+                };
+            } else if (std.mem.eql(u8, texture.texType, "specular")) {
+                numSpecular += 1;
+                num = std.fmt.bufPrintZ(&numBuf, "{}", .{numSpecular}) catch |err| {
+                    logs.err("Mesh draw error: {s}", .{@errorName(err)});
+                    return;
+                };
+            }
+            const uniform = std.fmt.bufPrintZ(&uniformBuf, "{s}{s}", .{textype, num}) catch |err| {
+                logs.err("Mesh draw error: {s}", .{@errorName(err)});
+                return;
+            };
+            texture.texUnit(shader, uniform, @intCast(i));
+            texture.bind();
+        }
+
+        zgl.uniform3f(zgl.getUniformLocation(shader.id, "camPos"), camera.position.x(), camera.position.y(), camera.position.z());
+        camera.matrix(shader, "camMatrix");
+
+        zgl.drawElements(.triangles, self.indices.len, .unsigned_int, 0);
+    }
+};
+
 pub const Camera = struct {
     position: za.Vec3,
     orientation: za.Vec3,
@@ -370,11 +464,12 @@ pub const Shader = struct {
 
 pub const Texture = struct {
     id: zgl.Texture,
-    texType: zgl.TextureTarget,
+    texType: []const u8,
     unit: u32,
 
-    pub fn init(textureFile: []const u8, textype: zgl.TextureTarget, slot: u32, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
+    pub fn init(textureFile: []const u8, textype: []const u8, slot: u32, format: zgl.PixelFormat, pixeltype: zgl.PixelType) !Texture {
         var self: Texture = undefined;
+        self.texType = textype;
         
         const dupezPath = allocator.dupeZ(u8, textureFile) catch |err| {
             logs.err("{any}", .{@errorName(err)});
@@ -390,32 +485,34 @@ pub const Texture = struct {
 
         allocator.free(dupezPath);
 
+        const pixels = surface.getPixels() orelse return error.TextureLoadFailed;
+
         // Generates an OpenGL texture object
         self.id = zgl.genTexture();
         // Assigns the texture to a Texture Unit
         zgl.binding.activeTexture(@as(u32, @intFromEnum(zgl.TextureUnit.texture_0) + slot));
         self.unit = slot;
-        zgl.bindTexture(self.id , textype);
+        zgl.bindTexture(self.id , .@"2d");
 
         // Configures the type of algorithm that is used to make the image smaller or bigger
-        zgl.texParameter(textype, .min_filter, .nearest_mipmap_linear);
-        zgl.texParameter(textype, .mag_filter, .nearest);
+        zgl.texParameter(.@"2d", .min_filter, .nearest_mipmap_linear);
+        zgl.texParameter(.@"2d", .mag_filter, .nearest);
 
         // Configures the way the texture repeats (if it does at all)
-        zgl.texParameter(textype, .wrap_r, .repeat);
-        zgl.texParameter(textype, .wrap_t, .repeat);
+        zgl.texParameter(.@"2d", .wrap_r, .repeat);
+        zgl.texParameter(.@"2d", .wrap_t, .repeat);
 
         // Extra lines in case you choose to use GL_CLAMP_TO_BORDER
         // float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
         // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
         // Assigns the image to the OpenGL Texture object
-        zgl.textureImage2D(textype, 0, .rgba, surface.getWidth(), surface.getHeight(), format, pixeltype, surface.getPixels().?.ptr);
+        zgl.textureImage2D(.@"2d", 0, .rgba, surface.getWidth(), surface.getHeight(), format, pixeltype, pixels.ptr);
         // Generates MipMaps
-        zgl.generateMipmap(textype);
+        zgl.generateMipmap(.@"2d");
 
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
-        zgl.bindTexture(.invalid, textype);
+        zgl.bindTexture(.invalid, .@"2d");
 
         self.texType = textype;
         return self;
@@ -425,7 +522,7 @@ pub const Texture = struct {
         self.id.delete();
     }
 
-    pub fn texUnit(self: *Texture, shader: *Shader, uniform: [:0]const u8, unit: i32) void {
+    pub fn texUnit(self: *const Texture, shader: *Shader, uniform: [:0]const u8, unit: i32) void {
         _ = self;
         // Gets the location of the uniform
         const texUniform = zgl.getUniformLocation(shader.id, uniform);
@@ -437,25 +534,27 @@ pub const Texture = struct {
 
     pub fn bind(self: *const Texture) void {
         zgl.binding.activeTexture(@as(u32, @intFromEnum(zgl.TextureUnit.texture_0) + self.unit));
-        zgl.bindTexture(self.id, self.texType);
+        zgl.bindTexture(self.id, .@"2d");
     }
 
     pub fn unbind(self: *const Texture) void {
         _ = self;
-        zgl.bindTexture(.invalid, 0);
+        zgl.bindTexture(.invalid, .@"2d");
     }
 };
 
 pub const ElementBuffer = struct {
     id: zgl.Buffer,
+    len: usize,
     size: usize,
 
-    pub fn init(indices: []const u32, size: usize) ElementBuffer {
+    pub fn init(indices: []const u32) ElementBuffer {
         var self: ElementBuffer = undefined;
         self.id = zgl.genBuffer();
         zgl.bindBuffer(self.id, .element_array_buffer);
         zgl.bufferData(.element_array_buffer, u32, indices, .static_draw);
-        self.size = size;
+        self.len = indices.len;
+        self.size = indices.len * @sizeOf(u32);
         return self;
     }
 
@@ -473,14 +572,25 @@ pub const ElementBuffer = struct {
     }
 };
 
+pub const Vertex = struct {
+    data: [11]f32,
+
+    pub fn init(position: za.Vec3, normal: za.Vec3, color: za.Vec3, uv: za.Vec2) Vertex {
+        var self: Vertex = undefined;
+        self.data = .{position.x(), position.y(), position.z(), normal.x(), normal.y(), normal.z(), color.x(), color.y(), color.z(), uv.x(), uv.y()};
+        return self;
+    }
+
+};
+
 pub const VertexBuffer = struct {
     id: zgl.Buffer,
 
-    pub fn init(vertices: []const f32) VertexBuffer {
+    pub fn init(vertices: []const Vertex) VertexBuffer {
         var self: VertexBuffer = undefined;
         self.id = zgl.genBuffer();
         zgl.bindBuffer(self.id, .array_buffer);
-        zgl.bufferData(.array_buffer, f32, vertices, .static_draw);
+        zgl.bufferData(.array_buffer, Vertex, vertices, .static_draw);
         return self;
     }
 
