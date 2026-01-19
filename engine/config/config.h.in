@@ -1,0 +1,12 @@
+/* Build Data */
+#cmakedefine ENGINE_BUILD_DEBUG
+#cmakedefine ENGINE_BUILD_RELEASE
+
+/* Engine Data */
+#cmakedefine ENGINE_NAME "@ENGINE_NAME@"
+#cmakedefine ENGINE_VERSION "@ENGINE_VERSION@"
+#cmakedefine ENGINE_MAJOR_VERSION "@ENGINE_MAJOR_VERSION@"
+#cmakedefine ENGINE_MINOR_VERSION "@ENGINE_MINOR_VERSION@"
+#cmakedefine ENGINE_PATH_VERSION "@ENGINE_PATH_VERSION@"
+
+/* Dictionary Data */

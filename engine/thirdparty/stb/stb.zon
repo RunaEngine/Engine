@@ -1,5 +1,0 @@
-.{ .flags = .{
-    "-DSTB_IMAGE_IMPLEMENTATION",
-    "-DSTB_IMAGE_WRITE_IMPLEMENTATION",
-    "-DSTB_IMAGE_RESIZE_IMPLEMENTATION",
-}, .generic = .{"stb_vorbis.c"} }
