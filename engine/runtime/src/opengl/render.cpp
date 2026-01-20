@@ -1,32 +1,69 @@
 #include "opengl/render.h"
+#include "runtime.h"
+#include "utils/logs.h"
 #include "settings.h"
 #include "input.h"
-#include "timer.h"
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 
-namespace runa::runtime {
-    int init_opengl(backend_t& backend, driver_e driver) {
+namespace runa::runtime::opengl {
+    Backend::~Backend()
+    {
+        deinit();
+    }
+
+    bool Backend::init(EDriver driver)
+    {
         /* Init SDL Video */
-        if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-            if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
-                return SDL_INIT_VIDEO;
+        if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) {
+            utils::Logs::error("SDL video already initialized");
+            return false;
+        }
+
+        if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
+        {
+            utils::Logs::sdlError();
+            return false;
         }
 
         // Configure driver
         switch (driver) {
-        case opengl_es:
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-            backend.glsl_version = "#version 320 es";
+        case es:
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            glslVersion = "#version 320 es";
             break;
-        case opengl_core:
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-            backend.glsl_version = "#version 460";
+        case core:
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6))
+            {
+                utils::Logs::sdlError();
+                return false;
+            }
+            glslVersion = "#version 460";
             break;
         default:
             SDL_Quit();
@@ -34,120 +71,134 @@ namespace runa::runtime {
         }
 
         // Create a SDL window
-        backend.window_ptr = SDL_CreateWindow("Runa", 1024, 576, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
-        if (!backend.window_ptr) {
-            SDL_Log("Failed to create window");
-            return 1;
+        windowPtr = SDL_CreateWindow("Runa", 1024, 576, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+        if (!windowPtr) {
+            utils::Logs::sdlError();
+            SDL_Quit();
+            return false;
         }
-
-        // Ensure window borders are visible on Wayland
-        SDL_SetWindowBordered(backend.window_ptr, true);
 
         // Create a SDL renderer
-        backend.context = SDL_GL_CreateContext(backend.window_ptr);
-        if (!backend.context) {
-            SDL_DestroyWindow(backend.window_ptr);
-            SDL_Log("Failed to create context");
-            return 1;
+       context = SDL_GL_CreateContext(windowPtr);
+        if (!context) {
+            SDL_DestroyWindow(windowPtr);
+            utils::Logs::sdlError();
+            SDL_Quit();
+            return false;
         }
 
-        if (driver == opengl_es) {
+        if (driver == es) {
             if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
-                SDL_Log("Failed to initialize GLAD");
-                SDL_DestroyWindow(backend.window_ptr);
-                SDL_GL_DestroyContext(backend.context);
-                return 1;
+                SDL_DestroyWindow(windowPtr);
+                SDL_GL_DestroyContext(context);
+                SDL_Quit();
+                utils::Logs::sdlError();
+                return false;
             }
         }
         else {
             if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-                SDL_Log("Failed to initialize GLAD");
-                SDL_DestroyWindow(backend.window_ptr);
-                SDL_GL_DestroyContext(backend.context);
-                return 1;
+                SDL_DestroyWindow(windowPtr);
+                SDL_GL_DestroyContext(context);
+                SDL_Quit();
+                utils::Logs::sdlError();
+                return false;
             }
         }
 
-        return 0;
+        glEnable(GL_DEPTH_TEST);
+
+        return true;
     }
 
-    void destroy_opengl(backend_t& backend) {
-        if (backend.context)
-            SDL_GL_DestroyContext(backend.context);
-        if (backend.window_ptr)
-            SDL_DestroyWindow(backend.window_ptr);
-        backend.glsl_version.clear();
+    void Backend::deinit()
+    {
+        if (context)
+            SDL_GL_DestroyContext(context);
+        context = nullptr;
+        if (windowPtr)
+            SDL_DestroyWindow(windowPtr);
+        windowPtr = nullptr;
+        glslVersion  = "";
+        if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
+        {
+            SDL_Quit();
+        }
     }
 
-    void init_imgui(backend_t& backend) {
-        if (!backend.window_ptr || !backend.context)
+    SDL_Window* Backend::getWindow() const
+    {
+        return windowPtr;
+    }
+
+    SDL_GLContext Backend::getContext() const
+    {
+        return context;
+    }
+
+    const char* Backend::getGlslVersion()
+    {
+        return glslVersion;
+    }
+
+    ImGuiBackend::~ImGuiBackend()
+    {
+        if (initialized) deinit();
+    }
+
+    void ImGuiBackend::init(Backend& backend)
+    {
+        if (!backend.getWindow() || !backend.getContext())
             return;
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        (void)io;
-        ImGui_ImplSDL3_InitForOpenGL(backend.window_ptr, backend.context);
-        ImGui_ImplOpenGL3_Init(backend.glsl_version.c_str());
+        io = &ImGui::GetIO();
+        ImGui_ImplSDL3_InitForOpenGL(backend.getWindow(), backend.getContext());
+        ImGui_ImplOpenGL3_Init(backend.getGlslVersion());
+        initialized = true;
     }
 
-    void destroy_imgui() {
-        ImGui_ImplSDL3_Shutdown();
+    void ImGuiBackend::deinit()
+    {
         ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
         ImGui::DestroyContext();
+        initialized = false;
+        io = nullptr;
     }
 
-    gl_render_c::gl_render_c()
+    ImGuiIO* ImGuiBackend::getIO()
     {
+        return io;
     }
 
-    gl_render_c::~gl_render_c()
+    Render::~Render()
     {
+
     }
 
-    int gl_render_c::init(config_t config) {
-        if (is_initialized) return -1;
-        int res = init_opengl(backend, config.driver);
-        if (res != 0) return res;
-        if (config.render_imgui) {
-            init_imgui(backend);
-        }
-        m_config = config;
-        glEnable(GL_DEPTH_TEST);
-        is_initialized = true;
+    bool Render::init(EDriver driver, bool useImgui) {
+        if (!backend.init(driver)) return false;
+        if (useImgui) imguiBackend.init(backend);
 
-        return res;
+        return true;
     }
 
-    void gl_render_c::destroy() {
-        if (!is_initialized) return;
-        if (m_config.render_imgui)
-            destroy_imgui();
-        destroy_opengl(backend);
+    void Render::deinit() {
+        imguiBackend.deinit();
+        backend.deinit();
     }
 
-    void gl_render_c::poll() {
-        Time.update_current_time();
-        bool should_limit = GameUserSettings.get_framerate_limit() > 0 && GameUserSettings.get_vsync() == disable;
+    void Render::poll() {
+        bool should_limit = gameUserSettings.getFramerateLimit() > 0 && gameUserSettings.getVsync() == disable;
         uint64_t frame_time = 0;
         if (should_limit) {
-            frame_time = 1000000000 / GameUserSettings.get_framerate_limit();
-        }
-        
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                int w = 0, h = 0;
-                SDL_GetWindowSizeInPixels(backend.window_ptr, &w, &h);
-                glViewport(0, 0, w, h);
-            }
-            Input.update_event(event);
-            if (event_cb) event_cb(event);
+            frame_time = 1000000000 / gameUserSettings.getFramerateLimit();
         }
 
         // Render imgui
-        if (m_config.render_imgui) {
+        if (imguiBackend.isInitialized()) {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
@@ -156,29 +207,21 @@ namespace runa::runtime {
         // Render behind imgui
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (render_cb) render_cb(Time.delta());
+        if (onRender) onRender(tick.delta());
 
-        if (m_config.render_imgui) {
-            if (imgui_render_cb) imgui_render_cb(ImGui::GetIO());
+        if (imguiBackend.isInitialized()) {
+            if (onImGuiRender) onImGuiRender(ImGui::GetIO());
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
 
-        SDL_GL_SwapWindow(backend.window_ptr);
+        SDL_GL_SwapWindow(backend.getWindow());
         // Finish render
         if (should_limit) {
-            if (frame_time > 0 && frame_time > Time.elapsed_ns()) {
-                SDL_DelayPrecise(frame_time - Time.elapsed_ns());
+            if (frame_time > 0 && frame_time > tick.elapsedNS()) {
+                SDL_DelayPrecise(frame_time - tick.elapsedNS());
             }
         }
-        Time.update_end_time();
     }
-
-    const backend_t& gl_render_c::get_backend() {
-        return backend;
-    }
-
-    gl_render_c Render = gl_render_c();
 }
-
 

@@ -2,16 +2,21 @@
 
 #include <glad/glad.h>
 
-namespace runa::runtime {
-    class element_buffer_c {
+namespace runa::runtime::opengl {
+    class ElementBuffer {
     public:
-        element_buffer_c(const GLuint *indices, const GLsizeiptr size);
-        ~element_buffer_c();
+        ElementBuffer() = default;
+        ~ElementBuffer();
+
+        void init(const GLuint *indices, GLsizeiptr count);
+        void deinit();
 
         void bind() const;
         void unbind() const;
+
+        GLsizeiptr count() const;
     private:
-        GLuint id;
-        GLsizeiptr size;
+        GLuint id = 0;
+        GLsizeiptr size = 0;
     };
 }

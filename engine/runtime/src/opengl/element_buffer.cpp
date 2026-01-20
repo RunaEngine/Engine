@@ -1,28 +1,35 @@
 #include "opengl/element_buffer.h"
-#include "opengl/element_count.h"
 
-namespace runa::runtime {
-    element_buffer_c::element_buffer_c(const GLuint *indices, const GLsizeiptr size) {
-        id = 0;
-        this->size = 0;
+namespace runa::runtime::opengl {
+    ElementBuffer::~ElementBuffer() {
+        if (id > 0) deinit();
+    }
+
+    void ElementBuffer::init(const GLuint* indices, GLsizeiptr count)
+    {
         glGenBuffers(1, &id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
-        this->size = size;
-        GL_ELEMENT_COUNT += size / sizeof(GLuint);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), indices, GL_STATIC_DRAW);
+        size = count;
     }
 
-    element_buffer_c::~element_buffer_c() {
-        GL_ELEMENT_COUNT -= size;
-        if (GL_ELEMENT_COUNT < 0) GL_ELEMENT_COUNT = 0;
+    void ElementBuffer::deinit()
+    {
         glDeleteBuffers(1, &id);
+        id = 0;
+        size = 0;
     }
 
-    void element_buffer_c::bind() const {
+    void ElementBuffer::bind() const {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
     }
 
-    void element_buffer_c::unbind() const {
+    void ElementBuffer::unbind() const {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    GLsizeiptr ElementBuffer::count() const
+    {
+        return size / sizeof(GLuint);
     }
 }

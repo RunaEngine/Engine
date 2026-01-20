@@ -1,48 +1,55 @@
 #include "opengl/camera.h"
-#include "opengl/render.h"
-#include "input.h"
+#include "runtime.h"
 #include<glm/gtx/vector_angle.hpp>
-#include <opengl/render.h>
 
 
-namespace runa::runtime {
-    camera_c::camera_c(int w, int h, glm::vec3 position) {
-        width = w;
-        height = h;
+namespace runa::runtime::opengl {
+    Camera::Camera(glm::vec3 position)
+    {
         pos = position;
     }
 
-    camera_c::~camera_c() {
+    Camera::~Camera()
+    {
 
     }
 
-    void camera_c::matrix(float FOVdeg, float near_plane, float far_plane, shader_c& shader, const char* uniform)
+    void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane)
     {
+        if (!SDL_GetWindowSize(render.getBackend().getWindow(), &width, &height))
+        {
+            return;
+        }
         // Initializes matrices since otherwise they will be the null matrix
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
+        glm::mat4 view = glm::identity<glm::mat4>();
+        glm::mat4 projection = glm::identity<glm::mat4>();
 
         // Makes camera look in the right direction from the right position
         view = glm::lookAt(pos, pos + orientation, up);
         // Adds perspective to the scene
-        projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, near_plane, far_plane);
+        projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, nearPlane, farPlane);
 
-        // Exports the camera matrix to the Vertex Shader
-        glUniformMatrix4fv(glGetUniformLocation(shader.get_id(), uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
+        cameraMatrix = projection * view;
     }
 
-    void camera_c::inputs(SDL_Event& event) {
-        glm::vec2 vec = runtime::Input.get_input_vector(SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_A);
+    void Camera::matrix(const Shader& shader, const char* uniform) const
+    {
+        // Exports the camera matrix to the Vertex Shader
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    }
+
+    void Camera::inputs(SDL_Event& event) {
+        glm::vec2 vec = input.inputVector(SDL_SCANCODE_D, SDL_SCANCODE_A, SDL_SCANCODE_W, SDL_SCANCODE_S);
         direction = glm::normalize(glm::cross(orientation, up)) * vec.x + glm::normalize(orientation) * vec.y;
 
-        float y_axis = runtime::Input.get_input_axis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
+        float y_axis = input.inputAxis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
         direction.y = y_axis;
-        speed = runtime::Input.is_key_pressed(SDL_SCANCODE_LSHIFT) ? 8.0f : 4.0f;
+        speed = input.keyPressed(SDL_SCANCODE_LSHIFT) ? 8.0f : 4.0f;
 
-        if (runtime::Input.is_mouse_button_pressed(SDL_BUTTON_RIGHT))
+        if (input.mouseButtonPressed(SDL_BUTTON_RIGHT))
         {
-            SDL_SetWindowMouseGrab(runtime::Render.get_backend().window_ptr, true);
-            SDL_SetWindowRelativeMouseMode(runtime::Render.get_backend().window_ptr, true);
+            SDL_SetWindowMouseGrab(render.getBackend().getWindow(), true);
+            SDL_SetWindowRelativeMouseMode(render.getBackend().getWindow(), true);
             SDL_HideCursor();
             
 
@@ -69,13 +76,13 @@ namespace runa::runtime {
         }
         else
         {
-            SDL_SetWindowMouseGrab(runtime::Render.get_backend().window_ptr, false);
-            SDL_SetWindowRelativeMouseMode(runtime::Render.get_backend().window_ptr, false);
+            SDL_SetWindowMouseGrab(render.getBackend().getWindow(), false);
+            SDL_SetWindowRelativeMouseMode(render.getBackend().getWindow(), false);
             SDL_ShowCursor();
         }
     }
 
-    void camera_c::tick(float delta) {
+    void Camera::tick(float delta) {
         direction = glm::clamp(direction, glm::vec3(-1.0f), glm::vec3(1.0f));
         pos += speed * direction * delta;
     }

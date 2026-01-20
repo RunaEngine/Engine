@@ -1,64 +1,85 @@
 #include "opengl/texture.h"
-#include <stb_image.h>
+#include "utils/logs.h"
 #include <SDL3_image/SDL_image.h>
-#include <vector>
 
-namespace runa::runtime {
-    texture_c::texture_c(const std::string &texturefile, const GLenum textype, const GLenum slot, const GLenum format,
-        GLenum pixeltype) {
-        id = 0;
-        // Assigns the type of the texture ot the texture object
+namespace runa::runtime::opengl {
+    Texture::~Texture() {
+        if (id > 0) denit();
+    }
+
+    bool Texture::init(const char* texturefile, const char* textype, GLenum slot, GLenum format, GLenum pixeltype)
+    {
+        // Assigns the type of the texture to the texture object
         type = textype;
 
-        SDL_Surface *img_surf = IMG_Load(texturefile.c_str());
+        SDL_Surface *img_surf = IMG_Load(texturefile);
         if (img_surf == nullptr) {
-            SDL_Log("Failed to load texture file %s", texturefile.c_str());
-            return;
+            utils::Logs::error("Failed to load texture file %s", texturefile);
+            return false;
         }
 
         // Generates an OpenGL texture object
         glGenTextures(1, &id);
         // Assigns the texture to a Texture Unit
-        glActiveTexture(slot);
-        glBindTexture(textype, id);
+        glActiveTexture(GL_TEXTURE0 + slot);
+        unit = slot;
+        glBindTexture(GL_TEXTURE_2D, id);
 
         // Configures the type of algorithm that is used to make the image smaller or bigger
-        glTexParameteri(textype, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-        glTexParameteri(textype, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         // Configures the way the texture repeats (if it does at all)
-        glTexParameteri(textype, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(textype, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // Extra lines in case you choose to use GL_CLAMP_TO_BORDER
         // float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
         // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
         // Assigns the image to the OpenGL Texture object
-        glTexImage2D(textype, 0, GL_RGBA, img_surf->w, img_surf->h, 0, format, pixeltype, img_surf->pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_surf->w, img_surf->h, 0, format, pixeltype, img_surf->pixels);
         // Generates MipMaps
-        glGenerateMipmap(textype);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         // Deletes the image data as it is already in the OpenGL Texture object
         //stbi_image_free(bytes);
         SDL_free(img_surf);
 
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
-        glBindTexture(textype, 0);
-
-        is_loaded = true;
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return true;
     }
 
-    texture_c::~texture_c() {
+    void Texture::denit()
+    {
         glDeleteTextures(1, &id);
+        id = 0;
         type = 0;
+        unit = 0;
     }
 
-    void texture_c::bind() const {
-        glBindTexture(type, id);
+    void Texture::texUnit(const Shader& shader, const char* uniform, GLuint unit)
+    {
+        // Gets the location of the uniform
+        GLuint texUni = glGetUniformLocation(shader.getID(), uniform);
+        // Shader needs to be activated before changing the value of a uniform
+        shader.use();
+        // Sets the value of the uniform
+        glUniform1i(texUni, unit);
     }
 
-    void texture_c::unbind() const {
-        glBindTexture(type, 0);
+    void Texture::bind() const {
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glBindTexture(GL_TEXTURE_2D, id);
+    }
+
+    void Texture::unbind() const {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    const char* Texture::getType()
+    {
+        return type;
     }
 }

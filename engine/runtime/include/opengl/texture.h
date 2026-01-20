@@ -3,19 +3,24 @@
 #include "shader.h"
 #include <glad/glad.h>
 
-namespace runa::runtime {
-    class texture_c {
+namespace runa::runtime::opengl {
+    class Texture {
     public:
-        texture_c(const std::string &texturefile, const GLenum textype, const GLenum slot,
-                   const GLenum format, GLenum pixeltype);
-        ~texture_c();
+        Texture() = default;
+        ~Texture();
+
+        bool init(const char* texturefile, const char* textype, GLenum slot, GLenum format, GLenum pixeltype);
+        void denit();
+
+        void texUnit(const Shader& shader, const char* uniform, GLuint unit);
 
         void bind() const;
         void unbind() const;
-        bool is_valid() const { return is_loaded; }
+
+        const char* getType();
     private:
-        GLuint id;
-        GLenum type;
-        bool is_loaded = false;
+        GLuint id = 0;
+        const char* type = 0;
+        GLuint unit = 0;
     };
 }

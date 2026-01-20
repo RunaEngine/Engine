@@ -5,49 +5,66 @@
 #include <string>
 #include <functional>
 
-namespace runa::runtime {
-    enum driver_e : uint8_t {
-        opengl_core = 0,
-        opengl_es = 1,
+namespace runa::runtime::opengl {
+    enum EDriver : uint8_t {
+        core = 0,
+        es = 1,
     };
 
-    struct backend_t {
-        SDL_Window* window_ptr;
-        SDL_GLContext context;
-        std::string glsl_version;
-    };
-
-    struct config_t {
-        driver_e driver = opengl_core;
-        bool render_imgui = true;
-    };
-
-    int init_opengl(backend_t& backend, driver_e driver);
-    void destroy_opengl(backend_t& backend);
-
-    void init_imgui(backend_t &backend);
-    void destroy_imgui();
-
-    class gl_render_c {
+    class Backend
+    {
     public:
-        gl_render_c();
-        ~gl_render_c();
+        Backend() = default;
+        ~Backend();
 
-        int init(config_t config = {});
-        void destroy();
+        bool init(EDriver driver);
+        void deinit();
+        
+        SDL_Window* getWindow() const;
+        SDL_GLContext getContext() const;
+        const char* getGlslVersion();
+    private:
+        SDL_Window* windowPtr = nullptr;
+        SDL_GLContext context = nullptr;
+        const char* glslVersion = "";
+    };
+
+    class ImGuiBackend
+    {
+    public:
+        ImGuiBackend() = default;
+        ~ImGuiBackend();
+
+        void init(Backend& backend);
+        void deinit();
+
+        bool isInitialized() const { return initialized; }
+
+        ImGuiIO* getIO();
+    private:
+        bool initialized = false;
+        ImGuiIO* io = nullptr;
+    };
+
+    class Render {
+    public:
+        Render() = default;
+        ~Render();
+
+        bool init(EDriver driver = core, bool useImgui = true);
+        void deinit();
+
         void poll();
 
-        const backend_t &get_backend();
+        const Backend& getBackend() { return backend; }
+        const ImGuiBackend& getImGuiBackend() { return imguiBackend; }
 
-        std::function<void(SDL_Event&)> event_cb;
-        std::function<void(ImGuiIO&)> imgui_render_cb;
-        std::function<void(double)> render_cb;
+        std::function<void(SDL_Event&)> onEvent;
+        std::function<void(ImGuiIO&)> onImGuiRender;
+        std::function<void(double)> onRender;
     private:
-        config_t m_config;
-        bool is_initialized = false;
-        bool window_should_close = false;
-        backend_t backend;
+        bool initialized = false;
+        Backend backend;
+        ImGuiBackend imguiBackend;
     };
-
-    extern gl_render_c Render;
 }

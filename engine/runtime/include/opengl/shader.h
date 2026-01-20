@@ -3,16 +3,21 @@
 #include <string>
 #include <glad/glad.h>
 
-namespace runa::runtime {
-    class shader_c {
+namespace runa::runtime::opengl {
+    class Shader {
     public:
-        shader_c(const std::string &vertexfile, const std::string &fragmentfile);
-        ~shader_c();
+        Shader() = default;
+        ~Shader();
+
+        bool init(const char* vertexfile, const char* fragmentfile);
+        void deinit();
 
         void use() const;
-        void set_uniform_location(const char *uniform, const GLuint unit) const;
-        GLuint get_id() const { return id; }
+        void setUniformLocation(const char *uniform, GLuint unit) const;
+        GLuint getID() const { return id; }
     private:
-        GLuint id;
+        GLuint id = 0;
+
+        bool checksum(unsigned int shader, const char* type);
     };
 }

@@ -5,37 +5,29 @@
 using namespace runa::runtime;
 
 namespace runa::runtime {
-    game_user_settings_c::game_user_settings_c()
-    = default;
-
-    game_user_settings_c::~game_user_settings_c()
-    = default;
-
-    void game_user_settings_c::set_vsync(vsync_e value) {
+    void GameUserSettings::setVsync(EVSync value) {
         SDL_GL_SetSwapInterval((int)value);
     }
 
-    vsync_e game_user_settings_c::get_vsync() {
+    EVSync GameUserSettings::getVsync() {
         int value = 0;
         SDL_GL_GetSwapInterval(&value);
-        return (vsync_e)value;
+        return (EVSync)value;
     }
 
-    void game_user_settings_c::set_framerate_limit(uint16_t value) {
+    void GameUserSettings::setFramerateLimit(uint16_t value) {
         if (value == 0) {
-            framerate_limit = 0;
+            framerateLimit = 0;
             return;
         }
 
-        framerate_limit = (uint16_t)std::clamp((int)value, 5, 300);
+        framerateLimit = (uint16_t)std::clamp((int)value, 5, 300);
     }
 
-    uint16_t game_user_settings_c::get_framerate_limit() const
+    uint16_t GameUserSettings::getFramerateLimit() const
     {
-        return framerate_limit;
+        return framerateLimit;
     }
-
-    game_user_settings_c GameUserSettings = game_user_settings_c();
 }
 
 

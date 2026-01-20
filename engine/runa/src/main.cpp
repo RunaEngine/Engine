@@ -1,128 +1,179 @@
 //#define STC_CSTR_CORE
 #include <iostream>
 #include <memory>
-#include <opengl/render.h>
-#include <opengl/camera.h>
-#include <opengl/element_buffer.h>
-#include <opengl/vertex_array.h>
-#include <opengl/vertex_buffer.h>
-#include <opengl/texture.h>
-#include <opengl/shader.h>
-#include <utils/system/path.h>
-#include <utils/system/file.h>
-#include <opengl/element_count.h>
+#include <runtime.h>
+#include <opengl/mesh.h>
+#include <utils/system.h>
 #include <settings.h>
-#include <timer.h>
 #include <io/handlers.h>
-#include <io/fs.h>
 
 using namespace runa::runtime;
+using namespace runa::runtime::opengl;
 
 int main(int argc, char** argv) {
-    loop_c loop;
-    events_c event;
+    if (!render.init()) return -1;
+    gameUserSettings.setVsync(disable);
+    gameUserSettings.setFramerateLimit(300);
 
-    Render.init();
-    GameUserSettings.set_vsync(disable);
-    GameUserSettings.set_framerate_limit(300);
-
-    const GLfloat vertices[] =
-    { //     COORDINATES     /        COLORS      /   TexCoord  //
-        -0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-        -0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-        0.5f, 0.0f, -0.5f,      0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-        0.5f, 0.0f,  0.5f,      0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-        0.0f, 0.8f,  0.0f,      0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+	// Vertices coordinates
+    std::vector<Vertex> vertices =
+    {
+	    Vertex{
+		    glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
+		    glm::vec2(0.0f, 0.0f)
+	    },
+	    Vertex{
+		    glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
+		    glm::vec2(0.0f, 1.0f)
+	    },
+	    Vertex{
+		    glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
+		    glm::vec2(1.0f, 1.0f)
+	    },
+	    Vertex{
+		    glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)
+	    }
     };
 
     // Indices for vertices order
-    const GLuint indices[] =
+    std::vector<GLuint> indices =
     {
-        0, 1, 2,
-        0, 2, 3,
-        0, 1, 4,
-        1, 2, 4,
-        2, 3, 4,
-        3, 0, 4
+	    0, 1, 2,
+	    0, 2, 3
     };
 
-    
-
-    std::unique_ptr<shader_c> shader;
-    std::unique_ptr<element_buffer_c> EBO;
-    std::unique_ptr<vertex_array_c> VAO;
-    std::unique_ptr<vertex_buffer_c> VBO;
-    std::unique_ptr<texture_c> tex;
-
-    GLuint uniID;
-    int viewport_width = 1024;
-    int viewport_height = 576;
-
-    camera_c camera = camera_c(viewport_width, viewport_height, glm::vec3(0.0f, 0.0f, 2.0f));
-
-    const std::string currentDir = runa::runtime::current_dir();
-    const std::string vert_shader = currentDir + "resources/shaders/default.vert";
-    const std::string frag_shader = currentDir + "resources/shaders/default.frag";
-    shader = std::make_unique<shader_c>(vert_shader, frag_shader);
-    VAO = std::make_unique<vertex_array_c>();
-    VAO->bind();
-    VBO = std::make_unique<vertex_buffer_c>(vertices, sizeof(vertices));
-    EBO = std::make_unique<element_buffer_c>(indices, sizeof(indices));
-    VAO->enable_attrib(*VBO, 0, 3, GL_FLOAT, 8 * sizeof(GLfloat), (void*)0);
-    VAO->enable_attrib(*VBO, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    VAO->enable_attrib(*VBO, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    VAO->unbind();
-
-    VAO->unbind();
-    VBO->unbind();
-    EBO->unbind();
-
-    uniID = glGetUniformLocation(shader->get_id(), "scale");
-    std::string albedodir = currentDir + "resources/textures/brick.png";
-    tex = std::make_unique<texture_c>(albedodir, GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-    shader->set_uniform_location("tex0", 0);    
-
-    bool should_close = false;
-    Render.event_cb = [&](SDL_Event &event) {
-        if (event.type == SDL_EVENT_WINDOW_RESIZED) 
-        {
-            SDL_GetWindowSizeInPixels(Render.get_backend().window_ptr, &viewport_width, &viewport_height);
-        }
-        if (event.type == SDL_EVENT_QUIT)
-        {
-            should_close = true;
-        }
-        camera.inputs(event);
-    };
-    Render.imgui_render_cb = [&](ImGuiIO &io) {
-        ImGui::Begin("teste");
-        ImGui::Text("FPS: %f", 1.0f / io.DeltaTime);
-        ImGui::End(); 
-    };
-    Render.render_cb = [&](double delta) {
-        shader->use();
-
-        camera.tick((float)delta);
-        camera.matrix(60.0f, 0.1f, 100.0f, *shader, "camMatrix");
-
-        glUniform1f(uniID, 0.5f);
-        tex->bind();
-        VAO->bind();
-        glDrawElements(GL_TRIANGLES, GL_ELEMENT_COUNT, GL_UNSIGNED_INT, nullptr);
-    };
-    
-    while (!should_close) 
+    std::vector<Vertex> lightVertices =
     {
+	    //	 COORDINATES	 //
+	    Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
+	    Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
+	    Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
+	    Vertex{glm::vec3(0.1f, -0.1f, 0.1f)},
+	    Vertex{glm::vec3(-0.1f, 0.1f, 0.1f)},
+	    Vertex{glm::vec3(-0.1f, 0.1f, -0.1f)},
+	    Vertex{glm::vec3(0.1f, 0.1f, -0.1f)},
+	    Vertex{glm::vec3(0.1f, 0.1f, 0.1f)}
+    };
 
-        Render.poll();
+    std::vector<GLuint> lightIndices =
+    {
+	    0, 1, 2,
+	    0, 2, 3,
+	    0, 4, 7,
+	    0, 7, 3,
+	    3, 7, 6,
+	    3, 6, 2,
+	    2, 6, 5,
+	    2, 5, 1,
+	    1, 5, 4,
+	    1, 4, 0,
+	    4, 5, 6,
+	    4, 6, 7
+    };
+
+    Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
+
+    const std::string currentDir = utils::baseDir();
+
+	// Texture data
+	std::string albedodir = currentDir + "resources/textures/planks.png";
+	std::string speculardir = currentDir + "resources/textures/planksSpec.png";
+    std::vector<Texture> textures;
+    textures.push_back(Texture());
+    textures.push_back(Texture());
+    textures[0].init(albedodir.c_str(), "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE);
+    textures[1].init(albedodir.c_str(), "specular", 1, GL_RED, GL_UNSIGNED_BYTE);
+
+    const std::string vertShader = currentDir + "resources/shaders/default.vert";
+    const std::string fragShader = currentDir + "resources/shaders/default.frag";
+    Shader shader;
+    if (!shader.init(vertShader.c_str(), fragShader.c_str()))
+    {
+        return -1;
     }
 
-    Render.destroy();
-    /*
-    if (code != 0) {
-        SDL_Log("%s", SDL_GetError());
-        return code;
-    }*/
+	// Store mesh data in vectors for the mesh
+	// Create floor mesh
+	Mesh floor;
+	if (!floor.init(vertices, indices, textures))
+	{
+		return -1;
+	}
+
+    // Shader for light cube
+    const std::string vertLightShader = currentDir + "resources/shaders/light.vert";
+    const std::string fragLightShader = currentDir + "resources/shaders/light.frag";
+    Shader lightShader;
+    if (!lightShader.init(vertLightShader.c_str(), fragLightShader.c_str()))
+    {
+        return -1;
+    }
+
+	// Create light mesh
+	Mesh light;
+	if (!light.init(lightVertices, lightIndices))
+	{
+		return -1;
+	}
+
+    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+    glm::mat4 lightModel = glm::identity<glm::mat4>();
+    lightModel = glm::translate(lightModel, lightPos);
+
+    glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::mat4 pyramidModel = glm::identity<glm::mat4>();
+    pyramidModel = glm::translate(pyramidModel, pyramidPos);
+
+    lightShader.use();
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+    glUniform4f(glGetUniformLocation(lightShader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+    shader.use();
+    glUniformMatrix4fv(glGetUniformLocation( shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+    glUniform4f(glGetUniformLocation( shader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+    glUniform3f(glGetUniformLocation( shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+    bool shouldClose = false;
+    event.onEvent = [&](SDL_Event &e) {
+        if (e.type == SDL_EVENT_WINDOW_RESIZED)
+        {
+            int viewportWidth, viewportHeight;
+            if (!SDL_GetWindowSizeInPixels(render.getBackend().getWindow(), &viewportWidth, &viewportHeight))
+            {
+                glViewport(0, 0, viewportWidth, viewportHeight);
+            }
+        }
+        if (e.type == SDL_EVENT_QUIT)
+        {
+            shouldClose = true;
+        }
+        camera.inputs(e);
+    };
+    render.onImGuiRender = [&](ImGuiIO &io) {
+        ImGui::Begin("teste");
+        ImGui::Text("FPS: %f", 1.0f / io.DeltaTime);
+        ImGui::End();
+    };
+    render.onRender= [&](double delta) {
+        shader.use();
+
+        camera.tick((float)delta);
+        camera.updateMatrix(60.0f, 0.1f, 100.0f);
+
+    	// Draws different meshes
+    	floor.draw(shader, camera);
+    	light.draw(lightShader, camera);
+    };
+
+    while (!shouldClose)
+    {
+        tick.updateCurrentTick();
+        event.run(io::pool);
+        render.poll();
+        tick.updateDeltaTime();
+    }
+
+    render.deinit();
 
     return 0;
 }
