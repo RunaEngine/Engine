@@ -5,7 +5,7 @@
 
 namespace runa::runtime::io
 {
-    enum EventMode : uint8_t {
+    enum EEventMode : uint8_t {
         pool = 0,
         wait = 1,
     };
@@ -15,7 +15,7 @@ namespace runa::runtime::io
     public:
         Event() = default;
 
-        void run(EventMode mode);
+        void run(EEventMode mode);
 
         std::function<void(SDL_Event&)> onEvent;
     private:

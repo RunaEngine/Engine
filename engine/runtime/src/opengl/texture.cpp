@@ -12,8 +12,8 @@ namespace runa::runtime::opengl {
         // Assigns the type of the texture to the texture object
         type = textype;
 
-        SDL_Surface *img_surf = IMG_Load(texturefile);
-        if (img_surf == nullptr) {
+        SDL_Surface* imgSurf = IMG_Load(texturefile);
+        if (imgSurf == nullptr) {
             utils::Logs::error("Failed to load texture file %s", texturefile);
             return false;
         }
@@ -38,13 +38,13 @@ namespace runa::runtime::opengl {
         // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
         // Assigns the image to the OpenGL Texture object
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_surf->w, img_surf->h, 0, format, pixeltype, img_surf->pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgSurf->w, imgSurf->h, 0, format, pixeltype, imgSurf->pixels);
         // Generates MipMaps
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Deletes the image data as it is already in the OpenGL Texture object
         //stbi_image_free(bytes);
-        SDL_free(img_surf);
+        SDL_DestroySurface(imgSurf);
 
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
         glBindTexture(GL_TEXTURE_2D, 0);

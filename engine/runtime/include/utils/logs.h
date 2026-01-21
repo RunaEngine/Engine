@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <cgltf.h>
 
 namespace runa::runtime::utils {
     class Logs
@@ -15,6 +16,8 @@ namespace runa::runtime::utils {
         static void warning(SDL_PRINTF_FORMAT_STRING const char* fmt, ...);
 
         static void sdlError();
+
+        static bool gltfError(cgltf_result result);
     };
     
 }

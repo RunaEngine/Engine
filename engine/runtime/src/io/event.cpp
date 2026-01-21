@@ -4,7 +4,7 @@
 
 namespace runa::runtime::io
 {
-    void Event::run(EventMode mode)
+    void Event::run(EEventMode mode)
     {
         if (mode == pool)
         {
