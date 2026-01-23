@@ -7,16 +7,49 @@ namespace runa::runtime::opengl {
         if (id > 0) denit();
     }
 
-    bool Texture::init(const char* texturefile, const char* textype, GLenum slot, GLenum format, GLenum pixeltype)
+    bool Texture::init(const char* filepath, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype)
     {
         // Assigns the type of the texture to the texture object
         type = textype;
 
-        SDL_Surface* imgSurf = IMG_Load(texturefile);
-        if (imgSurf == nullptr) {
-            utils::Logs::error("Failed to load texture file %s", texturefile);
+        SDL_Surface* surf = IMG_Load(filepath);
+        if (surf == nullptr) {
+            utils::Logs::error("Failed to load texture file %s", filepath);
             return false;
         }
+
+        const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(surf->format);
+        if (!details) {
+            utils::Logs::error("Failed to get texture details");
+            return false;
+        }
+
+        GLenum texChannels = GL_RED;
+        GLenum internalChannels = channels;
+        uint8_t numChannels = (details->Rbits > 0) + (details->Gbits > 0) + (details->Bbits > 0) + (details->Abits > 0);
+        switch (numChannels)
+        {
+        case 4:
+            texChannels = GL_RGBA;
+            if (internalChannels == 0)
+                internalChannels = texChannels;
+            break;
+        case 3:
+            texChannels = GL_RGB;
+            if (internalChannels = 0) {
+                internalChannels = texChannels;
+            }
+            else if (internalChannels == GL_ALPHA) {
+                internalChannels = GL_RED;
+            } 
+            else if (internalChannels == GL_RGBA) {
+                internalChannels--;
+            }
+            break;
+        default:
+            internalChannels = GL_RED;
+            break;
+        } 
 
         // Generates an OpenGL texture object
         glGenTextures(1, &id);
@@ -38,16 +71,17 @@ namespace runa::runtime::opengl {
         // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
         // Assigns the image to the OpenGL Texture object
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgSurf->w, imgSurf->h, 0, format, pixeltype, imgSurf->pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalChannels, surf->w, surf->h, 0, texChannels, pixeltype, surf->pixels);
         // Generates MipMaps
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Deletes the image data as it is already in the OpenGL Texture object
         //stbi_image_free(bytes);
-        SDL_DestroySurface(imgSurf);
+        SDL_DestroySurface(surf);
 
         // Unbinds the OpenGL Texture object so that it can't accidentally be modified
         glBindTexture(GL_TEXTURE_2D, 0);
+
         return true;
     }
 

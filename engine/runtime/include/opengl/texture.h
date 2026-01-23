@@ -9,7 +9,7 @@ namespace runa::runtime::opengl {
         Texture() = default;
         ~Texture();
 
-        bool init(const char* texturefile, const char* textype, GLenum slot, GLenum format, GLenum pixeltype);
+        bool init(const char* texturefile, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype);
         void denit();
 
         void texUnit(const Shader& shader, const char* uniform, GLuint unit);

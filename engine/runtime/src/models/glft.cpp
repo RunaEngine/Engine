@@ -1,7 +1,5 @@
 #include "models/glft.h"
-
-#include <vector>
-
+#include "glad/glad.h"
 #include "utils/logs.h"
 
 namespace runa::runtime::models
@@ -73,10 +71,135 @@ namespace runa::runtime::models
         for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex += sizeof(float))
         {
             float value;
-            std::memcpy(&value, &data[byteIndex], sizeof(float));
+            memcpy(&value, &data[byteIndex], sizeof(float));
             floatValues.push_back(value);
         }
 
         return floatValues;
+    }
+
+    std::vector<GLuint> glft::getIndices(cgltf_accessor* accessor)
+    {
+        std::vector<GLuint> indices;
+
+        // Get properties from the accessor
+        const cgltf_size elementCount = accessor->count;
+        const cgltf_size accessorByteOffset = accessor->offset;
+        const cgltf_component_type componentType = accessor->component_type;
+
+        // Get properties from the bufferView
+        const cgltf_size bufferViewByteOffset = accessor->buffer_view->offset;
+
+        // Pre-allocate the vector with the exact number of indices needed
+        indices.resize(elementCount);
+
+        // Calculate the starting position in the data buffer
+        const cgltf_size dataStartOffset = bufferViewByteOffset + accessorByteOffset;
+
+        // Extract indices based on their component type
+        if (componentType == cgltf_component_type_r_32u) // Unsigned int (32-bit)
+        {
+            const cgltf_size dataSizeInBytes = elementCount * sizeof(unsigned int);
+            cgltf_size indexPos = 0;
+            for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
+                 sizeof(unsigned int))
+            {
+                unsigned int value;
+                memcpy(&value, &data[byteIndex], sizeof(unsigned int));
+                indices[indexPos++] = (GLuint)value;
+            }
+        }
+        else if (componentType == cgltf_component_type_r_16u) // Unsigned short (16-bit)
+        {
+            const cgltf_size dataSizeInBytes = elementCount * sizeof(unsigned short);
+            cgltf_size indexPos = 0;
+            for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
+                 sizeof(unsigned short))
+            {
+                unsigned short value;
+                memcpy(&value, &data[byteIndex], sizeof(unsigned short));
+                indices[indexPos++] = (GLuint)value;
+            }
+        }
+        else if (componentType == cgltf_component_type_r_16) // Signed short (16-bit)
+        {
+            const cgltf_size dataSizeInBytes = elementCount * sizeof(short);
+            cgltf_size indexPos = 0;
+            for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
+                 sizeof(short))
+            {
+                short value;
+                memcpy(&value, &data[byteIndex], sizeof(short));
+                indices[indexPos++] = (GLuint)value;
+            }
+        }
+
+        return indices;
+    }
+
+    std::vector<opengl::Vertex> glft::assembleVertices(std::vector<glm::vec3> positions, std::vector<glm::vec3> normals,
+        std::vector<glm::vec2> texCoords)
+    {
+        std::vector<opengl::Vertex> vertices;
+        vertices.reserve(positions.size());
+        for (size_t i = 0; i < positions.size(); i++)
+        {
+            vertices.push_back(
+                opengl::Vertex{ positions[i], normals[i], glm::vec3(1.0f, 1.0f, 1.0f), texCoords[i]}
+                );
+        }
+
+        return vertices;
+    }
+
+    std::vector<glm::vec2> glft::groupFloatsVec2(std::vector<float> floatVec)
+    {
+        const unsigned int floatsPerVector = 2;
+
+        std::vector<glm::vec2> vectors;
+        for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
+        {
+            vectors.push_back(glm::vec2(0, 0));
+
+            for (unsigned int j = 0; j < floatsPerVector; j++)
+            {
+                vectors.back()[j] = floatVec[i + j];
+            }
+        }
+        return vectors;
+    }
+
+    std::vector<glm::vec3> glft::groupFloatsVec3(std::vector<float> floatVec)
+    {
+        const unsigned int floatsPerVector = 3;
+
+        std::vector<glm::vec3> vectors;
+        for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
+        {
+            vectors.push_back(glm::vec3(0, 0, 0));
+
+            for (unsigned int j = 0; j < floatsPerVector; j++)
+            {
+                vectors.back()[j] = floatVec[i + j];
+            }
+        }
+        return vectors;
+    }
+
+    std::vector<glm::vec4> glft::groupFloatsVec4(std::vector<float> floatVec)
+    {
+        const unsigned int floatsPerVector = 4;
+
+        std::vector<glm::vec4> vectors;
+        for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
+        {
+            vectors.push_back(glm::vec4(0, 0, 0, 0));
+
+            for (unsigned int j = 0; j < floatsPerVector; j++)
+            {
+                vectors.back()[j] = floatVec[i + j];
+            }
+        }
+        return vectors;
     }
 }

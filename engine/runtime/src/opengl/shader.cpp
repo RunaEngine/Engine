@@ -94,7 +94,7 @@ namespace runa::runtime::opengl {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &hasCompiled);
             if (hasCompiled == GL_FALSE)
             {
-                glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+                glGetShaderInfoLog(shader, 4096, NULL, infoLog);
                 utils::Logs::error("SHADER_COMPILATION_ERROR -> %s", infoLog);
                 return false;
             }
@@ -104,7 +104,7 @@ namespace runa::runtime::opengl {
             glGetProgramiv(shader, GL_LINK_STATUS, &hasCompiled);
             if (hasCompiled == GL_FALSE)
             {
-                glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+                glGetProgramInfoLog(shader, 4096, NULL, infoLog);
                 utils::Logs::error("SHADER_LINKING_ERROR -> %s", infoLog);
                 return false;
             }

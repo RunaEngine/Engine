@@ -7,8 +7,7 @@ namespace runa::runtime::utils {
     {
         va_list vargs;
         va_start(vargs, fmt);
-        SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, vargs);
-        SDL_Log("\n");
+        SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, vargs);
         va_end(vargs);
     }
 
@@ -16,9 +15,9 @@ namespace runa::runtime::utils {
     {
         va_list vargs;
         va_start(vargs, fmt);
-        SDL_Log("\033[32m");
-        SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, vargs);
-        SDL_Log("\033[0m\n");
+        //SDL_Log("\033[32m");
+        SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, vargs);
+        //SDL_Log("\033[0m");
         va_end(vargs);
     }
 
@@ -26,9 +25,9 @@ namespace runa::runtime::utils {
     {
         va_list vargs;
         va_start(vargs, fmt);
-        SDL_Log("\033[31m");
-        SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, vargs);
-        SDL_Log("\033[0m\n");
+        //SDL_Log("\033[31m");
+        SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, vargs);
+        //SDL_Log("\033[0m");
         va_end(vargs);
     }
 
@@ -36,17 +35,17 @@ namespace runa::runtime::utils {
     {
         va_list vargs;
         va_start(vargs, fmt);
-        SDL_Log("\033[33m");
-        SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_WARN, fmt, vargs);
-        SDL_Log("\033[0m\n");
+        printf_s("\033[33m");
+        SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_WARN, fmt, vargs);
+        printf_s("\033[0m");
         va_end(vargs);
     }
 
     void Logs::sdlError()
     {
-        SDL_Log("\033[31m");
+        printf_s("\033[31m");
         SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, "%s", SDL_GetError());
-        SDL_Log("\033[0m\n");
+        printf_s("\033[0m");
     }
 
     bool Logs::gltfError(cgltf_result result)

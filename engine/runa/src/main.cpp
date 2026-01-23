@@ -13,7 +13,7 @@ using namespace runa::runtime::opengl;
 int main(int argc, char** argv) {
     if (!render.init()) return -1;
     gameUserSettings.setVsync(disable);
-    gameUserSettings.setFramerateLimit(300);
+    //gameUserSettings.setFramerateLimit(300);
 
 	// Vertices coordinates
     std::vector<Vertex> vertices =
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
 
-    const std::string currentDir = utils::baseDir();
+    std::string currentDir = utils::baseDir();
 
 	// Texture data
 	std::string albedodir = currentDir + "resources/textures/planks.png";
@@ -81,11 +81,13 @@ int main(int argc, char** argv) {
     std::vector<Texture> textures;
     textures.push_back(Texture());
     textures.push_back(Texture());
-    textures[0].init(albedodir.c_str(), "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE);
-    textures[1].init(albedodir.c_str(), "specular", 1, GL_RED, GL_UNSIGNED_BYTE);
+    if (!textures[0].init(albedodir.c_str(), "diffuse", 0, 0, GL_UNSIGNED_BYTE))
+        return -1;
+    if(!textures[1].init(speculardir.c_str(), "specular", 1, 0, GL_UNSIGNED_BYTE))
+        return -1;
 
-    const std::string vertShader = currentDir + "resources/shaders/default.vert";
-    const std::string fragShader = currentDir + "resources/shaders/default.frag";
+    std::string vertShader = currentDir + "resources/shaders/default.vert";
+    std::string fragShader = currentDir + "resources/shaders/default.frag";
     Shader shader;
     if (!shader.init(vertShader.c_str(), fragShader.c_str()))
     {
@@ -101,8 +103,8 @@ int main(int argc, char** argv) {
 	}
 
     // Shader for light cube
-    const std::string vertLightShader = currentDir + "resources/shaders/light.vert";
-    const std::string fragLightShader = currentDir + "resources/shaders/light.frag";
+    std::string vertLightShader = currentDir + "resources/shaders/light.vert";
+    std::string fragLightShader = currentDir + "resources/shaders/light.frag";
     Shader lightShader;
     if (!lightShader.init(vertLightShader.c_str(), fragLightShader.c_str()))
     {
@@ -138,7 +140,7 @@ int main(int argc, char** argv) {
         if (e.type == SDL_EVENT_WINDOW_RESIZED)
         {
             int viewportWidth, viewportHeight;
-            if (!SDL_GetWindowSizeInPixels(render.getBackend().getWindow(), &viewportWidth, &viewportHeight))
+            if (SDL_GetWindowSizeInPixels(render.getBackend().getWindow(), &viewportWidth, &viewportHeight))
             {
                 glViewport(0, 0, viewportWidth, viewportHeight);
             }
