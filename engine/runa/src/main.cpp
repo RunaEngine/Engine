@@ -12,7 +12,7 @@ using namespace runa::runtime::opengl;
 
 int main(int argc, char** argv) {
     if (!render.init()) return -1;
-    gameUserSettings.setVsync(disable);
+    //gameUserSettings.setVsync(disable);
     //gameUserSettings.setFramerateLimit(300);
 
 	// Vertices coordinates

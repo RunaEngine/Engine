@@ -15,7 +15,7 @@ set(CGLTF_SOURCES
 add_library(gltf INTERFACE ${CGLTF_SOURCES})
 target_include_directories(gltf
         INTERFACE
-        "${CGLTF_DIR}"
+        ${CGLTF_SOURCE_DIR}
 )
 
 set_target_properties(gltf PROPERTIES FOLDER "/engine/thirdparty" LINKER_LANGUAGE C)

@@ -13,7 +13,7 @@ namespace runa::runtime::opengl {
         type = textype;
 
         SDL_Surface* surf = IMG_Load(filepath);
-        if (surf == nullptr) {
+        if (!surf) {
             utils::Logs::error("Failed to load texture file %s", filepath);
             return false;
         }
