@@ -4,38 +4,89 @@
 
 namespace runa::runtime::models
 {
-    glft::~glft()
+    gltf::~gltf()
     {
         deinit();
     }
 
-    bool glft::init(const char* filepath)
+    bool gltf::init(const char* filepath)
     {
         cgltf_options options = {};
-        cgltf_data* gltfData;
-        if (!utils::Logs::gltfError(cgltf_parse_file(&options, filepath, &gltfData)))
+        if (!utils::Logs::gltfError(cgltf_parse_file(&options, filepath, &data)))
         {
             return false;
         }
 
-        //Get data fom buffer or .bin file
-        cgltf_buffer* gltfBuffer = &gltfData->buffers[0];
-        data.assign(
-            static_cast<uint8_t*>(gltfBuffer->data),
-            static_cast<uint8_t*>(gltfBuffer->data) + gltfBuffer->size
-        );
+        if (!utils::Logs::gltfError(cgltf_validate(data)))
+        {
+            cgltf_free(data);
+            return false;
+        }
 
-        cgltf_free(gltfData);
+        std::string path = filepath;
+        path = path.substr(0, path.find_last_of('/') + 1);
+
+        std::string uri = path + data->buffers[0].uri;
+
+        if (!utils::Logs::gltfError(cgltf_load_buffers(&options, data, filepath))) {
+            cgltf_free(data);
+            return false;
+        }
+
+        dir = path;
 
         return true;
     }
 
-    void glft::deinit()
+    void gltf::deinit()
     {
-
+        if (data) cgltf_free(data);
+        data = nullptr;
     }
 
-    std::vector<float> glft::getFloats(cgltf_accessor* accessor)
+    void gltf::loadMesh(unsigned int indMesh) 
+    {
+        // Get all accessor indices
+        cgltf_primitive* primitive = &data->meshes[indMesh].primitives[0];
+        cgltf_accessor* posAccessor = primitive->attributes[0].data;
+        cgltf_accessor* normalAccessor = primitive->attributes[1].data;
+        cgltf_accessor* texAccessor = primitive->attributes[2].data;
+        cgltf_accessor* indAccessor = primitive->indices;
+
+        // Use accessor indices to get all vertices components
+        std::vector<float> posVec = getFloats(posAccessor);
+        std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
+        std::vector<float> normalVec = getFloats(normalAccessor);
+        std::vector<glm::vec3> normals = groupFloatsVec3(normalVec);
+        std::vector<float> texVec = getFloats(texAccessor);
+        std::vector<glm::vec2> texUVs = groupFloatsVec2(texVec);
+
+        // Combine all the vertex components and also get the indices and textures
+        std::vector<opengl::Vertex> vertices = assembleVertices(positions, normals, texUVs);
+        std::vector<GLuint> indices = getIndices(indAccessor);
+        std::vector<opengl::Texture> textures = getTextures();
+
+        // Combine the vertices, indices, and textures into a mesh
+        opengl::Mesh mesh;
+        if (mesh.init(vertices, indices, textures)) {
+            meshes.push_back(mesh);
+        }
+    }
+
+    std::vector<uint8_t> gltf::getData() {
+        std::vector<uint8_t> gltfData;
+
+        //Get data fom buffer or .bin file
+        cgltf_buffer* gltfBuf = &data->buffers[0];
+        gltfData.assign(
+            static_cast<uint8_t*>(gltfBuf->data),
+            static_cast<uint8_t*>(gltfBuf->data) + gltfBuf->size
+        );
+
+        return gltfData;
+    }
+
+    std::vector<float> gltf::getFloats(cgltf_accessor* accessor)
     {
         // Get properties from the accessor
         const cgltf_size elementCount = accessor->count;
@@ -78,7 +129,7 @@ namespace runa::runtime::models
         return floatValues;
     }
 
-    std::vector<GLuint> glft::getIndices(cgltf_accessor* accessor)
+    std::vector<GLuint> gltf::getIndices(cgltf_accessor* accessor)
     {
         std::vector<GLuint> indices;
 
@@ -102,7 +153,7 @@ namespace runa::runtime::models
             const cgltf_size dataSizeInBytes = elementCount * sizeof(unsigned int);
             cgltf_size indexPos = 0;
             for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
-                 sizeof(unsigned int))
+                sizeof(unsigned int))
             {
                 unsigned int value;
                 memcpy(&value, &data[byteIndex], sizeof(unsigned int));
@@ -114,7 +165,7 @@ namespace runa::runtime::models
             const cgltf_size dataSizeInBytes = elementCount * sizeof(unsigned short);
             cgltf_size indexPos = 0;
             for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
-                 sizeof(unsigned short))
+                sizeof(unsigned short))
             {
                 unsigned short value;
                 memcpy(&value, &data[byteIndex], sizeof(unsigned short));
@@ -126,7 +177,7 @@ namespace runa::runtime::models
             const cgltf_size dataSizeInBytes = elementCount * sizeof(short);
             cgltf_size indexPos = 0;
             for (cgltf_size byteIndex = dataStartOffset; byteIndex < dataStartOffset + dataSizeInBytes; byteIndex +=
-                 sizeof(short))
+                sizeof(short))
             {
                 short value;
                 memcpy(&value, &data[byteIndex], sizeof(short));
@@ -137,7 +188,47 @@ namespace runa::runtime::models
         return indices;
     }
 
-    std::vector<opengl::Vertex> glft::assembleVertices(std::vector<glm::vec3> positions, std::vector<glm::vec3> normals,
+    std::vector<opengl::Texture> gltf::getTextures()
+    {
+        std::vector<opengl::Texture> textures;
+
+        // Go over all images
+        for (unsigned int i = 0; i < data->images_count; i++)
+        {
+            // uri of current texture
+            std::string texUri = data->images[i].uri;
+
+            // Check if the texture has already been loaded
+            if (modelTextures.contains(texUri.c_str())) {
+                textures.push_back(modelTextures.at(texUri.c_str()));
+                continue;
+            }
+            // If the texture has been loaded, skip this
+
+            // Load diffuse texture
+            if (texUri.find("baseColor") != std::string::npos)
+            {
+                opengl::Texture diffuse;
+                if (diffuse.init((dir + texUri).c_str(), "diffuse", modelTextures.size(), 0, GL_UNSIGNED_BYTE)) {
+                    textures.push_back(diffuse);
+                    modelTextures.insert_or_assign(texUri.c_str(), diffuse);
+                }
+            }
+            // Load specular texture
+            else if (texUri.find("metallicRoughness") != std::string::npos)
+            {
+                opengl::Texture specular;
+                if (specular.init((dir + texUri).c_str(), "specular", modelTextures.size(), 0, GL_UNSIGNED_BYTE)) {
+                    textures.push_back(specular);
+                    modelTextures.insert_or_assign(texUri.c_str(), specular);
+                }
+            }
+        }
+
+        return textures;
+    }
+
+    std::vector<opengl::Vertex> gltf::assembleVertices(std::vector<glm::vec3> positions, std::vector<glm::vec3> normals,
         std::vector<glm::vec2> texCoords)
     {
         std::vector<opengl::Vertex> vertices;
@@ -145,14 +236,14 @@ namespace runa::runtime::models
         for (size_t i = 0; i < positions.size(); i++)
         {
             vertices.push_back(
-                opengl::Vertex{ positions[i], normals[i], glm::vec3(1.0f, 1.0f, 1.0f), texCoords[i]}
-                );
+                opengl::Vertex{ positions[i], normals[i], glm::vec3(1.0f, 1.0f, 1.0f), texCoords[i] }
+            );
         }
 
         return vertices;
     }
 
-    std::vector<glm::vec2> glft::groupFloatsVec2(std::vector<float> floatVec)
+    std::vector<glm::vec2> gltf::groupFloatsVec2(std::vector<float> floatVec)
     {
         const unsigned int floatsPerVector = 2;
 
@@ -169,7 +260,7 @@ namespace runa::runtime::models
         return vectors;
     }
 
-    std::vector<glm::vec3> glft::groupFloatsVec3(std::vector<float> floatVec)
+    std::vector<glm::vec3> gltf::groupFloatsVec3(std::vector<float> floatVec)
     {
         const unsigned int floatsPerVector = 3;
 
@@ -186,7 +277,7 @@ namespace runa::runtime::models
         return vectors;
     }
 
-    std::vector<glm::vec4> glft::groupFloatsVec4(std::vector<float> floatVec)
+    std::vector<glm::vec4> gltf::groupFloatsVec4(std::vector<float> floatVec)
     {
         const unsigned int floatsPerVector = 4;
 

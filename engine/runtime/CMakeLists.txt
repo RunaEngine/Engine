@@ -33,6 +33,6 @@ target_link_libraries(runtime
         #COMPRESSION
         ZLIB::ZLIB
         #OBJ LIBRARY
-        cgltf
+        gltf
 )
 set_target_properties(runtime PROPERTIES FOLDER "/engine/runtime" LINKER_LANGUAGE CXX)

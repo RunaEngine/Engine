@@ -1,7 +1,7 @@
 FetchContent_Declare(
     GLM
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    TAG 1.0.1
+    TAG 1.0.3
 )
 
 if (NOT GLM_POPULATED)
