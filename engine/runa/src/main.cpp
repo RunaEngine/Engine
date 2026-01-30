@@ -6,6 +6,7 @@
 #include <utils/system.h>
 #include <settings.h>
 #include <io/handlers.h>
+#include <models/gltf.h>
 
 using namespace runa::runtime;
 using namespace runa::runtime::opengl;
@@ -15,6 +16,7 @@ int main(int argc, char** argv) {
     //gameUserSettings.setVsync(disable);
     //gameUserSettings.setFramerateLimit(300);
 
+    /*
 	// Vertices coordinates
     std::vector<Vertex> vertices =
     {
@@ -70,11 +72,7 @@ int main(int argc, char** argv) {
 	    4, 5, 6,
 	    4, 6, 7
     };
-
-    Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
-
-    std::string currentDir = utils::baseDir();
-
+    
 	// Texture data
 	std::string albedodir = currentDir + "resources/textures/planks.png";
 	std::string speculardir = currentDir + "resources/textures/planksSpec.png";
@@ -134,6 +132,36 @@ int main(int argc, char** argv) {
     glUniformMatrix4fv(glGetUniformLocation( shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
     glUniform4f(glGetUniformLocation( shader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
     glUniform3f(glGetUniformLocation( shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+    */
+
+    std::filesystem::path currentDir = utils::baseDir();
+
+    // Shader for light cube
+    std::filesystem::path vertShader = currentDir.string() + "resources/shaders/default.vert";
+    std::filesystem::path fragShader = currentDir.string() + "resources/shaders/default.frag";
+    // Generates Shader object using shaders default.vert and default.frag
+	Shader shader;
+    if (!shader.init(vertShader, fragShader))
+    {
+        return -1;
+    }
+
+	// Take care of all the light related things
+	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::mat4 lightModel = glm::mat4(1.0f);
+	lightModel = glm::translate(lightModel, lightPos);
+
+	shader.use();
+	glUniform4f(glGetUniformLocation(shader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+    Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
+
+    std::filesystem::path glbfile = currentDir.string() + "resources/sword/scene.gltf";
+
+    models::gltf proxy;
+    proxy.init(glbfile);
 
     bool shouldClose = false;
     event.onEvent = [&](SDL_Event &e) {
@@ -157,14 +185,13 @@ int main(int argc, char** argv) {
         ImGui::End();
     };
     render.onRender= [&](double delta) {
-        shader.use();
+        //shader.use();
 
         camera.tick((float)delta);
         camera.updateMatrix(60.0f, 0.1f, 100.0f);
 
     	// Draws different meshes
-    	floor.draw(shader, camera);
-    	light.draw(lightShader, camera);
+    	proxy.draw(shader, camera);
     };
 
     while (!shouldClose)

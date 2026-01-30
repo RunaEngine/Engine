@@ -7,14 +7,14 @@ namespace runa::runtime::opengl {
         if (id > 0) denit();
     }
 
-    bool Texture::init(const char* filepath, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype)
+    bool Texture::init(const std::filesystem::path& filepath, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype)
     {
         // Assigns the type of the texture to the texture object
         type = textype;
 
-        SDL_Surface* surf = IMG_Load(filepath);
+        SDL_Surface* surf = IMG_Load(filepath.string().c_str());
         if (!surf) {
-            utils::Logs::error("Failed to load texture file %s", filepath);
+            utils::Logs::sdlError();
             return false;
         }
 

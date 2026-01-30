@@ -2,6 +2,7 @@
 
 #include "shader.h"
 #include <glad/glad.h>
+#include <filesystem>
 
 namespace runa::runtime::opengl {
     class Texture {
@@ -9,7 +10,7 @@ namespace runa::runtime::opengl {
         Texture() = default;
         ~Texture();
 
-        bool init(const char* texturefile, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype);
+        bool init(const std::filesystem::path& texturefile, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype);
         void denit();
 
         void texUnit(const Shader& shader, const char* uniform, GLuint unit);

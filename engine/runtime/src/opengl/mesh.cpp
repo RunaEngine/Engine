@@ -74,7 +74,12 @@ namespace runa::runtime::opengl
         textures.clear();
     }
 
-    void Mesh::draw(const Shader& shader, const Camera& camera)
+    void Mesh::draw(const Shader& shader, const Camera& camera, 
+            glm::mat4 matrix,
+            glm::vec3 translation,
+            glm::quat rotation,
+            glm::vec3 scale
+        )
     {
         // Bind shader to be able to access uniforms
         shader.use();
@@ -112,6 +117,22 @@ namespace runa::runtime::opengl
         // Take care of the camera Matrix
         glUniform3f(glGetUniformLocation(shader.getID(), "camPos"), camera.pos.x, camera.pos.y, camera.pos.z);
         camera.matrix(shader, "camMatrix");
+
+        // Initialize matrices
+        glm::mat4 trans = glm::mat4(1.0f);
+        glm::mat4 rot = glm::mat4(1.0f);
+        glm::mat4 sca = glm::mat4(1.0f);
+
+        // Transform the matrices to their correct form
+        trans = glm::translate(trans, translation);
+        rot = glm::mat4_cast(rotation);
+        sca = glm::scale(sca, scale);
+
+        // Push the matrices to the vertex shader
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "translation"), 1, GL_FALSE, glm::value_ptr(trans));
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "rotation"), 1, GL_FALSE, glm::value_ptr(rot));
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "scale"), 1, GL_FALSE, glm::value_ptr(sca));
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(matrix));
 
         // Draw the actual mesh
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

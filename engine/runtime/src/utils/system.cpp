@@ -2,16 +2,6 @@
 #include "utils/logs.h"
 #include <SDL3/SDL.h>
 
-#ifdef _WIN64
-const char PATH_SEPARATOR = '\\';
-const char PATH_SEPARATOR_OTHER = '/';
-const char *PATH_SEPARATOR_STR = "\\";
-#else
-const char PATH_SEPARATOR = '/';
-const char PATH_SEPARATOR_OTHER = '\\';
-const char* PATH_SEPARATOR_STR = "/";
-#endif
-
 namespace runa::runtime::utils
 {
     bool getEnvVar(const char* varname, std::string& var)
@@ -41,8 +31,8 @@ namespace runa::runtime::utils
         return false;
     }
 
-    bool readFile(const char* filepath, std::vector<uint8_t>& data) {
-        SDL_IOStream *file = SDL_IOFromFile(filepath, "rb");
+    bool readFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data) {
+        SDL_IOStream *file = SDL_IOFromFile(filepath.string().c_str(), "rb");
         if (!file) {
             Logs::sdlError();
             return false;
@@ -62,7 +52,7 @@ namespace runa::runtime::utils
         }
 
         if (SDL_SeekIO(file, 0, SDL_IO_SEEK_SET) < 0) {
-            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath, SDL_GetError());
+            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath.string().c_str(), SDL_GetError());
             SDL_CloseIO(file);
             return false;
         }
@@ -82,8 +72,8 @@ namespace runa::runtime::utils
         return true;
     }
 
-    bool readTextFile(const char* filepath, std::string& text) {
-        SDL_IOStream *file = SDL_IOFromFile(filepath, "rt");
+    bool readTextFile(const std::filesystem::path& filepath, std::string& text) {
+        SDL_IOStream *file = SDL_IOFromFile(filepath.string().c_str(), "rt");
         if (!file) {
             Logs::sdlError();
             return false;
@@ -103,7 +93,7 @@ namespace runa::runtime::utils
         }
 
         if (SDL_SeekIO(file, 0, SDL_IO_SEEK_SET) < 0) {
-            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath, SDL_GetError());
+            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath.string().c_str(), SDL_GetError());
             SDL_CloseIO(file);
             return false;
         }
@@ -123,64 +113,26 @@ namespace runa::runtime::utils
         return true;
     }
 
-    bool fileExist(const std::string &filepath) {
-        SDL_IOStream *file = SDL_IOFromFile(filepath.c_str(), "rb");
-
-        if (file) {
-            Logs::sdlError();
-            SDL_CloseIO(file);
+    bool fileExist(const std::filesystem::path &filepath) {
+        if (std::filesystem::exists(filepath) && std::filesystem::is_regular_file(filepath))
+        {
             return true;
         }
 
-        // No need to log here as file not existing is often an expected case
         return false;
     }
 
-    std::string joinPaths(const std::vector<std::string>& paths)
+    bool dirExist(const std::filesystem::path& filepath)
     {
-        std::string joined_path;
-
-        for (const std::string &path : paths) {
-            if (path.empty()) continue;
-
-            size_t str_len = path.length();
-            std::string str = path;
-            bool was_separator = false;
-            for (size_t i = 0; i < str_len; i++) {
-                char &c = str[i];
-                if (i == 0 && (c == PATH_SEPARATOR || c == PATH_SEPARATOR_OTHER)) {
-                    was_separator = true;
-                    continue;
-                }
-                if (c == PATH_SEPARATOR || c == PATH_SEPARATOR_OTHER) {
-                    if (was_separator) continue;
-                    was_separator = true;
-                    c = PATH_SEPARATOR;
-                }
-            }
-            if (str.back() != PATH_SEPARATOR) {
-                str.push_back(PATH_SEPARATOR);
-            }
-            joined_path += str;
+        if (std::filesystem::exists(filepath) && std::filesystem::is_directory(filepath))
+        {
+            return true;
         }
-        return joined_path;
+
+        return false;
     }
 
-    void nativeSeparator(std::string& path)
-    {
-        if (path.empty()) {
-            SDL_Log("Path is NULL");
-        }
-
-        size_t str_len = path.length();
-        for (char &c : path) {
-            if (c == PATH_SEPARATOR_OTHER) {
-                c = PATH_SEPARATOR;
-            }
-        }
-    }
-
-    std::string getHomeDir()
+    std::filesystem::path getHomeDir()
     {
         std::string homeDir;
 #ifdef _WIN64
@@ -188,23 +140,28 @@ namespace runa::runtime::utils
 #else
         getEnvVar("HOME", homeDir);
 #endif
-        return homeDir;
+        return std::filesystem::path(homeDir);
     }
 
-    std::string getPrefPath(const std::string& org, const std::string& app)
+    std::filesystem::path getPrefPath(const std::string& org, const std::string& app)
     {
         char *path = SDL_GetPrefPath(org.c_str(), app.c_str());
         if (!path) {
             SDL_Log("Failed to get pref path");
             return "";
         }
-        std::string path_str(path);
+        std::filesystem::path fs_path(path);
         SDL_free(path);
-        return path_str;
+        return fs_path;
     }
 
-    std::string baseDir()
+    std::filesystem::path baseDir()
     {
-        return SDL_GetBasePath();
+        return std::filesystem::path(SDL_GetBasePath());
+    }
+
+    std::filesystem::path currentWorkDir()
+    {
+        return std::filesystem::current_path();
     }
 }

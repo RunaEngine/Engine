@@ -8,7 +8,7 @@ namespace runa::runtime::opengl {
         if (id > 0) deinit();
     }
 
-    bool Shader::init(const char* vertexfile, const char* fragmentfile)
+    bool Shader::init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile)
     {
         // Convert the shader source strings into character arrays
         std::string vertexSource;

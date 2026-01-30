@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <filesystem>
 
 namespace runa::runtime::utils
 {
@@ -10,19 +11,19 @@ namespace runa::runtime::utils
 
     bool getUserName(std::string& username);
 
-    bool readFile(const char* filepath, std::vector<uint8_t>& data);
+    bool readFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data);
 
-    bool readTextFile(const char* filepath, std::string& text);
+    bool readTextFile(const std::filesystem::path& filepath, std::string& text);
 
-    bool fileExist(const char* filepath);
+    bool fileExist(const std::filesystem::path& filepath);
 
-    std::string joinPaths(const std::vector<std::string>& paths);
+    bool dirExist(const std::filesystem::path& filepath);
 
-    void nativeSeparator(std::string& path);
+    std::filesystem::path getHomeDir();
 
-    std::string getHomeDir();
+    std::filesystem::path getPrefPath(const std::string &org, const std::string &app);
 
-    std::string getPrefPath(const std::string &org, const std::string &app);
+    std::filesystem::path baseDir();
 
-    std::string baseDir();
+    std::filesystem::path currentWorkDir();
 }

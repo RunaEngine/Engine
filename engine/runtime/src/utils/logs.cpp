@@ -47,7 +47,7 @@ namespace runa::runtime::utils {
         SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, "%s", SDL_GetError());
         printf_s("\033[0m");
     }
-
+/*
     bool Logs::gltfError(cgltf_result result)
     {
         switch (result)
@@ -108,4 +108,5 @@ namespace runa::runtime::utils {
         if (result == cgltf_result_success) return true;
         return false;
     }
+*/
 }

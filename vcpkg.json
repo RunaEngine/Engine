@@ -2,6 +2,7 @@
   "name": "runa",
   "version": "0.0.1",
   "dependencies": [
+    "libuv",
     "openssl",
     {
       "name": "sdl3",
@@ -26,7 +27,6 @@
         "tiff"
       ]
     },
-    "zlib",
-    "libuv"
+    "zlib"
   ]
 }

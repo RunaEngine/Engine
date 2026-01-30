@@ -31,5 +31,5 @@ add_subdirectory(${THIRDPARTY_DIR}/simdjson)
 #IMAGE LIBRARY
 add_subdirectory(${THIRDPARTY_DIR}/stb)
 
-#OBJ LIBRARY
-add_subdirectory(${THIRDPARTY_DIR}/cgltf)
+#GLTF
+add_subdirectory(${THIRDPARTY_DIR}/fastgltf)

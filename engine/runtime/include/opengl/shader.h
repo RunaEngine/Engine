@@ -2,6 +2,7 @@
 
 #include <string>
 #include <glad/glad.h>
+#include <filesystem>
 
 namespace runa::runtime::opengl {
     class Shader {
@@ -9,7 +10,7 @@ namespace runa::runtime::opengl {
         Shader() = default;
         ~Shader();
 
-        bool init(const char* vertexfile, const char* fragmentfile);
+        bool init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile);
         void deinit();
 
         void use() const;
