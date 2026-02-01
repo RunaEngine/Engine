@@ -2,7 +2,8 @@
 
 namespace runa::runtime::opengl {
     VertexArray::~VertexArray() {
-        if (id > 0) deinit();
+        if (deferDeinit && id > 0) 
+            deinit();
     }
 
     void VertexArray::init()
@@ -13,6 +14,11 @@ namespace runa::runtime::opengl {
     void VertexArray::deinit()
     {
         glDeleteVertexArrays(1, &id);
+    }
+
+    void VertexArray::defer(bool value)
+    {
+        deferDeinit = value;
     }
 
     void VertexArray::bind() const {

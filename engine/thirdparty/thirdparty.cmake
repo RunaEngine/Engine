@@ -6,6 +6,7 @@ find_package(SDL3_image CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(libuv CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 # Dependencies
 include(FetchContent)
@@ -30,6 +31,3 @@ add_subdirectory(${THIRDPARTY_DIR}/simdjson)
 
 #IMAGE LIBRARY
 add_subdirectory(${THIRDPARTY_DIR}/stb)
-
-#GLTF
-add_subdirectory(${THIRDPARTY_DIR}/fastgltf)

@@ -3,10 +3,11 @@
 #include <memory>
 #include <runtime.h>
 #include <opengl/mesh.h>
+#include <opengl/model.h>
+#include <utils/logs.h>
 #include <utils/system.h>
 #include <settings.h>
 #include <io/handlers.h>
-#include <models/gltf.h>
 
 using namespace runa::runtime;
 using namespace runa::runtime::opengl;
@@ -158,10 +159,14 @@ int main(int argc, char** argv) {
 
     Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
 
-    std::filesystem::path glbfile = currentDir.string() + "resources/sword/scene.gltf";
+    //std::filesystem::path gltfFile = currentDir.string() + "resources/sword/scene.gltf";
+    std::filesystem::path gltfFile = currentDir.string() + "resources/proxy/proxy.glb";
 
-    models::gltf proxy;
-    proxy.init(glbfile);
+    Model model;
+    if (!model.init(gltfFile)) {
+        utils::Logs::error("Failed to load sword model from: %s", gltfFile.string().c_str());
+        return -1;
+    }
 
     bool shouldClose = false;
     event.onEvent = [&](SDL_Event &e) {
@@ -191,7 +196,7 @@ int main(int argc, char** argv) {
         camera.updateMatrix(60.0f, 0.1f, 100.0f);
 
     	// Draws different meshes
-    	proxy.draw(shader, camera);
+    	model.draw(shader, camera);
     };
 
     while (!shouldClose)

@@ -21,10 +21,12 @@ namespace runa::runtime::opengl {
 
         void init(const Vertex* vertices, GLsizeiptr count);
         void deinit();
+        void defer(bool value = true);
 
         void bind() const;
         void unbind() const;
     private:
+        bool deferDeinit = true;
         GLuint id;
     };
 }

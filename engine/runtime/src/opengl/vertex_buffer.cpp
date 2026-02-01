@@ -3,7 +3,8 @@
 namespace runa::runtime::opengl {
     VertexBuffer::~VertexBuffer()
     {
-        if (id > 0) deinit();
+        if (deferDeinit && id > 0) 
+            deinit();
     }
 
     void VertexBuffer::init(const Vertex* vertices, GLsizeiptr count)
@@ -17,6 +18,11 @@ namespace runa::runtime::opengl {
     {
         glDeleteBuffers(1, &id);
         id = 0;
+    }
+
+    void VertexBuffer::defer(bool value)
+    {
+        deferDeinit = value;
     }
 
     void VertexBuffer::bind() const {

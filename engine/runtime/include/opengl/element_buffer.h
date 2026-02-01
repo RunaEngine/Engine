@@ -10,12 +10,14 @@ namespace runa::runtime::opengl {
 
         void init(const GLuint *indices, GLsizeiptr count);
         void deinit();
+        void defer(bool value = true);
 
         void bind() const;
         void unbind() const;
 
         GLsizeiptr count() const;
     private:
+        bool deferDeinit = true;
         GLuint id = 0;
         GLsizeiptr size = 0;
     };

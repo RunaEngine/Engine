@@ -12,11 +12,13 @@ namespace runa::runtime::opengl {
 
         bool init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile);
         void deinit();
+        void defer(bool value = true);
 
         void use() const;
         void setUniformLocation(const char *uniform, GLuint unit) const;
         GLuint getID() const { return id; }
     private:
+        bool deferDeinit = true;
         GLuint id = 0;
 
         bool checksum(unsigned int shader, const char* type);

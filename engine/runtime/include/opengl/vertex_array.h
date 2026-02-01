@@ -11,11 +11,13 @@ namespace runa::runtime::opengl {
 
         void init();
         void deinit();
+        void defer(bool value = true);
 
         void bind() const;
         void unbind() const;
         void enableAttrib(const VertexBuffer &vertex_buffer, const GLuint layout, GLuint num, GLenum type, GLsizeiptr stride, void *offset) const;
     private:
+        bool deferDeinit = true;
         GLuint id;
     };
 }

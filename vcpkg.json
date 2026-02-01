@@ -27,6 +27,7 @@
         "tiff"
       ]
     },
-    "zlib"
+    "zlib",
+    "assimp"
   ]
 }

@@ -2,7 +2,8 @@
 
 namespace runa::runtime::opengl {
     ElementBuffer::~ElementBuffer() {
-        if (id > 0) deinit();
+        if (deferDeinit && id > 0) 
+            deinit();
     }
 
     void ElementBuffer::init(const GLuint* indices, GLsizeiptr count)
@@ -18,6 +19,11 @@ namespace runa::runtime::opengl {
         glDeleteBuffers(1, &id);
         id = 0;
         size = 0;
+    }
+
+    void ElementBuffer::defer(bool value)
+    {
+        deferDeinit = value;
     }
 
     void ElementBuffer::bind() const {

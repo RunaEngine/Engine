@@ -1,12 +1,12 @@
 #include "opengl/mesh.h"
-
 #include "utils/logs.h"
 
 namespace runa::runtime::opengl
 {
     Mesh::~Mesh()
     {
-        deinit();
+        if (deferDeinit)
+            deinit();
     }
 
     bool Mesh::init(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures)
@@ -74,9 +74,15 @@ namespace runa::runtime::opengl
         textures.clear();
     }
 
+
+    void Mesh::defer(bool value)
+    {
+        deferDeinit = value;
+    }
+
     void Mesh::draw(const Shader& shader, const Camera& camera, 
             glm::mat4 matrix,
-            glm::vec3 translation,
+            glm::vec3 position,
             glm::quat rotation,
             glm::vec3 scale
         )
@@ -95,21 +101,21 @@ namespace runa::runtime::opengl
             char uniform[128];
             if (SDL_strcmp(type, "diffuse") == 0)
             {
-                numDiffuse++;
-                if (SDL_snprintf(uniform, sizeof(uniform), "%s%d", type, numDiffuse) < 0)
+                if (SDL_snprintf(uniform, sizeof(uniform), "%s%u", type, numDiffuse) < 0)
                 {
                     utils::Logs::sdlError();
                     continue;
                 }
+                numDiffuse++;
             }
             else if (SDL_strcmp(type, "specular") == 0)
             {
-                numSpecular++;
-                if (SDL_snprintf(uniform, sizeof(uniform), "%s%d", type, numSpecular) < 0)
+                if (SDL_snprintf(uniform, sizeof(uniform), "%s%u", type, numSpecular) < 0)
                 {
                     utils::Logs::sdlError();
                     continue;
                 }
+                numSpecular++;
             }
             textures[i].texUnit(shader, uniform, i);
             textures[i].bind();
@@ -119,17 +125,17 @@ namespace runa::runtime::opengl
         camera.matrix(shader, "camMatrix");
 
         // Initialize matrices
-        glm::mat4 trans = glm::mat4(1.0f);
+        glm::mat4 pos = glm::mat4(1.0f);
         glm::mat4 rot = glm::mat4(1.0f);
         glm::mat4 sca = glm::mat4(1.0f);
 
         // Transform the matrices to their correct form
-        trans = glm::translate(trans, translation);
+        pos = glm::translate(pos, position);
         rot = glm::mat4_cast(rotation);
         sca = glm::scale(sca, scale);
 
         // Push the matrices to the vertex shader
-        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "translation"), 1, GL_FALSE, glm::value_ptr(trans));
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "translation"), 1, GL_FALSE, glm::value_ptr(pos));
         glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "rotation"), 1, GL_FALSE, glm::value_ptr(rot));
         glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "scale"), 1, GL_FALSE, glm::value_ptr(sca));
         glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(matrix));

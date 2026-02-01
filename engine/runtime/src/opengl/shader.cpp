@@ -5,7 +5,8 @@
 
 namespace runa::runtime::opengl {
     Shader::~Shader() {
-        if (id > 0) deinit();
+        if (deferDeinit && id > 0) 
+            deinit();
     }
 
     bool Shader::init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile)
@@ -39,9 +40,9 @@ namespace runa::runtime::opengl {
         // Attach Fragment Shader source to the Fragment Shader Object
         const GLchar* fragmentSrc = fragmentSource.c_str();
         glShaderSource(fragmentShader, 1, &fragmentSrc, NULL);
-        // Compile the Vertex Shader into machine code
+        // Compile the Fragment Shader into machine code
         glCompileShader(fragmentShader);
-        if (!checksum(vertexShader, "FRAGMENT"))
+        if (!checksum(fragmentShader, "FRAGMENT"))
         {
             return false;
         }
@@ -53,7 +54,7 @@ namespace runa::runtime::opengl {
         glAttachShader(id, fragmentShader);
         // Wrap-up/Link all the shaders together into the Shader Program
         glLinkProgram(id);
-        if (!checksum(vertexShader, "PROGRAM"))
+        if (!checksum(id, "PROGRAM"))
         {
             return false;
         }
@@ -68,6 +69,11 @@ namespace runa::runtime::opengl {
     void Shader::deinit()
     {
         glDeleteProgram(id);
+    }
+
+    void Shader::defer(bool value) 
+    {
+        deferDeinit = value;
     }
 
     void Shader::use() const {
@@ -85,27 +91,28 @@ namespace runa::runtime::opengl {
 
     bool Shader::checksum(unsigned int shader, const char* type)
     {
-        // Stores status of compilation
-        GLint hasCompiled;
+        // Stores status of compilation/linking
+        GLint status;
         // Character array to store error message in
         char infoLog[4096];
-        if (SDL_strcmp(type, "PROGRAM"))
+        // If type equals "PROGRAM" (strcmp == 0) check program link status
+        if (SDL_strcmp(type, "PROGRAM") == 0)
         {
-            glGetShaderiv(shader, GL_COMPILE_STATUS, &hasCompiled);
-            if (hasCompiled == GL_FALSE)
+            glGetProgramiv(shader, GL_LINK_STATUS, &status);
+            if (status == GL_FALSE)
             {
-                glGetShaderInfoLog(shader, 4096, NULL, infoLog);
-                utils::Logs::error("SHADER_COMPILATION_ERROR -> %s", infoLog);
+                glGetProgramInfoLog(shader, 4096, NULL, infoLog);
+                utils::Logs::error("SHADER_LINKING_ERROR -> %s", infoLog);
                 return false;
             }
         }
         else
         {
-            glGetProgramiv(shader, GL_LINK_STATUS, &hasCompiled);
-            if (hasCompiled == GL_FALSE)
+            glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+            if (status == GL_FALSE)
             {
-                glGetProgramInfoLog(shader, 4096, NULL, infoLog);
-                utils::Logs::error("SHADER_LINKING_ERROR -> %s", infoLog);
+                glGetShaderInfoLog(shader, 4096, NULL, infoLog);
+                utils::Logs::error("SHADER_COMPILATION_ERROR -> %s", infoLog);
                 return false;
             }
         }
