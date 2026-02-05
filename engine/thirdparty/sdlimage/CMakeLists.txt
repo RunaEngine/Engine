@@ -32,3 +32,5 @@ if (NOT SDL3_Image_POPULATED)
 endif ()
 
 FetchContent_MakeAvailable(SDL3_Image)
+
+set_target_properties(SDL3_image-static PROPERTIES FOLDER "/engine/thirdparty/sdl")

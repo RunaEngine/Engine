@@ -12,6 +12,9 @@ endif ()
 
 FetchContent_MakeAvailable(ZLIB)
 
+set_target_properties(zlib PROPERTIES FOLDER "/engine/thirdparty/zlib")
+set_target_properties(zlibstatic PROPERTIES FOLDER "/engine/thirdparty/zlib")
+
 # Definir variáveis esperadas pelo find_package
 if (NOT ZLIB_LIBRARY)
     if (MSVC)

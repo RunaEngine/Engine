@@ -14,6 +14,7 @@ namespace runa::runtime::opengl
         this->textures = textures;
 
         vao.init();
+        vao.defer(false);
         vao.bind();
         // Generates Vertex Buffer Object and links it to vertices
         vbo.init(vertices);
@@ -23,7 +24,7 @@ namespace runa::runtime::opengl
         ebo.defer(false);
         // Links VBO attributes such as coordinates and colors to VAO
         GLsizei stride = sizeof(Vertex);
-        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)0);
+        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, position));
         vao.enableAttrib(vbo, 1, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, normal));
         vao.enableAttrib(vbo, 2, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, color));
         vao.enableAttrib(vbo, 3, 2, GL_FLOAT, stride, (void*)offsetof(Vertex, texUV));
@@ -48,8 +49,7 @@ namespace runa::runtime::opengl
         ebo.defer(false);
         // Links VBO attributes such as coordinates and colors to VAO
         GLsizei stride = sizeof(Vertex);
-        (void*)offsetof(Vertex, normal);
-        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)0);
+        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, position));
         vao.enableAttrib(vbo, 1, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, normal));
         vao.enableAttrib(vbo, 2, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, color));
         vao.enableAttrib(vbo, 3, 2, GL_FLOAT, stride, (void*)offsetof(Vertex, texUV));

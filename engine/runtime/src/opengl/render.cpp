@@ -58,7 +58,7 @@ namespace runa::runtime::opengl {
                 utils::Logs::sdlError();
                 return false;
             }
-            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6))
+            if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5))
             {
                 utils::Logs::sdlError();
                 return false;

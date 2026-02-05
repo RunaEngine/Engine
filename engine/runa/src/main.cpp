@@ -160,8 +160,8 @@ int main(int argc, char** argv) {
     Camera camera = Camera();
 	camera.position = glm::vec3(0.0f, 0.0f, 1.0f);
 
-    //std::filesystem::path gltfFile = currentDir.string() + "resources/bunny/scene.gltf";
-    std::filesystem::path gltfFile = currentDir.string() + "resources/proxy/proxy.glb";
+    std::filesystem::path gltfFile = currentDir.string() + "resources/bunny/scene.gltf";
+    //std::filesystem::path gltfFile = currentDir.string() + "resources/proxy/proxy.glb";
 
     Model model;
     if (!model.init(gltfFile)) {
