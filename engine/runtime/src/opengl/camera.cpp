@@ -4,11 +4,6 @@
 
 
 namespace runa::runtime::opengl {
-    Camera::Camera(glm::vec3 position)
-    {
-        pos = position;
-    }
-
     Camera::~Camera()
     {
 
@@ -25,25 +20,25 @@ namespace runa::runtime::opengl {
         glm::mat4 projection = glm::identity<glm::mat4>();
 
         // Makes camera look in the right direction from the right position
-        view = glm::lookAt(pos, pos + orientation, up);
+        view = glm::lookAt(position, position + orientation, up);
         // Adds perspective to the scene
         projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, nearPlane, farPlane);
 
-        cameraMatrix = projection * view;
+        cmatrix = projection * view;
     }
 
     void Camera::matrix(const Shader& shader, const char* uniform) const
     {
         // Exports the camera matrix to the Vertex Shader
-        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(shader.getID(), uniform), 1, GL_FALSE, glm::value_ptr(cmatrix));
     }
 
     void Camera::inputs(SDL_Event& event) {
         glm::vec2 vec = input.inputVector(SDL_SCANCODE_D, SDL_SCANCODE_A, SDL_SCANCODE_W, SDL_SCANCODE_S);
-        direction = glm::normalize(glm::cross(orientation, up)) * vec.x + glm::normalize(orientation) * vec.y;
+        rotation = glm::normalize(glm::cross(orientation, up)) * vec.x + glm::normalize(orientation) * vec.y;
 
         float y_axis = input.inputAxis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
-        direction.y = y_axis;
+        rotation.y = y_axis;
         speed = input.keyPressed(SDL_SCANCODE_LSHIFT) ? 8.0f : 4.0f;
 
         if (input.mouseButtonPressed(SDL_BUTTON_RIGHT))
@@ -70,7 +65,6 @@ namespace runa::runtime::opengl {
                     orientation = newOrientation;
                 }
                 
-
                 orientation = glm::rotate(orientation, glm::radians(-rotY), up);
             }
         }
@@ -83,7 +77,7 @@ namespace runa::runtime::opengl {
     }
 
     void Camera::tick(float delta) {
-        direction = glm::clamp(direction, glm::vec3(-1.0f), glm::vec3(1.0f));
-        pos += speed * direction * delta;
+        rotation = glm::clamp(rotation, glm::vec3(-1.0f), glm::vec3(1.0f));
+        position += speed * rotation * delta;
     }
 }

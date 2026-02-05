@@ -1,7 +1,7 @@
 #pragma once
 
+#include <array>
 #include <glad/glad.h>
-
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 
@@ -19,7 +19,7 @@ namespace runa::runtime::opengl {
         VertexBuffer() = default;
         ~VertexBuffer();
 
-        void init(const Vertex* vertices, GLsizeiptr count);
+        void init(const std::vector<Vertex>& vertices);
         void deinit();
         void defer(bool value = true);
 

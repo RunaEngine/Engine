@@ -1,0 +1,34 @@
+FetchContent_Declare(
+    SDL3_Image
+    URL https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.0/SDL3_image-3.4.0.tar.gz
+)
+
+if (NOT SDL3_Image_POPULATED)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Configurações básicas de build SDLIMAGE_VENDORED=OFF
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
+    set(SDLIMAGE_INSTALL OFF CACHE INTERNAL "")
+    set(SDLIMAGE_DEPS_SHARED OFF CACHE INTERNAL "")
+    set(SDLIMAGE_INSTALL_CPACK OFF CACHE INTERNAL "")
+    set(SDLIMAGE_SAMPLES OFF CACHE INTERNAL "")
+    set(SDLIMAGE_VENDORED OFF CACHE INTERNAL "")
+
+    # Formatos de imagem desabilitados
+    set(SDLIMAGE_ANI OFF CACHE INTERNAL "")
+    set(SDLIMAGE_ANI_SAVE OFF CACHE INTERNAL "")
+    set(SDLIMAGE_LBM OFF CACHE INTERNAL "")
+    set(SDLIMAGE_QOI OFF CACHE INTERNAL "")
+    set(SDLIMAGE_PNM OFF CACHE INTERNAL "")
+    set(SDLIMAGE_XCF OFF CACHE INTERNAL "")
+    set(SDLIMAGE_XPM OFF CACHE INTERNAL "")
+    set(SDLIMAGE_XV OFF CACHE INTERNAL "")
+
+    # Bibliotecas compartilhadas desabilitadas
+    set(SDLIMAGE_AVIF_SHARED OFF CACHE INTERNAL "")
+    set(SDLIMAGE_PNG_SHARED OFF CACHE INTERNAL "")
+    set(SDLIMAGE_TIF_SHARED OFF CACHE INTERNAL "")
+    set(SDLIMAGE_WEBP_SHARED OFF CACHE INTERNAL "")
+endif ()
+
+FetchContent_MakeAvailable(SDL3_Image)

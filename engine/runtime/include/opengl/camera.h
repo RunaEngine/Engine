@@ -10,22 +10,13 @@
 namespace runa::runtime::opengl {
     class Camera {
     public:
-        Camera(glm::vec3 position);
+        Camera() = default;
         ~Camera();
 
         // Camera main vectors
-        glm::vec3 pos;
+        glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        glm::vec3 direction = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::mat4 cameraMatrix = glm::identity<glm::mat4>();
-
-        // Prevents the camera from jumping around when first clicking left click
-        bool firstClick = true;
-
-        // Window w/h
-        int width = 0;
-        int height = 0;
 
         // Camera speed
         float speed = 4.0f;
@@ -37,5 +28,13 @@ namespace runa::runtime::opengl {
         // Handles camera inputs
         void inputs(SDL_Event &event);
         void tick(float delta);
+
+    private:
+        glm::mat4 cmatrix = glm::identity<glm::mat4>();
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        // Window w/h
+        int width = 0;
+        int height = 0;
     };
 }

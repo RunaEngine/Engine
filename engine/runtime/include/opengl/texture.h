@@ -3,6 +3,7 @@
 #include "shader.h"
 #include <glad/glad.h>
 #include <filesystem>
+#include <vector>
 
 namespace runa::runtime::opengl {
     class Texture {

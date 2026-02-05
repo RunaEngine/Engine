@@ -6,12 +6,12 @@ namespace runa::runtime::opengl {
             deinit();
     }
 
-    void ElementBuffer::init(const GLuint* indices, GLsizeiptr count)
+    void ElementBuffer::init(const std::vector<uint32_t>& indices)
     {
         glGenBuffers(1, &id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), indices, GL_STATIC_DRAW);
-        size = count;
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
+        size = indices.size();
     }
 
     void ElementBuffer::deinit()
@@ -36,6 +36,6 @@ namespace runa::runtime::opengl {
 
     GLsizeiptr ElementBuffer::count() const
     {
-        return size / sizeof(GLuint);
+        return size;
     }
 }

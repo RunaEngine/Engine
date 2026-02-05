@@ -30,7 +30,7 @@ namespace runa::runtime::opengl {
         glShaderSource(vertexShader, 1, &vertexSrc, NULL);
         // Compile the Vertex Shader into machine code
         glCompileShader(vertexShader);
-        if (!checksum(vertexShader, "VERTEX"))
+        if (!checksum(vertexShader, GL_COMPILE_STATUS))
         {
             return false;
         }
@@ -42,7 +42,7 @@ namespace runa::runtime::opengl {
         glShaderSource(fragmentShader, 1, &fragmentSrc, NULL);
         // Compile the Fragment Shader into machine code
         glCompileShader(fragmentShader);
-        if (!checksum(fragmentShader, "FRAGMENT"))
+        if (!checksum(fragmentShader, GL_COMPILE_STATUS))
         {
             return false;
         }
@@ -54,7 +54,7 @@ namespace runa::runtime::opengl {
         glAttachShader(id, fragmentShader);
         // Wrap-up/Link all the shaders together into the Shader Program
         glLinkProgram(id);
-        if (!checksum(id, "PROGRAM"))
+        if (!checksum(id, GL_LINK_STATUS))
         {
             return false;
         }
@@ -89,15 +89,16 @@ namespace runa::runtime::opengl {
         glUniform1i(texuni, unit);
     }
 
-    bool Shader::checksum(unsigned int shader, const char* type)
+    bool Shader::checksum(unsigned int shader, uint32_t type)
     {
         // Stores status of compilation/linking
-        GLint status;
+        int status;
         // Character array to store error message in
         char infoLog[4096];
-        // If type equals "PROGRAM" (strcmp == 0) check program link status
-        if (SDL_strcmp(type, "PROGRAM") == 0)
+
+        switch (type)
         {
+        case GL_LINK_STATUS: {
             glGetProgramiv(shader, GL_LINK_STATUS, &status);
             if (status == GL_FALSE)
             {
@@ -105,9 +106,9 @@ namespace runa::runtime::opengl {
                 utils::Logs::error("SHADER_LINKING_ERROR -> %s", infoLog);
                 return false;
             }
+            break;
         }
-        else
-        {
+        default: {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
             if (status == GL_FALSE)
             {
@@ -115,6 +116,8 @@ namespace runa::runtime::opengl {
                 utils::Logs::error("SHADER_COMPILATION_ERROR -> %s", infoLog);
                 return false;
             }
+            break;
+        }
         }
         return true;
     }

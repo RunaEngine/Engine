@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <glad/glad.h>
 
 namespace runa::runtime::opengl {
@@ -8,7 +9,7 @@ namespace runa::runtime::opengl {
         ElementBuffer() = default;
         ~ElementBuffer();
 
-        void init(const GLuint *indices, GLsizeiptr count);
+        void init(const std::vector<uint32_t>& indices);
         void deinit();
         void defer(bool value = true);
 
@@ -18,7 +19,7 @@ namespace runa::runtime::opengl {
         GLsizeiptr count() const;
     private:
         bool deferDeinit = true;
-        GLuint id = 0;
+        uint32_t id = 0;
         GLsizeiptr size = 0;
     };
 }

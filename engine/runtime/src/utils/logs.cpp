@@ -35,17 +35,17 @@ namespace runa::runtime::utils {
     {
         va_list vargs;
         va_start(vargs, fmt);
-        printf_s("\033[33m");
+        printf("\033[33m");
         SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_WARN, fmt, vargs);
-        printf_s("\033[0m");
+        printf("\033[0m");
         va_end(vargs);
     }
 
     void Logs::sdlError()
     {
-        printf_s("\033[31m");
+        printf("\033[31m");
         SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, "%s", SDL_GetError());
-        printf_s("\033[0m");
+        printf("\033[0m");
     }
 /*
     bool Logs::gltfError(cgltf_result result)

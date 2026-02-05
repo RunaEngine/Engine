@@ -157,9 +157,10 @@ int main(int argc, char** argv) {
 	glUniform4f(glGetUniformLocation(shader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-    Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.0f));
+    Camera camera = Camera();
+	camera.position = glm::vec3(0.0f, 0.0f, 1.0f);
 
-    //std::filesystem::path gltfFile = currentDir.string() + "resources/sword/scene.gltf";
+    //std::filesystem::path gltfFile = currentDir.string() + "resources/bunny/scene.gltf";
     std::filesystem::path gltfFile = currentDir.string() + "resources/proxy/proxy.glb";
 
     Model model;
@@ -193,7 +194,7 @@ int main(int argc, char** argv) {
         //shader.use();
 
         camera.tick((float)delta);
-        camera.updateMatrix(60.0f, 0.1f, 100.0f);
+        camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
     	// Draws different meshes
     	model.draw(shader, camera);

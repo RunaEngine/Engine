@@ -11,23 +11,22 @@ namespace runa::runtime::opengl
 
     bool Mesh::init(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures)
     {
-        this->vertices = vertices;
-        this->indices = indices;
         this->textures = textures;
 
         vao.init();
         vao.bind();
         // Generates Vertex Buffer Object and links it to vertices
-        VertexBuffer vbo;
-        vbo.init(vertices.data(), vertices.size());
+        vbo.init(vertices);
+        vbo.defer(false);
         // Generates Element Buffer Object and links it to indices
-        ElementBuffer ebo;
-        ebo.init(indices.data(), indices.size());
+        ebo.init(indices);
+        ebo.defer(false);
         // Links VBO attributes such as coordinates and colors to VAO
-        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
-        vao.enableAttrib(vbo, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
-        vao.enableAttrib(vbo, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float)));
-        vao.enableAttrib(vbo, 3, 2, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float)));
+        GLsizei stride = sizeof(Vertex);
+        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)0);
+        vao.enableAttrib(vbo, 1, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, normal));
+        vao.enableAttrib(vbo, 2, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, color));
+        vao.enableAttrib(vbo, 3, 2, GL_FLOAT, stride, (void*)offsetof(Vertex, texUV));
         // Unbind all to prevent accidentally modifying them
         vao.unbind();
         vbo.unbind();
@@ -38,22 +37,22 @@ namespace runa::runtime::opengl
 
     bool Mesh::init(std::vector<Vertex>& vertices, std::vector<GLuint>& indices)
     {
-        this->vertices = vertices;
-        this->indices = indices;
-
         vao.init();
+        vao.defer(false);
         vao.bind();
         // Generates Vertex Buffer Object and links it to vertices
-        VertexBuffer vbo;
-        vbo.init(vertices.data(), vertices.size());
+        vbo.init(vertices);
+        vbo.defer(false);
         // Generates Element Buffer Object and links it to indices
-        ElementBuffer ebo;
-        ebo.init(indices.data(), indices.size());
+        ebo.init(indices);
+        ebo.defer(false);
         // Links VBO attributes such as coordinates and colors to VAO
-        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
-        vao.enableAttrib(vbo, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
-        vao.enableAttrib(vbo, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float)));
-        vao.enableAttrib(vbo, 3, 2, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float)));
+        GLsizei stride = sizeof(Vertex);
+        (void*)offsetof(Vertex, normal);
+        vao.enableAttrib(vbo, 0, 3, GL_FLOAT, stride, (void*)0);
+        vao.enableAttrib(vbo, 1, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, normal));
+        vao.enableAttrib(vbo, 2, 3, GL_FLOAT, stride, (void*)offsetof(Vertex, color));
+        vao.enableAttrib(vbo, 3, 2, GL_FLOAT, stride, (void*)offsetof(Vertex, texUV));
         // Unbind all to prevent accidentally modifying them
         vao.unbind();
         vbo.unbind();
@@ -65,15 +64,14 @@ namespace runa::runtime::opengl
     void Mesh::deinit()
     {
         vao.deinit();
-        vertices.clear();
-        indices.clear();
+        vbo.deinit();
+        ebo.deinit();
         for (Texture& t : textures)
         {
             t.denit();
         }
         textures.clear();
     }
-
 
     void Mesh::defer(bool value)
     {
@@ -121,7 +119,7 @@ namespace runa::runtime::opengl
             textures[i].bind();
         }
         // Take care of the camera Matrix
-        glUniform3f(glGetUniformLocation(shader.getID(), "camPos"), camera.pos.x, camera.pos.y, camera.pos.z);
+        glUniform3f(glGetUniformLocation(shader.getID(), "camPos"), camera.position.x, camera.position.y, camera.position.z);
         camera.matrix(shader, "camMatrix");
 
         // Initialize matrices
@@ -141,6 +139,6 @@ namespace runa::runtime::opengl
         glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(matrix));
 
         // Draw the actual mesh
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, ebo.count(), GL_UNSIGNED_INT, 0);
     }
 }

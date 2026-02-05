@@ -26,10 +26,10 @@ namespace runa::runtime::opengl
         );
     private:
         bool deferDeinit = true;
-        std::vector <Vertex> vertices;
-        std::vector <GLuint> indices;
         std::vector <Texture> textures;
         // Store VAO in public so it can be used in the Draw function
         VertexArray vao;
+        VertexBuffer vbo;
+        ElementBuffer ebo;
     };
 }

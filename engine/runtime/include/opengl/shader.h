@@ -21,6 +21,6 @@ namespace runa::runtime::opengl {
         bool deferDeinit = true;
         GLuint id = 0;
 
-        bool checksum(unsigned int shader, const char* type);
+        bool checksum(unsigned int shader, uint32_t type);
     };
 }

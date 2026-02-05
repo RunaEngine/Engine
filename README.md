@@ -18,9 +18,7 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
 
 - [Git](https://git-scm.com)
 
-- [CMake 3.20 or above](https://cmake.org/download/)
-
-- [VCPKG](https://vcpkg.io/en/)
+- [CMake 3.25 or above](https://cmake.org/download/)
 
 - Windows only
   - Build With Visual Studio 2019/2022
@@ -55,14 +53,6 @@ git clone https://github.com/Cesio137/Runa.git
 ## Building the Engine
 
 ---
-
-#### Setup Enviroment Variables
-VCPKG_ROOT
-* Setup VCPKG  
-  * Create a variable called `VCPKG_ROOT` if do not exist:
-    * ```Path
-      <Path to VCPKG>/x.x.x/
-      ```
 
 #### Any OS
 
