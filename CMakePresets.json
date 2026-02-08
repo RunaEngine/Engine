@@ -10,7 +10,7 @@
       "name": "debug",
       "displayName": "debug",
       "description": "Default build using Debug",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/debug",
+      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -19,7 +19,7 @@
       "name": "release",
       "displayName": "release",
       "description": "Default build using Debug",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/release",
+      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
