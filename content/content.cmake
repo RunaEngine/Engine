@@ -9,7 +9,7 @@ function(copy_resources_to_target TARGET_NAME)
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${CONTENT_DIR}/Resources ${RESOURCES_DEST_DIR}
-                COMMENT "Copying resources do exe dir"
+                COMMENT "Copying resources to .exe dir"
         )
     endif()
 endfunction()
