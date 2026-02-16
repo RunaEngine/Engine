@@ -1,31 +1,31 @@
 #include "Opengl/VertexArray.h"
 
-VertexArray::~VertexArray()
+GLVertexArray::~GLVertexArray()
 {
     Deinit();
 }
 
-void VertexArray::Init()
+void GLVertexArray::Init()
 {
     glGenVertexArrays(1, &Id);
 }
 
-void VertexArray::Deinit()
+void GLVertexArray::Deinit()
 {
     glDeleteVertexArrays(1, &Id);
 }
 
-void VertexArray::Bind() const
+void GLVertexArray::Bind() const
 {
     glBindVertexArray(Id);
 }
 
-void VertexArray::Unbind() const
+void GLVertexArray::Unbind() const
 {
     glBindVertexArray(0);
 }
 
-void VertexArray::EnableAttrib(const VertexBuffer& vertexBuffer, const GLuint layout, GLuint num, GLenum type,
+void GLVertexArray::EnableAttrib(const GLVertexBuffer& vertexBuffer, const GLuint layout, GLuint num, GLenum type,
                                GLsizeiptr stride, void* offset) const
 {
     vertexBuffer.Bind();

@@ -14,11 +14,11 @@ struct Vertex
     glm::vec2 TexUV;
 };
 
-class VertexBuffer: public Object
+class GLVertexBuffer: public Object
 {
 public:
-    VertexBuffer() = default;
-    ~VertexBuffer() override;
+    GLVertexBuffer() = default;
+    ~GLVertexBuffer() override;
 
     void Init(const std::vector<Vertex>& vertices);
     void Deinit();

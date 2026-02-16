@@ -8,6 +8,9 @@
 #include <Utils/System.h>
 #include <Settings.h>
 #include <Io/Handlers.h>
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <string>
 
 
 int main(int argc, char** argv) {
@@ -133,39 +136,64 @@ int main(int argc, char** argv) {
     glUniform3f(glGetUniformLocation( shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
     */
 
+	// Enables the Depth Buffer
+	glEnable(GL_DEPTH_TEST);
+	// Enables the Stencil Buffer
+	glEnable(GL_STENCIL_TEST);
+	// Sets rules for outcomes of stecil tests
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
     std::filesystem::path currentDir = BaseDir();
 
     // Shader for light cube
     std::filesystem::path vertShader = currentDir.string() + "Resources/Shaders/Default.vert";
     std::filesystem::path fragShader = currentDir.string() + "Resources/Shaders/Default.frag";
+    
     // Generates Shader object using shaders default.vert and default.frag
-	Shader shader;
+	GLShader shader;
     if (!shader.Init(vertShader, fragShader))
     {
         return -1;
     }
 
+	std::filesystem::path outlineVertShader = currentDir.string() + "Resources/Shaders/Outline.vert";
+	std::filesystem::path outlineFragShader = currentDir.string() + "Resources/Shaders/Outline.frag";
+	GLShader outlineShader;
+	if (!outlineShader.Init(outlineVertShader, outlineFragShader))
+	{
+		return -1;
+	}
+
 	// Take care of all the light related things
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::translate(lightModel, lightPos);
+	//glm::mat4 lightModel = glm::mat4(1.0f);
+	//lightModel = glm::translate(lightModel, lightPos);
+    
 
 	shader.Use();
 	glUniform4f(glGetUniformLocation(shader.GetId(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shader.GetId(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-    Camera camera = Camera();
+    GLCamera camera = GLCamera();
 	camera.Position = glm::vec3(0.0f, 0.0f, 1.0f);
 
     //std::filesystem::path gltfFile = currentDir.string() + "resources/bunny/scene.gltf";
     std::filesystem::path gltfFile = currentDir.string() + "Resources/Proxy/Proxy.glb";
 
-    Model model;
+    GLModel model;
     if (!model.Init(gltfFile)) {
         Logs::Error("Failed to load sword model from: %s", gltfFile.string().c_str());
         return -1;
     }
+
+    // Imgui
+
+	ImGuiIO* io = GRender->GetImGuiBackend().GetIO();
+	io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	//io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event &e) {
@@ -189,13 +217,41 @@ int main(int argc, char** argv) {
         ImGui::End();
     };
     GRender->OnRender= [&](double delta) {
+    	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+    	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         //shader.use();
 
         camera.Tick((float)delta);
         camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
-    	// Draws different meshes
+        // Disable the depth buffer
+    	glDisable(GL_DEPTH_TEST);
+        
+    	// Make it so the stencil test always passes
+    	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    	// Enable modifying of the stencil buffer
+    	glStencilMask(0xFF);
+
+    	// Make it so only the pixels without the value 1 pass the test
+    	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    	// Disable modifying of the stencil buffer
+    	glStencilMask(0x00);
+
+    	// First method from the tutorial
+    	outlineShader.Use();
+    	glUniform1f(glGetUniformLocation(outlineShader.GetId(), "outlining"), 0.01f);
+    	model.Draw(outlineShader, camera);
+
+    	// Enable modifying of the stencil buffer
+    	glStencilMask(0xFF);
+    	// Clear stencil buffer
+    	glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    	// Enable the depth buffer
+    	glEnable(GL_DEPTH_TEST);
+
+        // Draws different meshes
     	model.Draw(shader, camera);
+
     };
 
     while (!shouldClose)

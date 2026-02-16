@@ -2,13 +2,13 @@
 #include "Utils/Logs.h"
 #include <SDL3_image/SDL_image.h>
 
-Texture::~Texture()
+GLTexture::~GLTexture()
 {
     if (Id > 0)
         Denit();
 }
 
-bool Texture::Init(const std::filesystem::path& filepath, const char* textype, GLenum slot, GLenum channels,
+bool GLTexture::Init(const std::filesystem::path& filepath, const char* textype, GLenum slot, GLenum channels,
                    GLenum PixelType)
 {
     // Assigns the type of the texture to the texture object
@@ -92,7 +92,7 @@ bool Texture::Init(const std::filesystem::path& filepath, const char* textype, G
     return true;
 }
 
-bool Texture::Init(const std::vector<uint8_t>& buf, const char* textype, GLenum slot, GLenum channels,
+bool GLTexture::Init(const std::vector<uint8_t>& buf, const char* textype, GLenum slot, GLenum channels,
                    GLenum pixeltype)
 {
     // Assigns the type of the texture to the texture object
@@ -182,7 +182,7 @@ bool Texture::Init(const std::vector<uint8_t>& buf, const char* textype, GLenum 
     return true;
 }
 
-void Texture::Denit()
+void GLTexture::Denit()
 {
     glDeleteTextures(1, &Id);
     Id = 0;
@@ -190,7 +190,7 @@ void Texture::Denit()
     Unit = 0;
 }
 
-void Texture::TexUnit(const Shader& shader, const char* uniform, GLuint unit)
+void GLTexture::TexUnit(const GLShader& shader, const char* uniform, GLuint unit)
 {
     // Gets the location of the uniform
     GLuint texUni = glGetUniformLocation(shader.GetId(), uniform);
@@ -200,23 +200,23 @@ void Texture::TexUnit(const Shader& shader, const char* uniform, GLuint unit)
     glUniform1i(texUni, unit);
 }
 
-void Texture::Bind() const
+void GLTexture::Bind() const
 {
     glActiveTexture(GL_TEXTURE0 + Unit);
     glBindTexture(GL_TEXTURE_2D, Id);
 }
 
-void Texture::Unbind() const
+void GLTexture::Unbind() const
 {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-const char* Texture::GetType()
+const char* GLTexture::GetType()
 {
     return TextureType;
 }
 
-GLuint Texture::GetId()
+GLuint GLTexture::GetId()
 {
     return Id;
 }

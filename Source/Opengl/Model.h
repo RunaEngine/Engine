@@ -17,23 +17,23 @@
 
 struct Asset
 {
-    SharedPtr<Mesh> Mesh;
+    SharedPtr<GLMesh> Mesh;
     glm::vec3 Position;
     glm::quat Rotation;
     glm::vec3 Scale;
     glm::mat4 Matrix;
 };
 
-class Model : public Object
+class GLModel : public Object
 {
 public:
-    Model() = default;
-    ~Model() override;
+    GLModel() = default;
+    ~GLModel() override;
 
     bool Init(const std::filesystem::path& filepath);
     void Deinit();
 
-    void Draw(Shader& shader, Camera& camera);
+    void Draw(GLShader& shader, GLCamera& camera);
 
 private:
     std::vector<Asset> Assets;
@@ -42,5 +42,5 @@ private:
 
     void ConstructScene(aiNode* node, glm::mat4 parentMatrix);
     void GetVertexData(aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<GLuint>& indices);
-    void GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<SharedPtr<Texture>>& textures);
+    void GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<SharedPtr<GLTexture>>& textures);
 };

@@ -3,11 +3,11 @@
 #include<glm/gtx/vector_angle.hpp>
 
 
-Camera::~Camera()
+GLCamera::~GLCamera()
 {
 }
 
-void Camera::UpdateMatrix(float fovdeg, float nearPlane, float farPlane)
+void GLCamera::UpdateMatrix(float fovdeg, float nearPlane, float farPlane)
 {
     if (!SDL_GetWindowSize(GRender->
         GetBackend().GetWindow(), &Width, &Height))
@@ -26,13 +26,13 @@ void Camera::UpdateMatrix(float fovdeg, float nearPlane, float farPlane)
     CMatrix = projection * view;
 }
 
-void Camera::Matrix(const Shader& shader, const char* uniform) const
+void GLCamera::Matrix(const GLShader& shader, const char* uniform) const
 {
     // Exports the camera matrix to the Vertex Shader
     glUniformMatrix4fv(glGetUniformLocation(shader.GetId(), uniform), 1, GL_FALSE, glm::value_ptr(CMatrix));
 }
 
-void Camera::Inputs(SDL_Event& event)
+void GLCamera::Inputs(SDL_Event& event)
 {
     glm::vec2 vec = GInput->InputVector(SDL_SCANCODE_D, SDL_SCANCODE_A, SDL_SCANCODE_W, SDL_SCANCODE_S);
     Rotation = glm::normalize(glm::cross(Orientantion, Up)) * vec.x + glm::normalize(Orientantion) * vec.y;
@@ -76,7 +76,7 @@ void Camera::Inputs(SDL_Event& event)
     }
 }
 
-void Camera::Tick(float Delta)
+void GLCamera::Tick(float Delta)
 {
     Rotation = glm::clamp(Rotation, glm::vec3(-1.0f), glm::vec3(1.0f));
     Position += Speed * Rotation * Delta;

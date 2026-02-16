@@ -1,7 +1,7 @@
 #include "Engine/Engine.h"
 
-extern GameUserSettings* GUserSettings = new GameUserSettings();
-extern GLRender* GRender = new GLRender();
-extern Event* GEvent = new Event();
-extern Tick* GTick = new Tick();
-extern Input* GInput = new Input();
+GameUserSettings* GUserSettings = new GameUserSettings();
+GLRender* GRender = new GLRender();
+Event* GEvent = new Event();
+Tick* GTick = new Tick();
+Input* GInput = new Input();

@@ -1,12 +1,12 @@
 #include "Opengl/Mesh.h"
 #include "Utils/Logs.h"
 
-Mesh::~Mesh()
+GLMesh::~GLMesh()
 {
     Deinit();
 }
 
-bool Mesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices, const std::vector<SharedPtr<Texture>>& textures)
+bool GLMesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices, const std::vector<SharedPtr<GLTexture>>& textures)
 {
     Textures = textures;
 
@@ -30,7 +30,7 @@ bool Mesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& 
     return true;
 }
 
-bool Mesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices)
+bool GLMesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices)
 {
     //Vao = MakeUniqueObject<VertexArray>();
     Vao->Init();
@@ -53,7 +53,7 @@ bool Mesh::Init(const std::vector<Vertex>& vertices, const std::vector<GLuint>& 
     return true;
 }
 
-void Mesh::Deinit()
+void GLMesh::Deinit()
 {
     for (auto& t : Textures)
     {
@@ -63,7 +63,7 @@ void Mesh::Deinit()
     Textures.clear();
 }
 
-void Mesh::Draw(const Shader& shader, const Camera& camera,
+void GLMesh::Draw(const GLShader& shader, const GLCamera& camera,
                 glm::mat4 matrix,
                 glm::vec3 position,
                 glm::quat rotation,

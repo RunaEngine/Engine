@@ -5,12 +5,12 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 
-Model::~Model()
+GLModel::~GLModel()
 {
     Deinit();
 }
 
-bool Model::Init(const std::filesystem::path& filepath)
+bool GLModel::Init(const std::filesystem::path& filepath)
 {
     Assimp::Importer importer;
     Scene = importer.ReadFile(
@@ -35,7 +35,7 @@ bool Model::Init(const std::filesystem::path& filepath)
     return true;
 }
 
-void Model::Deinit()
+void GLModel::Deinit()
 {
     for (auto& resource : Assets)
     {
@@ -47,7 +47,7 @@ void Model::Deinit()
     Assets.clear();
 }
 
-void Model::Draw(Shader& shader, Camera& camera)
+void GLModel::Draw(GLShader& shader, GLCamera& camera)
 {
     // Go over all meshes and draw each one
     for (auto& asset : Assets)
@@ -60,7 +60,7 @@ void Model::Draw(Shader& shader, Camera& camera)
     }
 }
 
-void Model::ConstructScene(aiNode* node, glm::mat4 parentMatrix)
+void GLModel::ConstructScene(aiNode* node, glm::mat4 parentMatrix)
 {
     // Get the node's transformation matrix
     // Assimp matrices are row-major, while GLM uses column-major matrices.
@@ -78,10 +78,10 @@ void Model::ConstructScene(aiNode* node, glm::mat4 parentMatrix)
         aiMesh* mesh = Scene->mMeshes[node->mMeshes[i]];
 
         Asset asset;
-        asset.Mesh = MakeShared<Mesh>();
+        asset.Mesh = MakeShared<GLMesh>();
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
-        std::vector<std::shared_ptr<Texture>> textures;
+        std::vector<std::shared_ptr<GLTexture>> textures;
 
         // Vertex
         GetVertexData(mesh, vertices, indices);
@@ -124,7 +124,7 @@ void Model::ConstructScene(aiNode* node, glm::mat4 parentMatrix)
     }
 }
 
-void Model::GetVertexData(aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<GLuint>& indices)
+void GLModel::GetVertexData(aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<GLuint>& indices)
 {
     vertices.reserve(mesh->mNumVertices);
 
@@ -158,7 +158,7 @@ void Model::GetVertexData(aiMesh* mesh, std::vector<Vertex>& vertices, std::vect
     }
 }
 
-void Model::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<SharedPtr<Texture>>& textures)
+void GLModel::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<SharedPtr<GLTexture>>& textures)
 {
     // Texture
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -185,7 +185,7 @@ void Model::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<Share
                 auto data = reinterpret_cast<uint8_t*>(embeddedTexture->pcData);
                 buffer.assign(data, data + size);
             }
-            auto diffuse = MakeShared<Texture>();
+            auto diffuse = MakeShared<GLTexture>();
             if (diffuse->Init(buffer, "diffuse", textures.size(), 0, GL_UNSIGNED_BYTE))
             {
                 textures.push_back(diffuse);
@@ -196,7 +196,7 @@ void Model::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<Share
             // External texture
             std::filesystem::path ftexturePath = *ParentPath;
             ftexturePath.append(texturePath.C_Str());
-            auto diffuse = MakeShared<Texture>();
+            auto diffuse = MakeShared<GLTexture>();
             if (diffuse->Init(ftexturePath, "diffuse", textures.size(), 0, GL_UNSIGNED_BYTE))
             {
                 textures.push_back(diffuse);
@@ -225,7 +225,7 @@ void Model::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<Share
                 auto data = reinterpret_cast<uint8_t*>(embeddedTexture->pcData);
                 buffer.assign(data, data + size);
             }
-            auto specular = MakeShared<Texture>();
+            auto specular = MakeShared<GLTexture>();
             if (specular->Init(buffer, "specular", textures.size(), 0, GL_UNSIGNED_BYTE))
             {
                 textures.push_back(specular);
@@ -236,7 +236,7 @@ void Model::GetTextureData(const aiScene* scene, aiMesh* mesh, std::vector<Share
             // External texture
             std::filesystem::path ftexturePath = *ParentPath;
             ftexturePath.append(texturePath.C_Str());
-            auto specular = MakeShared<Texture>();
+            auto specular = MakeShared<GLTexture>();
             if (specular->Init(ftexturePath, "specular", textures.size(), 0, GL_UNSIGNED_BYTE))
             {
                 textures.push_back(specular);

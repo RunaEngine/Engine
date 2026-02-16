@@ -1,11 +1,11 @@
 #include "Opengl/ElementBuffer.h"
 
-ElementBuffer::~ElementBuffer()
+GLElementBuffer::~GLElementBuffer()
 {
     Deinit();
 }
 
-void ElementBuffer::Init(const std::vector<uint32_t>& indices)
+void GLElementBuffer::Init(const std::vector<uint32_t>& indices)
 {
     glGenBuffers(1, &Id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Id);
@@ -13,24 +13,24 @@ void ElementBuffer::Init(const std::vector<uint32_t>& indices)
     Size = indices.size();
 }
 
-void ElementBuffer::Deinit()
+void GLElementBuffer::Deinit()
 {
     glDeleteBuffers(1, &Id);
     Id = 0;
     Size = 0;
 }
 
-void ElementBuffer::Bind() const
+void GLElementBuffer::Bind() const
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Id);
 }
 
-void ElementBuffer::Unbind() const
+void GLElementBuffer::Unbind() const
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-GLsizeiptr ElementBuffer::Count() const
+GLsizeiptr GLElementBuffer::Count() const
 {
     return Size;
 }

@@ -7,11 +7,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
-class Camera : public Object
+class GLCamera : public Object
 {
 public:
-    Camera() = default;
-    ~Camera() override;
+    GLCamera() = default;
+    ~GLCamera() override;
 
     // Camera main vectors
     glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -24,7 +24,7 @@ public:
 
     // Updates and exports the camera matrix to the Vertex Shader
     void UpdateMatrix(float fovdeg, float nearPlane, float farPlane);
-    void Matrix(const Shader& shader, const char* uniform) const;
+    void Matrix(const GLShader& shader, const char* uniform) const;
     // Handles camera inputs
     void Inputs(SDL_Event& event);
     void Tick(float Delta);

@@ -16,4 +16,6 @@ endif ()
 FetchContent_MakeAvailable(ASSIMP)
 
 set_target_properties(assimp PROPERTIES FOLDER "/Thirdparty")
-set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER "/Thirdparty")
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER "/Thirdparty")
+endif ()

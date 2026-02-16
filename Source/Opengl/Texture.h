@@ -6,18 +6,18 @@
 #include <filesystem>
 #include <vector>
 
-class Texture : public Object
+class GLTexture : public Object
 {
 public:
-    Texture() = default;
-    ~Texture() override;
+    GLTexture() = default;
+    ~GLTexture() override;
 
     bool Init(const std::filesystem::path& texturefile, const char* textype, GLenum slot, GLenum channels,
               GLenum PixelType);
     bool Init(const std::vector<uint8_t>& buf, const char* textype, GLenum slot, GLenum channels, GLenum pixeltype);
     void Denit();
 
-    void TexUnit(const Shader& shader, const char* uniform, GLuint unit);
+    void TexUnit(const GLShader& shader, const char* uniform, GLuint unit);
 
     void Bind() const;
     void Unbind() const;

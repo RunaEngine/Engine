@@ -42,7 +42,7 @@ public:
 
     bool IsInitialized() const { return Initialized; }
 
-    ImGuiIO* getIO();
+    ImGuiIO* GetIO();
 
 private:
     bool Initialized = false;
@@ -61,7 +61,7 @@ public:
     void Poll();
 
     const GLBackend& GetBackend() { return Backend; }
-    const GLImGuiBackend& GetImGuiBackend() { return ImguiBackend; }
+    GLImGuiBackend& GetImGuiBackend() { return ImguiBackend; }
 
     std::function<void(SDL_Event&)> OnEvent;
     std::function<void(ImGuiIO&)> OnImGuiRender;

@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 23)
 set(USE_FOLDERS ON)
 add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 
-include(Content/content.cmake)
+include(Content/Content.cmake)
 include(Thirdparty/Thirdparty.cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

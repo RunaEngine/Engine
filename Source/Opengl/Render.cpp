@@ -113,8 +113,6 @@ bool GLBackend::Init(EGLDriver driver)
         }
     }
 
-    glEnable(GL_DEPTH_TEST);
-
     return true;
 }
 
@@ -175,7 +173,7 @@ void GLImGuiBackend::Deinit()
     Io = nullptr;
 }
 
-ImGuiIO* GLImGuiBackend::getIO()
+ImGuiIO* GLImGuiBackend::GetIO()
 {
     return Io;
 }
@@ -216,8 +214,7 @@ void GLRender::Poll()
     }
 
     // Render behind imgui
-    glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     if (OnRender) OnRender(GTick->Delta());
 
     if (ImguiBackend.IsInitialized())

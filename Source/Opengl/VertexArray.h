@@ -4,18 +4,18 @@
 #include "Engine/Core/Object.h"
 #include <glad/glad.h>
 
-class VertexArray : public Object
+class GLVertexArray : public Object
 {
 public:
-    VertexArray() = default;
-    ~VertexArray() override;
+    GLVertexArray() = default;
+    ~GLVertexArray() override;
 
     void Init();
     void Deinit();
 
     void Bind() const;
     void Unbind() const;
-    void EnableAttrib(const VertexBuffer& vertexBuffer, GLuint layout, GLuint num, GLenum type, GLsizeiptr stride,
+    void EnableAttrib(const GLVertexBuffer& vertexBuffer, GLuint layout, GLuint num, GLenum type, GLsizeiptr stride,
                       void* offset) const;
 
 private:

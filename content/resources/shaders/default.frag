@@ -26,7 +26,7 @@ uniform vec3 camPos;
 
 
 vec4 pointLight()
-{	
+{
 	// used in two variables so I calculate it here to not have to do it twice
 	vec3 lightVec = lightPos - crntPos;
 

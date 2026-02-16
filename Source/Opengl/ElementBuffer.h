@@ -4,11 +4,11 @@
 #include <vector>
 #include <glad/glad.h>
 
-class ElementBuffer : public Object
+class GLElementBuffer : public Object
 {
 public:
-    ElementBuffer() = default;
-    ~ElementBuffer() override;
+    GLElementBuffer() = default;
+    ~GLElementBuffer() override;
 
     void Init(const std::vector<uint32_t>& indices);
     void Deinit();

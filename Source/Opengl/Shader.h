@@ -5,11 +5,11 @@
 #include <glad/glad.h>
 #include <filesystem>
 
-class Shader : public Object
+class GLShader : public Object
 {
 public:
-    Shader() = default;
-    ~Shader() override;
+    GLShader() = default;
+    ~GLShader() override;
 
     bool Init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile);
     void Deinit();

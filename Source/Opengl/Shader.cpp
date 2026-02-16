@@ -3,13 +3,13 @@
 #include "Utils/System.h"
 #include <SDL3/SDL.h>
 
-Shader::~Shader()
+GLShader::~GLShader()
 {
     if (DeferDeinit && Id > 0)
         Deinit();
 }
 
-bool Shader::Init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile)
+bool GLShader::Init(const std::filesystem::path& vertexfile, const std::filesystem::path& fragmentfile)
 {
     // Convert the shader source strings into character arrays
     std::string vertexSource;
@@ -66,22 +66,22 @@ bool Shader::Init(const std::filesystem::path& vertexfile, const std::filesystem
     return true;
 }
 
-void Shader::Deinit()
+void GLShader::Deinit()
 {
     glDeleteProgram(Id);
 }
 
-void Shader::Defer(bool value)
+void GLShader::Defer(bool value)
 {
     DeferDeinit = value;
 }
 
-void Shader::Use() const
+void GLShader::Use() const
 {
     glUseProgram(Id);
 }
 
-void Shader::SetUniformLocation(const char* uniform, const GLuint unit) const
+void GLShader::SetUniformLocation(const char* uniform, const GLuint unit) const
 {
     // Gets the location of the uniform
     GLuint texuni = glGetUniformLocation(Id, uniform);
@@ -91,7 +91,7 @@ void Shader::SetUniformLocation(const char* uniform, const GLuint unit) const
     glUniform1i(texuni, unit);
 }
 
-bool Shader::Checksum(unsigned int shader, uint32_t type)
+bool GLShader::Checksum(unsigned int shader, uint32_t type)
 {
     // Stores status of compilation/linking
     int status;
