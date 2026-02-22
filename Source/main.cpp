@@ -1,268 +1,27 @@
-//#define STC_CSTR_CORE
 #include <iostream>
-#include <memory>
-#include <Engine/Engine.h>
-#include <Opengl/Mesh.h>
-#include <Opengl/Model.h>
-#include <Utils/Logs.h>
-#include <Utils/System.h>
-#include <Settings.h>
-#include <Io/Handlers.h>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <string>
+#include "Vulkan/Pipeline.h"
+#include "Io/Event.h"
 
-
-int main(int argc, char** argv) {
-    if (!GRender->Init()) return -1;
-    //gameUserSettings.setVsync(disable);
-    //gameUserSettings.setFramerateLimit(300);
-
-    /*
-	// Vertices coordinates
-    std::vector<Vertex> vertices =
-    {
-	    Vertex{
-		    glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-		    glm::vec2(0.0f, 0.0f)
-	    },
-	    Vertex{
-		    glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-		    glm::vec2(0.0f, 1.0f)
-	    },
-	    Vertex{
-		    glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-		    glm::vec2(1.0f, 1.0f)
-	    },
-	    Vertex{
-		    glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)
-	    }
-    };
-
-    // Indices for vertices order
-    std::vector<GLuint> indices =
-    {
-	    0, 1, 2,
-	    0, 2, 3
-    };
-
-    std::vector<Vertex> lightVertices =
-    {
-	    //	 COORDINATES	 //
-	    Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
-	    Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
-	    Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
-	    Vertex{glm::vec3(0.1f, -0.1f, 0.1f)},
-	    Vertex{glm::vec3(-0.1f, 0.1f, 0.1f)},
-	    Vertex{glm::vec3(-0.1f, 0.1f, -0.1f)},
-	    Vertex{glm::vec3(0.1f, 0.1f, -0.1f)},
-	    Vertex{glm::vec3(0.1f, 0.1f, 0.1f)}
-    };
-
-    std::vector<GLuint> lightIndices =
-    {
-	    0, 1, 2,
-	    0, 2, 3,
-	    0, 4, 7,
-	    0, 7, 3,
-	    3, 7, 6,
-	    3, 6, 2,
-	    2, 6, 5,
-	    2, 5, 1,
-	    1, 5, 4,
-	    1, 4, 0,
-	    4, 5, 6,
-	    4, 6, 7
-    };
-    
-	// Texture data
-	std::string albedodir = currentDir + "resources/textures/planks.png";
-	std::string speculardir = currentDir + "resources/textures/planksSpec.png";
-    std::vector<Texture> textures;
-    textures.push_back(Texture());
-    textures.push_back(Texture());
-    if (!textures[0].init(albedodir.c_str(), "diffuse", 0, 0, GL_UNSIGNED_BYTE))
+int main(int argc, char** argv)
+{
+    Pipeline pipeline;
+    Event event;
+    if (!pipeline.Init())
         return -1;
-    if(!textures[1].init(speculardir.c_str(), "specular", 1, 0, GL_UNSIGNED_BYTE))
-        return -1;
-
-    std::string vertShader = currentDir + "resources/shaders/default.vert";
-    std::string fragShader = currentDir + "resources/shaders/default.frag";
-    Shader shader;
-    if (!shader.init(vertShader.c_str(), fragShader.c_str()))
-    {
-        return -1;
-    }
-
-	// Store mesh data in vectors for the mesh
-	// Create floor mesh
-	Mesh floor;
-	if (!floor.init(vertices, indices, textures))
-	{
-		return -1;
-	}
-
-    // Shader for light cube
-    std::string vertLightShader = currentDir + "resources/shaders/light.vert";
-    std::string fragLightShader = currentDir + "resources/shaders/light.frag";
-    Shader lightShader;
-    if (!lightShader.init(vertLightShader.c_str(), fragLightShader.c_str()))
-    {
-        return -1;
-    }
-
-	// Create light mesh
-	Mesh light;
-	if (!light.init(lightVertices, lightIndices))
-	{
-		return -1;
-	}
-
-    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-    glm::mat4 lightModel = glm::identity<glm::mat4>();
-    lightModel = glm::translate(lightModel, lightPos);
-
-    glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::mat4 pyramidModel = glm::identity<glm::mat4>();
-    pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
-    lightShader.use();
-    glUniformMatrix4fv(glGetUniformLocation(lightShader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-    glUniform4f(glGetUniformLocation(lightShader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-    shader.use();
-    glUniformMatrix4fv(glGetUniformLocation( shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
-    glUniform4f(glGetUniformLocation( shader.getID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-    glUniform3f(glGetUniformLocation( shader.getID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-    */
-
-	// Enables the Depth Buffer
-	glEnable(GL_DEPTH_TEST);
-	// Enables the Stencil Buffer
-	glEnable(GL_STENCIL_TEST);
-	// Sets rules for outcomes of stecil tests
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    std::filesystem::path currentDir = BaseDir();
-
-    // Shader for light cube
-    std::filesystem::path vertShader = currentDir.string() + "Resources/Shaders/Default.vert";
-    std::filesystem::path fragShader = currentDir.string() + "Resources/Shaders/Default.frag";
-    
-    // Generates Shader object using shaders default.vert and default.frag
-	GLShader shader;
-    if (!shader.Init(vertShader, fragShader))
-    {
-        return -1;
-    }
-
-	std::filesystem::path outlineVertShader = currentDir.string() + "Resources/Shaders/Outline.vert";
-	std::filesystem::path outlineFragShader = currentDir.string() + "Resources/Shaders/Outline.frag";
-	GLShader outlineShader;
-	if (!outlineShader.Init(outlineVertShader, outlineFragShader))
-	{
-		return -1;
-	}
-
-	// Take care of all the light related things
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-	//glm::mat4 lightModel = glm::mat4(1.0f);
-	//lightModel = glm::translate(lightModel, lightPos);
-    
-
-	shader.Use();
-	glUniform4f(glGetUniformLocation(shader.GetId(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	glUniform3f(glGetUniformLocation(shader.GetId(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
-    GLCamera camera = GLCamera();
-	camera.Position = glm::vec3(0.0f, 0.0f, 1.0f);
-
-    //std::filesystem::path gltfFile = currentDir.string() + "resources/bunny/scene.gltf";
-    std::filesystem::path gltfFile = currentDir.string() + "Resources/Proxy/Proxy.glb";
-
-    GLModel model;
-    if (!model.Init(gltfFile)) {
-        Logs::Error("Failed to load sword model from: %s", gltfFile.string().c_str());
-        return -1;
-    }
-
-    // Imgui
-
-	ImGuiIO* io = GRender->GetImGuiBackend().GetIO();
-	io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-	//io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
     bool shouldClose = false;
-    GEvent->OnEvent = [&](SDL_Event &e) {
-        if (e.type == SDL_EVENT_WINDOW_RESIZED)
-        {
-            int viewportWidth, viewportHeight;
-            if (SDL_GetWindowSizeInPixels(GRender->GetBackend().GetWindow(), &viewportWidth, &viewportHeight))
-            {
-                glViewport(0, 0, viewportWidth, viewportHeight);
-            }
-        }
+    event.OnEvent = [&](SDL_Event &e) {
         if (e.type == SDL_EVENT_QUIT)
         {
             shouldClose = true;
         }
-        camera.Inputs(e);
-    };
-    GRender->OnImGuiRender = [&](ImGuiIO &io) {
-        ImGui::Begin("teste");
-        ImGui::Text("FPS: %f", 1.0f / io.DeltaTime);
-        ImGui::End();
-    };
-    GRender->OnRender= [&](double delta) {
-    	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-    	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        //shader.use();
-
-        camera.Tick((float)delta);
-        camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
-
-        // Disable the depth buffer
-    	glDisable(GL_DEPTH_TEST);
-        
-    	// Make it so the stencil test always passes
-    	glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    	// Enable modifying of the stencil buffer
-    	glStencilMask(0xFF);
-
-    	// Make it so only the pixels without the value 1 pass the test
-    	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    	// Disable modifying of the stencil buffer
-    	glStencilMask(0x00);
-
-    	// First method from the tutorial
-    	outlineShader.Use();
-    	glUniform1f(glGetUniformLocation(outlineShader.GetId(), "outlining"), 0.01f);
-    	model.Draw(outlineShader, camera);
-
-    	// Enable modifying of the stencil buffer
-    	glStencilMask(0xFF);
-    	// Clear stencil buffer
-    	glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    	// Enable the depth buffer
-    	glEnable(GL_DEPTH_TEST);
-
-        // Draws different meshes
-    	model.Draw(shader, camera);
-
     };
 
     while (!shouldClose)
     {
-        GTick->UpdateCurrentTick();
-        GEvent->Run(EPool);
-        GRender->Poll();
-        GTick->UpdateDeltaTime();
+        event.Run(EPool);
+        pipeline.Pool();
     }
-
-    GRender->Deinit();
 
     return 0;
 }

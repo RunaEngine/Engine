@@ -22,7 +22,7 @@ set(ENGINE_MAJOR_VERSION ${CMAKE_PROJECT_VERSION_MAJOR})
 set(ENGINE_MINOR_VERSION ${CMAKE_PROJECT_VERSION_MINOR})
 set(ENGINE_PATH_VERSION ${CMAKE_PROJECT_VERSION_PATCH})
 
-configure_file(Source/Config.h.in Source/Config.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.h @ONLY)
 
 file(GLOB_RECURSE ENGINE_SOURCES Source/*.h Source/*.cpp)
 #[[
