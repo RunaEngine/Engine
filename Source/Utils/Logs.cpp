@@ -14,9 +14,9 @@ void Logs::Success(SDL_PRINTF_FORMAT_STRING const char* fmt, ...)
 {
     va_list vargs;
     va_start(vargs, fmt);
-    //SDL_Log("\033[32m");
+    printf("\033[32m");
     SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, vargs);
-    //SDL_Log("\033[0m");
+    printf("\033[0m");
     va_end(vargs);
 }
 
@@ -24,9 +24,9 @@ void Logs::Error(SDL_PRINTF_FORMAT_STRING const char* fmt, ...)
 {
     va_list vargs;
     va_start(vargs, fmt);
-    //SDL_Log("\033[31m");
+    printf("\033[31m");
     SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, vargs);
-    //SDL_Log("\033[0m");
+    printf("\033[0m");
     va_end(vargs);
 }
 

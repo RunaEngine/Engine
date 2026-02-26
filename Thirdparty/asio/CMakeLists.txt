@@ -1,9 +1,10 @@
 FetchContent_Declare(
-    ASIONONBOOST
-    URL https://sourceforge.net/projects/asio/files/asio/1.36.0%20%28Stable%29/boost_asio_1_36_0.tar.gz/download
+        asiononboost
+        URL https://sourceforge.net/projects/asio/files/asio/1.36.0%20%28Stable%29/boost_asio_1_36_0.tar.gz/download
 )
 
-FetchContent_MakeAvailable(ASIONONBOOST)
+FetchContent_MakeAvailable(asiononboost)
+
 set(ASIO_SOURCE_DIR ${asionnonboost_SOURCE_DIR})
 
 project(asio)

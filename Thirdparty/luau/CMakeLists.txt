@@ -1,15 +1,13 @@
 FetchContent_Declare(
-        LUAU
-        GIT_REPOSITORY https://github.com/luau-lang/luau.git
-        TAG 0.706
+        luaulang
+        URL https://github.com/luau-lang/luau/archive/refs/tags/0.709.tar.gz
 )
 
-if (NOT LUAU_POPULATED)
-    set(LUAU_BUILD_CLI OFF CACHE INTERNAL "")
-    set(LUAU_BUILD_TESTS OFF CACHE INTERNAL "")
-endif ()
+set(LUAU_BUILD_CLI OFF CACHE INTERNAL "")
+set(LUAU_BUILD_TESTS OFF CACHE INTERNAL "")
 
 FetchContent_MakeAvailable(LUAU)
+
 set_target_properties(isocline PROPERTIES FOLDER "/engine/thirdparty/luau")
 set_target_properties(Luau.Analysis PROPERTIES FOLDER "/engine/thirdparty/luau")
 set_target_properties(Luau.Ast PROPERTIES FOLDER "/engine/thirdparty/luau")

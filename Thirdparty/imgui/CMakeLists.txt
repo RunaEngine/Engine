@@ -1,6 +1,6 @@
 FetchContent_Declare(
-    ocornutImgui
-    URL https://github.com/ocornut/imgui/archive/refs/tags/v1.92.5-docking.tar.gz
+        ocornutImgui
+        URL https://github.com/ocornut/imgui/archive/refs/tags/v1.92.6-docking.tar.gz
 )
 
 FetchContent_MakeAvailable(ocornutImgui)
@@ -26,38 +26,38 @@ set(IMGUI_SOURCES
         ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
         ${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.h
         ${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-    )
+)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    list(APPEND  IMGUI_SOURCES
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.cpp
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND IMGUI_SOURCES
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.cpp
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
     )
-    if(MSVC)
-        list(APPEND  IMGUI_SOURCES
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.h
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.cpp
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.h
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.cpp
+    if (MSVC)
+        list(APPEND IMGUI_SOURCES
+                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.h
+                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.cpp
+                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.h
+                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.cpp
         )
-    endif()
-endif()
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    list(APPEND  IMGUI_SOURCES 
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+    endif ()
+endif ()
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND IMGUI_SOURCES
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
     )
-endif()
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    list(APPEND  IMGUI_SOURCES 
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_osx.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_osx.mm
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_metal.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_metal.cpp
+endif ()
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    list(APPEND IMGUI_SOURCES
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_osx.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_osx.mm
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_metal.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_metal.cpp
     )
-endif()
+endif ()
 
 add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC ${IMGUI_SOURCE_DIR} ${IMGUI_SOURCE_DIR}/backends)

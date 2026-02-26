@@ -11,17 +11,14 @@ set(FETCHCONTENT_QUIET OFF)
 #COMPRESSION LIBRARY
 add_subdirectory(${THIRDPARTY_DIR}/zlib)
 
-#IMAGE LIBRARY
-#add_subdirectory(${THIRDPARTY_DIR}/libjpeg)
-#add_subdirectory(${THIRDPARTY_DIR}/gif)
-#add_subdirectory(${THIRDPARTY_DIR}/libpng)
-#add_subdirectory(${THIRDPARTY_DIR}/libwebp)
-
 #GRAPHICS LIBRARY
 add_subdirectory(${THIRDPARTY_DIR}/vulkan)
 add_subdirectory(${THIRDPARTY_DIR}/sdl)
 add_subdirectory(${THIRDPARTY_DIR}/glad)
 add_subdirectory(${THIRDPARTY_DIR}/glm)
+
+#SHADER LIBRARY
+add_subdirectory(${THIRDPARTY_DIR}/slang)
 
 #USER INTERFACE LIBRARY
 add_subdirectory(${THIRDPARTY_DIR}/imgui)

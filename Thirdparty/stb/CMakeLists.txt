@@ -1,10 +1,11 @@
 FetchContent_Declare(
-    nothingsstb
-    GIT_REPOSITORY https://github.com/nothings/stb.git
-    TAG master
+        nothingsstb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        TAG master
 )
 
 FetchContent_MakeAvailable(nothingsstb)
+
 set(STB_SOURCE_DIR ${nothingsstb_SOURCE_DIR})
 
 project(stb)
@@ -30,8 +31,8 @@ set(STB_SOURCES
         ${STB_SOURCE_DIR}/stb_truetype.h
         ${STB_SOURCE_DIR}/stb_vorbis.c
         ${STB_SOURCE_DIR}/stb_voxel_render.h
-    )
-add_library(stb STATIC ${STB_SOURCES})
+)
+add_library(stb SHARED ${STB_SOURCES})
 target_include_directories(stb
         PUBLIC
         ${STB_SOURCE_DIR}

@@ -8,3 +8,5 @@ target_include_directories(vulkan
         "${VULKAN_DIR}/include"
 )
 set_target_properties(vulkan PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE CXX)
+
+find_package(Vulkan REQUIRED)

@@ -1,11 +1,9 @@
 FetchContent_Declare(
-    zlibrary
-    URL https://www.zlib.net/current/zlib.tar.gz
+        zlibrary
+        URL https://www.zlib.net/current/zlib.tar.gz
 )
 
-if (NOT zlibrary_POPULATED)
-    set(ZLIB_BUILD_EXAMPLES OFF CACHE INTERNAL "")
-endif ()
+set(ZLIB_BUILD_EXAMPLES OFF CACHE INTERNAL "")
 
 FetchContent_MakeAvailable(zlibrary)
 

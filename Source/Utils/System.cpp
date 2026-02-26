@@ -2,35 +2,35 @@
 #include "Utils/Logs.h"
 #include <SDL3/SDL.h>
 
-    bool GetEnvVar(const char* Varname, std::string& Var)
+    bool GetEnvVar(const char* varname, std::string& var)
     {
         SDL_Environment* env = SDL_GetEnvironment();
         if (!env) {
             Logs::SdlError();
             return false;
         }
-        const char *val = SDL_GetEnvironmentVariable(env, Varname);
+        const char *val = SDL_GetEnvironmentVariable(env, varname);
         if (!val) {
-            Logs::Error("Error trying to find envvar %s", Varname);
+            Logs::Error("Error trying to find envvar %s", varname);
             return false;
         }
-        Var = val;
+        var = val;
         return true;
     }
 
-    bool GetUserName(std::string& Username)
+    bool GetUserName(std::string& username)
     {
 #ifdef _WIN64
-        return GetEnvVar("USERNAME", Username);
+        return GetEnvVar("USERNAME", username);
 #else
-        return GetEnvVar("HOSTNAME", Username);
+        return GetEnvVar("HOSTNAME", username);
 #endif
 
         return false;
     }
 
-    bool ReadFile(const std::filesystem::path& Filepath, std::vector<uint8_t>& Data) {
-        SDL_IOStream *file = SDL_IOFromFile(Filepath.string().c_str(), "rb");
+    bool ReadFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data) {
+        SDL_IOStream *file = SDL_IOFromFile(filepath.string().c_str(), "rb");
         if (!file) {
             Logs::SdlError();
             return false;
@@ -50,28 +50,28 @@
         }
 
         if (SDL_SeekIO(file, 0, SDL_IO_SEEK_SET) < 0) {
-            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", Filepath.string().c_str(), SDL_GetError());
+            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath.string().c_str(), SDL_GetError());
             SDL_CloseIO(file);
             return false;
         }
 
         //char *buffer = SDL_malloc(filesize + 1);
-        Data.resize(filesize);
+        data.resize(filesize);
 
-        size_t bytes_read = SDL_ReadIO(file, Data.data(), filesize);
+        size_t bytes_read = SDL_ReadIO(file, data.data(), filesize);
         SDL_CloseIO(file);
 
         if (bytes_read != filesize) {
             Logs::SdlError();
-            Data.clear(); Data.shrink_to_fit();
+            data.clear(); data.shrink_to_fit();
             return false;
         }
 
         return true;
     }
 
-    bool ReadTextFile(const std::filesystem::path& Filepath, std::string& Text) {
-        SDL_IOStream *file = SDL_IOFromFile(Filepath.string().c_str(), "rt");
+    bool ReadTextFile(const std::filesystem::path& filepath, std::string& text) {
+        SDL_IOStream *file = SDL_IOFromFile(filepath.string().c_str(), "rt");
         if (!file) {
             Logs::SdlError();
             return false;
@@ -91,28 +91,28 @@
         }
 
         if (SDL_SeekIO(file, 0, SDL_IO_SEEK_SET) < 0) {
-            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", Filepath.string().c_str(), SDL_GetError());
+            SDL_Log("Error loading file to string: Unable to seek to beginning of file '%s': %s", filepath.string().c_str(), SDL_GetError());
             SDL_CloseIO(file);
             return false;
         }
 
         //char *buffer = SDL_malloc(filesize + 1);
-        Text.resize(filesize);
+        text.resize(filesize);
 
-        size_t bytes_read = SDL_ReadIO(file, Text.data(), filesize);
+        size_t bytes_read = SDL_ReadIO(file, text.data(), filesize);
         SDL_CloseIO(file);
 
         if (bytes_read != filesize) {
             Logs::SdlError();
-            Text.clear(); Text.shrink_to_fit();
+            text.clear(); text.shrink_to_fit();
             return false;
         }
 
         return true;
     }
 
-    bool FileExist(const std::filesystem::path &Filepath) {
-        if (std::filesystem::exists(Filepath) && std::filesystem::is_regular_file(Filepath))
+    bool FileExist(const std::filesystem::path& filepath) {
+        if (std::filesystem::exists(filepath) && std::filesystem::is_regular_file(filepath))
         {
             return true;
         }
@@ -120,9 +120,9 @@
         return false;
     }
 
-    bool DirExist(const std::filesystem::path& Filepath)
+    bool DirExist(const std::filesystem::path& filepath)
     {
-        if (std::filesystem::exists(Filepath) && std::filesystem::is_directory(Filepath))
+        if (std::filesystem::exists(filepath) && std::filesystem::is_directory(filepath))
         {
             return true;
         }
@@ -141,9 +141,9 @@
         return std::filesystem::path(homeDir);
     }
 
-    std::filesystem::path GetPrefPath(const std::string& Org, const std::string& App)
+    std::filesystem::path GetPrefPath(const std::string& org, const std::string& app)
     {
-        char *path = SDL_GetPrefPath(Org.c_str(), App.c_str());
+        char *path = SDL_GetPrefPath(org.c_str(), app.c_str());
         if (!path) {
             SDL_Log("Failed to get pref path");
             return "";

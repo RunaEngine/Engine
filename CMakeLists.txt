@@ -60,19 +60,42 @@ target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
         vulkan
-        SDL3-static
+        SDL3-shared
         glad
         glm
+        slang
         #USER INTERFACE LIBRARY
         imgui
         #IMAGE LIBRARY
-        SDL3_image-static
+        SDL3_image-shared
         #OBJ LIBRARY
         assimp
         #COMPRESSION
-        zlibstatic
+        zlib
 )
 set_target_properties(Runa PROPERTIES FOLDER "/Source" LINKER_LANGUAGE CXX)
+
+function(copy_target_shared_dlls target)
+        foreach(lib IN LISTS ARGN)
+                if(TARGET ${lib})
+                        add_custom_command(TARGET ${target} POST_BUILD
+                                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                        $<TARGET_FILE:${lib}>
+                                        $<TARGET_FILE_DIR:${target}>
+                        )
+                else()
+                        message(VERBOSE "copy_target_shared_dlls: target '${lib}' não encontrado; pulando cópia")
+                endif()
+        endforeach()
+endfunction()
+
+copy_target_shared_dlls(Runa
+        SDL3-shared
+        SDL3_image-shared
+        assimp
+        slang
+        zlib
+)
 
 include(Content/Content.cmake)
 copy_resources_to_target(Runa)
