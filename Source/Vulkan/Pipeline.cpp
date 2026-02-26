@@ -26,7 +26,7 @@ bool Pipeline::Init()
     CreateSwapChain();
     CreateImageViews();
     CreateCommandPool();
-    CreateCommandBuffer();
+    CreateCommandBuffers();
     CreateSyncObjects();
     return true;
 }
@@ -64,7 +64,7 @@ void Pipeline::Pool()
 
 vk::raii::CommandBuffer& Pipeline::GetCommandBuffer()
 {
-    return CommandBuffer;
+    return CommandBuffers[FrameIndex];
 }
 
 vk::raii::Device& Pipeline::GetDevice()
@@ -105,16 +105,30 @@ bool Pipeline::CreateWindow()
     }
     Surface = surfaceHandle;
 
+    SDL_AddEventWatch(ResizeEventWatcher, this);
+
+    return true;
+}
+
+bool SDLCALL Pipeline::ResizeEventWatcher(void* userdata, SDL_Event* event)
+{
+    Pipeline* self = (Pipeline*)userdata;
+    if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+        //int newWidth = event->window.data1;
+        //int newHeight = event->window.data2;
+        self->FramebufferResized = true;
+    }
     return true;
 }
 
 void Pipeline::DrawFrame()
 {
+    /*
     // NOTE: for simplicity, wait for the queue to be idle before starting the frame
     Queue.waitIdle();
     // In the next chapter you see how to use multiple frames in flight and fences to sync
 
-    auto [result, imageIndex] = SwapChain.acquireNextImage(UINT64_MAX, *PresentCompleteSemaphore, nullptr);
+    auto [result, imageIndex] = SwapChain.acquireNextImage(UINT64_MAX, *PresentCompleteSemaphores, nullptr);
     RecordCommandBuffer(imageIndex);
 
     Device.resetFences(*DrawFence);
@@ -122,12 +136,12 @@ void Pipeline::DrawFrame()
 
     vk::SubmitInfo submitInfo;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &*PresentCompleteSemaphore;
+    submitInfo.pWaitSemaphores = &*PresentCompleteSemaphores;
     submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &*CommandBuffer;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &*RenderFinishedSemaphore;
+    submitInfo.pSignalSemaphores = &*RenderFinishedSemaphores;
 
     Queue.submit(submitInfo, *DrawFence);
     result = Device.waitForFences(*DrawFence, vk::True, UINT64_MAX);
@@ -139,7 +153,7 @@ void Pipeline::DrawFrame()
 
     vk::PresentInfoKHR presentInfoKHR;
     presentInfoKHR.waitSemaphoreCount = 1;
-    presentInfoKHR.pWaitSemaphores = &*RenderFinishedSemaphore;
+    presentInfoKHR.pWaitSemaphores = &*RenderFinishedSemaphores;
     presentInfoKHR.swapchainCount = 1;
     presentInfoKHR.pSwapchains = &*SwapChain;
     presentInfoKHR.pImageIndices = &imageIndex;
@@ -155,6 +169,89 @@ void Pipeline::DrawFrame()
     default:
         break;        // an unexpected result is returned!
     }
+    */
+    auto fenceResult = Device.waitForFences(*InFlightFences[FrameIndex], vk::True, UINT64_MAX);
+    if (fenceResult != vk::Result::eSuccess)
+    {
+        throw std::runtime_error("failed to wait for fence!");
+    }
+
+    auto [result, imageIndex] = SwapChain.acquireNextImage(UINT64_MAX, *PresentCompleteSemaphores[FrameIndex], nullptr);
+    // Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
+    // here and does not need to be caught by an exception.
+    // Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
+    // here and does not need to be caught by an exception.
+    if (result == vk::Result::eErrorOutOfDateKHR)
+    {
+        RecreateSwapChain();
+        return;
+    }
+    // On other success codes than eSuccess and eSuboptimalKHR we just throw an exception.
+    // On any error code, aquireNextImage already threw an exception.
+    else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+    {
+        assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+
+    // Only reset the fence if we are submitting work
+    Device.resetFences(*InFlightFences[FrameIndex]);
+
+    CommandBuffers[FrameIndex].reset();
+    RecordCommandBuffer(imageIndex);
+
+    vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+    vk::SubmitInfo submitInfo;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &*PresentCompleteSemaphores[FrameIndex];
+    submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &*CommandBuffers[FrameIndex];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &*RenderFinishedSemaphores[imageIndex];
+
+    Queue.submit(submitInfo, *InFlightFences[FrameIndex]);
+
+    vk::PresentInfoKHR presentInfoKHR;
+    presentInfoKHR.waitSemaphoreCount = 1;
+    presentInfoKHR.pWaitSemaphores = &*RenderFinishedSemaphores[imageIndex];
+    presentInfoKHR.swapchainCount = 1;
+    presentInfoKHR.pSwapchains = &*SwapChain;
+    presentInfoKHR.pImageIndices = &imageIndex;
+
+    result = Queue.presentKHR(presentInfoKHR);
+    // Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
+    // here and does not need to be caught by an exception.
+    if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || FramebufferResized)
+    {
+        FramebufferResized = false;
+        RecreateSwapChain();
+    }
+    else
+    {
+        // There are no other success codes than eSuccess; on any error code, presentKHR already threw an exception.
+        assert(result == vk::Result::eSuccess);
+    }
+
+    FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Pipeline::RecreateSwapChain()
+{
+    int width = 0, height = 0;
+    while (width == 0 || height == 0)
+    {
+        if (!SDL_GetWindowSizeInPixels(Window, &width, &height))
+        {
+            Logs::SdlError();
+        }
+    }
+
+    Device.waitIdle();
+
+    CleanupSwapChain();
+    CreateSwapChain();
+    CreateImageViews();
 }
 
 bool Pipeline::CreateInstance()
@@ -419,6 +516,12 @@ void Pipeline::CreateSwapChain()
     SwapChainImages = SwapChain.getImages();
 }
 
+void Pipeline::CleanupSwapChain()
+{
+    SwapChainImageViews.clear();
+    SwapChain = nullptr;
+}
+
 void Pipeline::CreateImageViews()
 {
     assert(SwapChainImageViews.empty());
@@ -441,7 +544,7 @@ vk::Extent2D Pipeline::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabi
     {
         return capabilities.currentExtent;
     }
-    int width = 1024, height = 576;
+    int width, height;
     SDL_GetWindowSizeInPixels(Window, &width, &height);
 
     return {
@@ -518,12 +621,13 @@ void Pipeline::transition_image_layout(uint32_t imageIndex, vk::ImageLayout oldL
     dependencyInfo.imageMemoryBarrierCount = 1;
     dependencyInfo.pImageMemoryBarriers = &barrier;
 
-    CommandBuffer.pipelineBarrier2(dependencyInfo);
+    CommandBuffers[FrameIndex].pipelineBarrier2(dependencyInfo);
 }
 
 void Pipeline::RecordCommandBuffer(uint32_t imageIndex)
 {
-    CommandBuffer.begin({});
+    auto &commandBuffer = CommandBuffers[FrameIndex];
+    commandBuffer.begin({});
 
     // Transition the image layout for rendering
     transition_image_layout(
@@ -557,13 +661,13 @@ void Pipeline::RecordCommandBuffer(uint32_t imageIndex)
     renderingInfo.pColorAttachments = &attachmentInfo;
 
     // Begin rendering
-    CommandBuffer.beginRendering(renderingInfo);
+    commandBuffer.beginRendering(renderingInfo);
 
     // Rendering commands will go here
     if (OnRender) OnRender();
 
     // End rendering
-    CommandBuffer.endRendering();
+    commandBuffer.endRendering();
 
     // Transition the image layout for presentation
     transition_image_layout(
@@ -576,7 +680,7 @@ void Pipeline::RecordCommandBuffer(uint32_t imageIndex)
         vk::PipelineStageFlagBits2::eBottomOfPipe
     );
 
-    CommandBuffer.end();
+    commandBuffer.end();
 }
 
 void Pipeline::CreateCommandPool()
@@ -587,23 +691,32 @@ void Pipeline::CreateCommandPool()
     CommandPool = vk::raii::CommandPool(Device, poolInfo);
 }
 
-void Pipeline::CreateCommandBuffer()
+void Pipeline::CreateCommandBuffers()
 {
     vk::CommandBufferAllocateInfo allocInfo;
     allocInfo.commandPool = *CommandPool;
     allocInfo.level = vk::CommandBufferLevel::ePrimary;
-    allocInfo.commandBufferCount = 1;
+    allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
-    CommandBuffer = std::move(vk::raii::CommandBuffers(Device, allocInfo).front());
+    CommandBuffers = vk::raii::CommandBuffers(Device, allocInfo);
 }
 
 void Pipeline::CreateSyncObjects()
 {
-    PresentCompleteSemaphore = vk::raii::Semaphore(Device, vk::SemaphoreCreateInfo());
-    RenderFinishedSemaphore = vk::raii::Semaphore(Device, vk::SemaphoreCreateInfo());
-    vk::FenceCreateInfo fenceInfo;
-    fenceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
-    DrawFence = vk::raii::Fence(Device, fenceInfo);
+    assert(PresentCompleteSemaphores.empty() && RenderFinishedSemaphores.empty() && InFlightFences.empty());
+
+    for (size_t i = 0; i < SwapChainImages.size(); i++)
+    {
+        RenderFinishedSemaphores.emplace_back(Device, vk::SemaphoreCreateInfo());
+    }
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        PresentCompleteSemaphores.emplace_back(Device, vk::SemaphoreCreateInfo());
+        vk::FenceCreateInfo createFanceInfo;
+        createFanceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
+        InFlightFences.emplace_back(Device, createFanceInfo);
+    }
 }
 
 vk::Bool32 Pipeline::DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,

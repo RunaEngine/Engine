@@ -1,6 +1,7 @@
 #pragma once
 #define VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL 0
 #define VK_NO_PROTOTYPES
+#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
 
 #include "Config.h"
 #include "Engine/Core/Object.h"
@@ -50,7 +51,6 @@ private:
     vk::raii::Device Device = nullptr;
     uint32_t QueueIndex = ~0;
     vk::raii::Queue Queue = nullptr;
-    //vk::raii::Queue GraphicsQueue = nullptr;
     vk::raii::SwapchainKHR SwapChain = nullptr;
     std::vector<vk::Image> SwapChainImages;
     vk::SurfaceFormatKHR SwapChainSurfaceFormat;
@@ -58,23 +58,30 @@ private:
     std::vector<vk::raii::ImageView> SwapChainImageViews;
 
     vk::raii::CommandPool CommandPool = nullptr;
-    vk::raii::CommandBuffer CommandBuffer = nullptr;
+    std::vector<vk::raii::CommandBuffer> CommandBuffers;
 
-    vk::raii::Semaphore PresentCompleteSemaphore = nullptr;
-    vk::raii::Semaphore RenderFinishedSemaphore = nullptr;
+    std::vector<vk::raii::Semaphore> PresentCompleteSemaphores;
+    std::vector<vk::raii::Semaphore> RenderFinishedSemaphores;
+    std::vector<vk::raii::Fence> InFlightFences;
+    uint32_t FrameIndex = 0;
+
     vk::raii::Fence DrawFence = nullptr;
+    bool FramebufferResized = false;
 
     // SDL Funcitons
     bool CreateWindow();
 
     // Vulkan Functions
+    static bool SDLCALL ResizeEventWatcher(void* userdata, SDL_Event* event);
     void DrawFrame();
 
+    void RecreateSwapChain();
     bool CreateInstance();
     void SetupDebugMessenger();
     bool PickPhysicalDevice();
     void CreateLogicalDevice();
     void CreateSwapChain();
+    void CleanupSwapChain();
     void CreateImageViews();
     vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities);
     static uint32_t ChooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const &surfaceCapabilities);
@@ -92,7 +99,7 @@ private:
     );
     void RecordCommandBuffer(uint32_t imageIndex);
     void CreateCommandPool();
-    void CreateCommandBuffer();
+    void CreateCommandBuffers();
 
     void CreateSyncObjects();
 
