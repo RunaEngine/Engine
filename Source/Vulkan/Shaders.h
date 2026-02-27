@@ -14,6 +14,8 @@ public:
     bool Init(const std::filesystem::path& filepath);
     void Deinit();
 
+    void Bind();
+
     vk::raii::Pipeline& GetGraphicsPipeline();
 private:
     vk::raii::PipelineLayout PipelineLayout = nullptr;

@@ -19,10 +19,22 @@ Pipeline::~Pipeline()
 
 bool Pipeline::Init()
 {
-    if (!CreateInstance()) return false;
-    if (!PickPhysicalDevice()) return false;
-    if (!CreateWindow()) return false;
-    CreateLogicalDevice();
+    if (!CreateInstance()) {
+        Deinit();
+        return false;
+    }
+    if (!PickPhysicalDevice()) {
+        Deinit();
+        return false;
+    }
+    if (!CreateWindow()) {
+        Deinit();
+        return false;
+    }
+    if (!CreateLogicalDevice()) {
+        Deinit();
+        return false;
+    }
     CreateSwapChain();
     CreateImageViews();
     CreateCommandPool();
@@ -62,9 +74,10 @@ void Pipeline::Pool()
     DrawFrame();
 }
 
-vk::raii::CommandBuffer& Pipeline::GetCommandBuffer()
+
+vk::raii::PhysicalDevice& Pipeline::GetPhysicalDevice()
 {
-    return CommandBuffers[FrameIndex];
+    return PhysicalDevice;
 }
 
 vk::raii::Device& Pipeline::GetDevice()
@@ -80,6 +93,21 @@ vk::SurfaceFormatKHR& Pipeline::GetSwapChainSurfaceFormat()
 vk::Extent2D& Pipeline::GetSwapChainExtent()
 {
     return SwapChainExtent;
+}
+
+vk::raii::CommandPool& Pipeline::GetCommandPool()
+{
+    return CommandPool;
+}
+
+vk::raii::CommandBuffer& Pipeline::GetCommandBuffer()
+{
+    return CommandBuffers[FrameIndex];
+}
+
+vk::raii::Queue& Pipeline::GetQueue()
+{
+    return Queue;
 }
 
 bool Pipeline::CreateWindow()
@@ -123,62 +151,14 @@ bool SDLCALL Pipeline::ResizeEventWatcher(void* userdata, SDL_Event* event)
 
 void Pipeline::DrawFrame()
 {
-    /*
-    // NOTE: for simplicity, wait for the queue to be idle before starting the frame
-    Queue.waitIdle();
-    // In the next chapter you see how to use multiple frames in flight and fences to sync
-
-    auto [result, imageIndex] = SwapChain.acquireNextImage(UINT64_MAX, *PresentCompleteSemaphores, nullptr);
-    RecordCommandBuffer(imageIndex);
-
-    Device.resetFences(*DrawFence);
-    vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-
-    vk::SubmitInfo submitInfo;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &*PresentCompleteSemaphores;
-    submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &*CommandBuffer;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &*RenderFinishedSemaphores;
-
-    Queue.submit(submitInfo, *DrawFence);
-    result = Device.waitForFences(*DrawFence, vk::True, UINT64_MAX);
-    if (result != vk::Result::eSuccess)
-    {
-        Logs::Error("failed to wait for fence!");
-        return;
-    }
-
-    vk::PresentInfoKHR presentInfoKHR;
-    presentInfoKHR.waitSemaphoreCount = 1;
-    presentInfoKHR.pWaitSemaphores = &*RenderFinishedSemaphores;
-    presentInfoKHR.swapchainCount = 1;
-    presentInfoKHR.pSwapchains = &*SwapChain;
-    presentInfoKHR.pImageIndices = &imageIndex;
-
-    result = Queue.presentKHR(presentInfoKHR);
-    switch (result)
-    {
-    case vk::Result::eSuccess:
-        break;
-    case vk::Result::eSuboptimalKHR:
-        Logs::Warning("vk::Queue::presentKHR returned vk::Result::eSuboptimalKHR !");
-        break;
-    default:
-        break;        // an unexpected result is returned!
-    }
-    */
     auto fenceResult = Device.waitForFences(*InFlightFences[FrameIndex], vk::True, UINT64_MAX);
     if (fenceResult != vk::Result::eSuccess)
     {
-        throw std::runtime_error("failed to wait for fence!");
+        Logs::RuntimeError("%d\nFailed to wait for fence", fenceResult);
+        return;
     }
 
     auto [result, imageIndex] = SwapChain.acquireNextImage(UINT64_MAX, *PresentCompleteSemaphores[FrameIndex], nullptr);
-    // Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
-    // here and does not need to be caught by an exception.
     // Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
     // here and does not need to be caught by an exception.
     if (result == vk::Result::eErrorOutOfDateKHR)
@@ -191,7 +171,8 @@ void Pipeline::DrawFrame()
     else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
     {
         assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
-        throw std::runtime_error("failed to acquire swap chain image!");
+        Logs::RuntimeError("%d\nFailed to acquire swap chain image", result);
+        return;
     }
 
     // Only reset the fence if we are submitting work
@@ -386,7 +367,7 @@ bool Pipeline::PickPhysicalDevice()
     std::vector<vk::raii::PhysicalDevice> devices = Instance.enumeratePhysicalDevices();
     if (devices.empty())
     {
-        Logs::Error("Failed to find GPUs with Vulkan support!");
+        Logs::Error("Failed to find GPUs with Vulkan support");
         return false;
     }
     // Use an ordered map to automatically sort candidates by increasing score
@@ -430,7 +411,7 @@ bool Pipeline::PickPhysicalDevice()
 
     if (PhysicalDevices.empty())
     {
-        throw std::runtime_error("Failed to find a suitable GPU!");
+        Logs::Error("Failed to find a suitable GPU");
         return false;
     }
 
@@ -440,7 +421,7 @@ bool Pipeline::PickPhysicalDevice()
     return true;
 }
 
-void Pipeline::CreateLogicalDevice()
+bool Pipeline::CreateLogicalDevice()
 {
     // find the index of the first queue family that supports graphics
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties = PhysicalDevice.getQueueFamilyProperties();
@@ -458,7 +439,8 @@ void Pipeline::CreateLogicalDevice()
     }
     if (QueueIndex == ~0)
     {
-        throw std::runtime_error("Could not find a queue for graphics and present -> terminating");
+        Logs::Error("Could not find a queue for graphics and present -> terminating");
+        return 0;
     }
 
     // query for Vulkan 1.4 features
@@ -491,6 +473,8 @@ void Pipeline::CreateLogicalDevice()
 
     Device = vk::raii::Device(PhysicalDevice, deviceCreateInfo);
     Queue = vk::raii::Queue(Device, QueueIndex, 0);
+
+    return true;
 }
 
 void Pipeline::CreateSwapChain()

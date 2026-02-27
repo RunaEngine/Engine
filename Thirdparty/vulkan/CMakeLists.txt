@@ -8,5 +8,9 @@ target_include_directories(vulkan
         "${VULKAN_DIR}/include"
 )
 set_target_properties(vulkan PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE CXX)
-
-find_package(Vulkan REQUIRED)
+target_compile_definitions(vulkan 
+        INTERFACE
+        VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL=0
+        VK_NO_PROTOTYPES
+        VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
+)

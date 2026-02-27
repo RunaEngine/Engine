@@ -1,5 +1,6 @@
-#include "Engine/Engine.h"
 #include "Vulkan/Shaders.h"
+#include "Vulkan/VertexBuffer.h"
+#include "Engine/Engine.h"
 #include "Utils/System.h"
 #include "Utils/Logs.h"
 #include <slang.h>
@@ -130,6 +131,15 @@ bool VKShaders::Init(const std::filesystem::path& filepath)
 void VKShaders::Deinit()
 {
     ShaderModules.clear();
+    GraphicsPipeline = nullptr;
+    PipelineLayout = nullptr;
+}
+
+void VKShaders::Bind()
+{
+    auto& commandBuffer = GPipeline->GetCommandBuffer();
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *GraphicsPipeline);
 }
 
 vk::raii::Pipeline& VKShaders::GetGraphicsPipeline()
@@ -139,7 +149,13 @@ vk::raii::Pipeline& VKShaders::GetGraphicsPipeline()
 
 void VKShaders::CreateGraphicsPipeline(const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
+    auto bindingDescription = VKVertex::GetBindingDescription();
+	auto attributeDescriptions = VKVertex::GetAttributeDescriptions();
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
     inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;

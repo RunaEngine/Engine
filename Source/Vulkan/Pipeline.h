@@ -1,7 +1,4 @@
 #pragma once
-#define VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL 0
-#define VK_NO_PROTOTYPES
-#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
 
 #include "Config.h"
 #include "Engine/Core/Object.h"
@@ -10,10 +7,10 @@
 #include <vulkan/vulkan_raii.hpp>
 #include <functional>
 
-#ifdef ENGINE_BUILD_DEBUG
-constexpr bool EnableValidationLayers = true;
-#else
+#ifdef NDEBUG
 constexpr bool EnableValidationLayers = false;
+#else
+constexpr bool EnableValidationLayers = true;
 #endif
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
@@ -29,10 +26,15 @@ public:
 
     void Pool();
 
-    vk::raii::CommandBuffer& GetCommandBuffer();
+    vk::raii::PhysicalDevice& GetPhysicalDevice();
     vk::raii::Device& GetDevice();
     vk::SurfaceFormatKHR& GetSwapChainSurfaceFormat();
     vk::Extent2D& GetSwapChainExtent();
+
+    vk::raii::CommandPool& GetCommandPool();
+    vk::raii::CommandBuffer& GetCommandBuffer();
+
+    vk::raii::Queue& GetQueue();
 
     std::function<void()> OnRender;
 private:
@@ -70,16 +72,16 @@ private:
 
     // SDL Funcitons
     bool CreateWindow();
+    static bool SDLCALL ResizeEventWatcher(void* userdata, SDL_Event* event);
 
     // Vulkan Functions
-    static bool SDLCALL ResizeEventWatcher(void* userdata, SDL_Event* event);
     void DrawFrame();
 
     void RecreateSwapChain();
     bool CreateInstance();
     void SetupDebugMessenger();
     bool PickPhysicalDevice();
-    void CreateLogicalDevice();
+    bool CreateLogicalDevice();
     void CreateSwapChain();
     void CleanupSwapChain();
     void CreateImageViews();

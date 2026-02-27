@@ -13,7 +13,7 @@ public:
 
     static void Warning(SDL_PRINTF_FORMAT_STRING const char* fmt, ...);
 
-    static void SdlError();
+    static void RuntimeError(SDL_PRINTF_FORMAT_STRING const char* fmt, ...);
 
-    //static bool gltfError(cgltf_result result);
+    static void SdlError();
 };
