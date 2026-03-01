@@ -19,4 +19,4 @@ target_include_directories(asio
         $<TARGET_NAME_IF_EXISTS:OpenSSL::SSL>
         $<TARGET_NAME_IF_EXISTS:OpenSSL::Crypto>
 )]]
-set_target_properties(asio PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE CXX)
+set_target_properties(asio PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)

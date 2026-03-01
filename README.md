@@ -18,11 +18,11 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
 
 - [Git](https://git-scm.com)
 
-- [CMake 3.25 or above](https://cmake.org/download/)
+- [CMake 3.28 or above](https://cmake.org/download/)
 
 - Windows only
-  - Build With Visual Studio 2019/2022
-    - [Visual Studio 2019/2022](https://visualstudio.microsoft.com/downloads/)
+  - Build With Visual Studio 2026
+    - [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/)
     - 👇 Install the following workloads:
     - Game Development with C++
     - MSVC v142 or above | x64/x86

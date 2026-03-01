@@ -1,6 +1,7 @@
 FetchContent_Declare(
         libsdl3image
-        URL https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.0/SDL3_image-3.4.0.tar.gz
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+        GIT_TAG release-3.4.0
 )
 
 set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
@@ -27,4 +28,4 @@ set(SDLIMAGE_WEBP_SHARED ON CACHE INTERNAL "")
 
 FetchContent_MakeAvailable(libsdl3image)
 
-set_target_properties(SDL3_image-shared PROPERTIES FOLDER "/Thirdparty/sdl")
+set_target_properties(SDL3_image-shared PROPERTIES FOLDER "Thirdparty/sdl")

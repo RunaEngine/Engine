@@ -1,6 +1,7 @@
 FetchContent_Declare(
         libsdl3
-        URL https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.2.tar.gz
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-3.4.2
 )
 
 set(SDL_TEST_LIBRARY OFF CACHE INTERNAL "")
@@ -21,5 +22,5 @@ endif ()
 
 FetchContent_MakeAvailable(libsdl3)
 
-set_target_properties(SDL3-shared PROPERTIES FOLDER "/Thirdparty/sdl")
-#set_target_properties(SDL_uclibc PROPERTIES FOLDER "/Thirdparty/sdl")
+set_target_properties(SDL3-shared PROPERTIES FOLDER "Thirdparty/sdl")
+set_target_properties(SDL_uclibc PROPERTIES FOLDER "Thirdparty/sdl")

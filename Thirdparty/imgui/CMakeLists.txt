@@ -1,6 +1,7 @@
 FetchContent_Declare(
         ocornutImgui
-        URL https://github.com/ocornut/imgui/archive/refs/tags/v1.92.6-docking.tar.gz
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG v1.92.6-docking
 )
 
 FetchContent_MakeAvailable(ocornutImgui)
@@ -67,4 +68,4 @@ target_link_libraries(imgui
         glad
         vulkan
 )
-set_target_properties(imgui PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE CXX)
+set_target_properties(imgui PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)

@@ -12,4 +12,4 @@ target_link_libraries(glad
         PUBLIC
         vulkan
 )
-set_target_properties(glad PROPERTIES FOLDER "/Thirdparty")
+set_target_properties(glad PROPERTIES FOLDER "Thirdparty")

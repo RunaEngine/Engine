@@ -7,7 +7,7 @@ target_include_directories(vulkan
         INTERFACE
         "${VULKAN_DIR}/include"
 )
-set_target_properties(vulkan PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE CXX)
+set_target_properties(vulkan PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)
 target_compile_definitions(vulkan 
         INTERFACE
         VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL=0

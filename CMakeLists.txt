@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.28)
 project(Runa VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 23)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 set(USE_FOLDERS ON)
 add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 
@@ -11,20 +12,21 @@ include(Content/Content.cmake)
 include(Thirdparty/Thirdparty.cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(ENGINE_BUILD_DEBUG ON)
+    set(ENGINE_BUILD_DEBUG true)
+    set(ENGINE_BUILD_RELEASE false)
 else()
-    set(ENGINE_BUILD_RELEASE ON)
+    set(ENGINE_BUILD_DEBUG false)
+    set(ENGINE_BUILD_RELEASE true)
 endif()
 
 set(ENGINE_NAME ${CMAKE_PROJECT_NAME})
-set(ENGINE_VERSION ${CMAKE_PROJECT_VERSION})
 set(ENGINE_MAJOR_VERSION ${CMAKE_PROJECT_VERSION_MAJOR})
 set(ENGINE_MINOR_VERSION ${CMAKE_PROJECT_VERSION_MINOR})
 set(ENGINE_PATH_VERSION ${CMAKE_PROJECT_VERSION_PATCH})
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.hpp @ONLY)
 
-file(GLOB_RECURSE ENGINE_SOURCES Source/*.h Source/*.cpp)
+file(GLOB_RECURSE ENGINE_SOURCES Source/*.hpp)
 #[[
 list(REMOVE_ITEM ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Main.cpp")
 
@@ -51,10 +53,18 @@ set_target_properties(Runtime PROPERTIES FOLDER "/Source" LINKER_LANGUAGE CXX)
 
 list(APPEND ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Main.cpp")
 ]]
-add_executable(Runa ${ENGINE_SOURCES})
+add_executable(Runa)
 target_include_directories(Runa
         PUBLIC
-        Source
+        Source/
+)
+target_sources(Runa
+        PRIVATE
+        Source/main.cpp
+)
+target_sources(Runa
+        PUBLIC
+        ${ENGINE_SOURCES}
 )
 target_link_libraries(Runa
         PUBLIC
@@ -62,7 +72,7 @@ target_link_libraries(Runa
         vulkan
         SDL3-shared
         glad
-        glm
+        glm-header-only
         slang
         #USER INTERFACE LIBRARY
         imgui
@@ -73,7 +83,7 @@ target_link_libraries(Runa
         #COMPRESSION
         zlib
 )
-set_target_properties(Runa PROPERTIES FOLDER "/Source" LINKER_LANGUAGE CXX)
+#set_target_properties(Runa PROPERTIES FOLDER "Source")
 
 function(copy_target_shared_dlls target)
         foreach(lib IN LISTS ARGN)
@@ -95,6 +105,7 @@ copy_target_shared_dlls(Runa
         assimp
         slang
         zlib
+        miniz
 )
 
 include(Content/Content.cmake)

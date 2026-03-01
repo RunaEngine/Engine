@@ -1,7 +1,6 @@
 FetchContent_Declare(
         nothingsstb
         GIT_REPOSITORY https://github.com/nothings/stb.git
-        TAG master
 )
 
 FetchContent_MakeAvailable(nothingsstb)
@@ -44,4 +43,4 @@ target_compile_definitions(stb
         STB_IMAGE_RESIZE_IMPLEMENTATION
 )
 
-set_target_properties(stb PROPERTIES FOLDER "/Thirdparty" LINKER_LANGUAGE C)
+set_target_properties(stb PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE C)

@@ -1,7 +1,7 @@
 FetchContent_Declare(
         slang
         GIT_REPOSITORY https://github.com/shader-slang/slang.git
-        TAG 74f1dc8f3b5cc6920c0cb994cbf0850ebcaa4c2b
+        GIT_TAG v2026.3.1
 )
 
 set(SLANG_ENABLE_REPLAYER OFF CACHE BOOL "")
@@ -21,8 +21,8 @@ set(SLANG_ENABLE_SLANGI OFF CACHE BOOL "")
 set(SLANG_ENABLE_SLANGC OFF CACHE BOOL "")
 set(SLANG_ENABLE_SLANGD OFF CACHE BOOL "")
 set(SLANG_ENABLE_SLANG_GLSLANG OFF CACHE BOOL "")
-set(SLANG_EMBED_CORE_MODULE_SOURCE OFF CACHE BOOL "")
-set(SLANG_EMBED_CORE_MODULE ON CACHE BOOL "")
+set(SLANG_EMBED_CORE_MODULE_SOURCE ON CACHE BOOL "")
+set(SLANG_EMBED_CORE_MODULE OFF CACHE BOOL "")
 set(SLANG_ENABLE_DX_ON_VK ON CACHE BOOL "")
 set(SLANG_ENABLE_NVAPI "AUTO" CACHE STRING "")
 set(SLANG_ENABLE_IR_BREAK_ALLOC OFF CACHE BOOL "")
@@ -31,16 +31,18 @@ set(SLANG_LIB_TYPE "SHARED" CACHE STRING "")
 
 FetchContent_MakeAvailable(slang)
 
-set_target_properties(core PROPERTIES FOLDER "/Thirdparty/slang")
-set_target_properties(compiler-core PROPERTIES FOLDER "/Thirdparty/slang")
-set_target_properties(slang PROPERTIES FOLDER "/Thirdparty/slang")
+set_target_properties(core PROPERTIES FOLDER "Thirdparty/slang")
+set_target_properties(compiler-core PROPERTIES FOLDER "Thirdparty/slang")
+set_target_properties(slang PROPERTIES FOLDER "Thirdparty/slang")
+set_target_properties(slang PROPERTIES FOLDER "Thirdparty/slang")
+set_target_properties(slang-proxy PROPERTIES FOLDER "Thirdparty/slang")
 #set_target_properties(slang-common-objects PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangc PROPERTIES FOLDER "/Thirdparty/slang")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-        set_target_properties(minigzip PROPERTIES FOLDER "/Thirdparty/slang")
-        set_target_properties(static_minigzip PROPERTIES FOLDER "/Thirdparty/slang")
-        set_target_properties(zlib_example PROPERTIES FOLDER "/Thirdparty/slang")
-        set_target_properties(zlib_static_example PROPERTIES FOLDER "/Thirdparty/slang")
+        set_target_properties(minigzip PROPERTIES FOLDER "Thirdparty/slang")
+        set_target_properties(static_minigzip PROPERTIES FOLDER "Thirdparty/slang")
+        set_target_properties(zlib_example PROPERTIES FOLDER "Thirdparty/slang")
+        set_target_properties(zlib_static_example PROPERTIES FOLDER "Thirdparty/slang")
 endif ()
 #set_target_properties(slang-glslang PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangd PROPERTIES FOLDER "/Thirdparty/slang")

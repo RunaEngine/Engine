@@ -7,4 +7,4 @@ target_include_directories(simdjson
         PUBLIC
         "${SIMDJSON_DIR}/include"
 )
-set_target_properties(simdjson PROPERTIES FOLDER "/engine/thirdparty")
+set_target_properties(simdjson PROPERTIES FOLDER "Thirdparty")
