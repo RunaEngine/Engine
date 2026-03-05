@@ -1,0 +1,172 @@
+#pragma once
+
+//#include "Vulkan/Utils.hpp"
+#include "Engine/Core/Object.hpp"
+#include "Engine/Engine.hpp"
+#include "Utils/Logs.hpp"
+#include <vulkan/vulkan_raii.hpp>
+#include <vulkan/vulkan.hpp>
+#include <SDL3_image/SDL_image.h>
+
+class VKTexture : public Object
+{
+public:
+    VKTexture() = default;
+    ~VKTexture() override
+    {
+        Deinit();
+    }
+
+    bool Init(const std::filesystem::path& filepath)
+    {
+        SDL_Surface* surf = IMG_Load(filepath.string().c_str());
+        if (!surf)
+        {
+            Logs::SdlError();
+            return false;
+        }
+
+        const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(surf->format);
+        if (!details)
+        {
+            Logs::SdlError();
+            SDL_DestroySurface(surf);
+            return false;
+        }
+
+        uint8_t numChannels = (details->Rbits > 0) + (details->Gbits > 0) + (details->Bbits > 0) + (details->Abits > 0);
+        int width = surf->w, height = surf->h;
+        vk::DeviceSize imageSize = width * height * numChannels;
+
+        vk::raii::Buffer stagingBuffer({});
+        vk::raii::DeviceMemory stagingBufferMemory({});
+
+        VKUtils::CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+
+        void* data = stagingBufferMemory.mapMemory(0, imageSize);
+        memcpy(data, surf->pixels, imageSize);
+        stagingBufferMemory.unmapMemory();
+
+        CreateImage(width, height, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
+
+        TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        CopyBufferToImage(stagingBuffer, TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        TransitionImageLayout(TextureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+        CreateTextureImageView();
+        CreateTextureSampler();
+
+        SDL_DestroySurface(surf);
+
+        return true;
+    }
+
+    void Deinit()
+    {
+        TextureImageView.release();
+        TextureImageMemory.release();
+        TextureImage.release();
+    }
+
+    void Bind()
+    {
+
+    }
+
+    vk::raii::Image TextureImage = nullptr;
+    vk::raii::DeviceMemory TextureImageMemory = nullptr;
+    vk::raii::ImageView TextureImageView = nullptr;
+    vk::raii::Sampler TextureSampler = nullptr;
+
+private:
+
+    void CreateImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties /*vk::raii::Image& image, vk::raii::DeviceMemory& imageMemory*/)
+    {
+        auto& device = GPipeline->Device;
+
+        vk::ImageCreateInfo imageInfo{};
+        imageInfo.imageType = vk::ImageType::e2D, imageInfo.format = format,
+        imageInfo.extent.width = width, imageInfo.extent.height = height, imageInfo.extent.depth = 1, imageInfo.mipLevels = 1, imageInfo.arrayLayers = 1,
+        imageInfo.samples = vk::SampleCountFlagBits::e1, imageInfo.tiling = tiling,
+        imageInfo.usage = usage, imageInfo.sharingMode = vk::SharingMode::eExclusive;
+
+        TextureImage = vk::raii::Image(device, imageInfo);
+        
+        vk::MemoryRequirements memRequirements = TextureImage.getMemoryRequirements();
+        vk::MemoryAllocateInfo allocInfo;
+        allocInfo.allocationSize = memRequirements.size,
+        allocInfo.memoryTypeIndex = VKUtils::FindMemoryType(memRequirements.memoryTypeBits, properties);
+        TextureImageMemory = vk::raii::DeviceMemory(device, allocInfo);
+        TextureImage.bindMemory(TextureImageMemory, 0);
+    }
+
+    void TransitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
+        auto commandBuffer = VKUtils::BeginSingleTimeCommands();
+
+        vk::ImageMemoryBarrier barrier;
+        barrier.oldLayout = oldLayout, barrier.newLayout = newLayout, barrier.image = image, barrier.subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+
+
+        vk::PipelineStageFlags sourceStage;
+        vk::PipelineStageFlags destinationStage;
+
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.srcAccessMask = {};
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+            sourceStage      = vk::PipelineStageFlagBits::eTopOfPipe;
+            destinationStage = vk::PipelineStageFlagBits::eTransfer;
+        }
+        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+            sourceStage      = vk::PipelineStageFlagBits::eTransfer;
+            destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+        }
+        else
+        {
+            Logs::RuntimeError("Unsupported layout transition");
+        }
+        commandBuffer.pipelineBarrier(sourceStage, destinationStage, {}, {}, nullptr, barrier);
+        VKUtils::EndSingleTimeCommands(commandBuffer);
+    }
+
+    void CopyBufferToImage(const vk::raii::Buffer& buffer, vk::raii::Image& image, uint32_t width, uint32_t height) {
+        vk::raii::CommandBuffer commandBuffer = VKUtils::BeginSingleTimeCommands();
+        vk::BufferImageCopy region;
+        region.bufferOffset = 0, region.bufferRowLength = 0, region.bufferImageHeight = 0, region.imageSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+        region.imageOffset.x = 0, region.imageOffset.y = 0, region.imageOffset.z = 0, region.imageExtent.width = width, region.imageExtent.height = height, region.imageExtent.depth = 1;
+		commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, {region});
+        VKUtils::EndSingleTimeCommands(commandBuffer);
+    }
+
+    void CreateTextureImageView()
+    {
+        TextureImageView = VKUtils::CreateImageView(TextureImage, vk::Format::eR8G8B8A8Srgb);
+    }
+
+    void CreateTextureSampler()
+    {
+        auto& device = GPipeline->Device;
+        auto& physicalDevice = GPipeline->PhysicalDevice;
+
+        vk::PhysicalDeviceProperties properties = physicalDevice.getProperties();
+        vk::SamplerCreateInfo samplerInfo;
+        samplerInfo.magFilter = vk::Filter::eLinear,
+        samplerInfo.minFilter = vk::Filter::eLinear,
+        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear,
+        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat,
+        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat,
+        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat,
+        samplerInfo.mipLodBias = 0.0f,
+        samplerInfo.anisotropyEnable = vk::True,
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy,
+        samplerInfo.compareEnable = vk::False,
+        samplerInfo.compareOp = vk::CompareOp::eAlways;
+
+        TextureSampler = vk::raii::Sampler(device, samplerInfo);
+    }
+};

@@ -7,7 +7,7 @@
 #include <vector>
 #include <cstdint>
 
-bool GetEnvVar(const char* varname, std::string& var)
+inline bool GetEnvVar(const char* varname, std::string& var)
 {
     SDL_Environment* env = SDL_GetEnvironment();
     if (!env)
@@ -25,7 +25,7 @@ bool GetEnvVar(const char* varname, std::string& var)
     return true;
 }
 
-bool GetUserName(std::string& username)
+inline bool GetUserName(std::string& username)
 {
 #ifdef _WIN64
     return GetEnvVar("USERNAME", username);
@@ -36,7 +36,7 @@ bool GetUserName(std::string& username)
     return false;
 }
 
-bool ReadFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data)
+inline bool ReadFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data)
 {
     SDL_IOStream* file = SDL_IOFromFile(filepath.string().c_str(), "rb");
     if (!file)
@@ -85,7 +85,7 @@ bool ReadFile(const std::filesystem::path& filepath, std::vector<uint8_t>& data)
     return true;
 }
 
-bool ReadTextFile(const std::filesystem::path& filepath, std::string& text)
+inline bool ReadTextFile(const std::filesystem::path& filepath, std::string& text)
 {
     SDL_IOStream* file = SDL_IOFromFile(filepath.string().c_str(), "rt");
     if (!file)
@@ -134,7 +134,7 @@ bool ReadTextFile(const std::filesystem::path& filepath, std::string& text)
     return true;
 }
 
-bool FileExist(const std::filesystem::path& filepath)
+inline bool FileExist(const std::filesystem::path& filepath)
 {
     if (std::filesystem::exists(filepath) && std::filesystem::is_regular_file(filepath))
     {
@@ -144,7 +144,7 @@ bool FileExist(const std::filesystem::path& filepath)
     return false;
 }
 
-bool DirExist(const std::filesystem::path& filepath)
+inline bool DirExist(const std::filesystem::path& filepath)
 {
     if (std::filesystem::exists(filepath) && std::filesystem::is_directory(filepath))
     {
@@ -154,7 +154,7 @@ bool DirExist(const std::filesystem::path& filepath)
     return false;
 }
 
-std::filesystem::path GetHomeDir()
+inline std::filesystem::path GetHomeDir()
 {
     std::string homeDir;
 #ifdef _WIN64
@@ -165,7 +165,7 @@ std::filesystem::path GetHomeDir()
     return std::filesystem::path(homeDir);
 }
 
-std::filesystem::path GetPrefPath(const std::string& org, const std::string& app)
+inline std::filesystem::path GetPrefPath(const std::string& org, const std::string& app)
 {
     char* path = SDL_GetPrefPath(org.c_str(), app.c_str());
     if (!path)
@@ -178,12 +178,12 @@ std::filesystem::path GetPrefPath(const std::string& org, const std::string& app
     return fs_path;
 }
 
-std::filesystem::path GetBaseDir()
+inline std::filesystem::path GetBaseDir()
 {
     return std::filesystem::path(SDL_GetBasePath());
 }
 
-std::filesystem::path currentWorkDir()
+inline std::filesystem::path currentWorkDir()
 {
     return std::filesystem::current_path();
 }

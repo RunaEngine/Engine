@@ -2,6 +2,7 @@
 
 #include "Config.hpp"
 #include "Engine/Core/Object.hpp"
+#include "Vulkan/Utils.hpp"
 #include "Utils/System.hpp"
 #include "Utils/Logs.hpp"
 #include <SDL3/SDL.h>
@@ -64,6 +65,12 @@ public:
 
     void Deinit()
     {
+        DebugMessenger.release();
+        Extensions.clear(); Extensions.shrink_to_fit();
+        Instance.release();
+        PhysicalDevices.clear(); PhysicalDevices.shrink_to_fit();
+        PhysicalDevice.release();
+
         if (Surface != VK_NULL_HANDLE)
         {
             SDL_Vulkan_DestroySurface(*Instance, Surface, NULL);
@@ -76,11 +83,7 @@ public:
             Window = nullptr;
         }
 
-        DebugMessenger.release();
-        Extensions.clear(); Extensions.shrink_to_fit();
-        Instance.release();
-        PhysicalDevices.clear(); PhysicalDevices.shrink_to_fit();
-        PhysicalDevice.release();
+        SDL_Vulkan_UnloadLibrary();
 
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
@@ -93,44 +96,9 @@ public:
         DrawFrame();
     }
 
-    vk::raii::PhysicalDevice& GetPhysicalDevice()
-    {
-        return PhysicalDevice;
-    }
-
-    vk::raii::Device& GetDevice()
-    {
-        return Device;
-    }
-
-    vk::SurfaceFormatKHR& GetSwapChainSurfaceFormat()
-    {
-        return SwapChainSurfaceFormat;
-    }
-
-    vk::Extent2D& GetSwapChainExtent()
-    {
-        return SwapChainExtent;
-    }
-
-    vk::raii::CommandPool& GetCommandPool()
-    {
-        return CommandPool;
-    }
-
-    vk::raii::CommandBuffer& GetCommandBuffer()
-    {
-        return CommandBuffers[FrameIndex];
-    }
-
-    vk::raii::Queue& GetQueue()
-    {
-        return Queue;
-    }
-
     std::function<void(uint32_t)> OnSwap;
     std::function<void(uint32_t)> OnRender;
-private:
+
     // SDL
     SDL_Window* Window = nullptr;
     vk::SurfaceKHR Surface = nullptr;
@@ -162,6 +130,7 @@ private:
 
     vk::raii::Fence DrawFence = nullptr;
     bool FramebufferResized = false;
+private:
 
     // SDL Funcitons
     bool CreateWindow()
@@ -314,8 +283,8 @@ private:
         return false;
     }
 
-    PFN_vkGetInstanceProcAddr instanceProcAdd = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-    auto ctx = new vk::raii::Context(instanceProcAdd);
+    //PFN_vkGetInstanceProcAddr instanceProcAdd = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+    auto ctx = new vk::raii::Context();
     Context.reset(ctx);
 
     AppInfo.pApplicationName = ENGINE_NAME;
@@ -508,6 +477,7 @@ private:
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
     > featureChain;
 
+    featureChain.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy = true;
     featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = true;
     featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = true;
     featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = true;

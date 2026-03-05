@@ -10,19 +10,19 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
-class VKShaders : public Object
+class VKShader : public Object
 {
 public:
-    VKShaders() = default;
+    VKShader() = default;
 
-    ~VKShaders() override
+    ~VKShader() override
     {
         Deinit();
     }
 
     bool Init(const std::filesystem::path& filepath,
         vk::VertexInputBindingDescription& bindingDescription,
-        std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions,
+        std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions,
         vk::raii::DescriptorSetLayout& descriptorSetLayout
         )
     {
@@ -150,29 +150,18 @@ public:
 
     void Bind()
     {
-        auto& commandBuffer = GPipeline->GetCommandBuffer();
+        auto& commandBuffer = GPipeline->CommandBuffers[GPipeline->FrameIndex];
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *GraphicsPipeline);
     }
 
-    vk::raii::Pipeline& GetGraphicsPipeline()
-    {
-        return GraphicsPipeline;
-    }
-
-    vk::raii::PipelineLayout& GetPipelineLayout()
-    {
-        return PipelineLayout;
-    }
-
-private:
     vk::raii::PipelineLayout PipelineLayout = nullptr;
     vk::raii::Pipeline GraphicsPipeline = nullptr;
     std::vector<vk::raii::ShaderModule> ShaderModules;
 
     void CreateGraphicsPipeline(const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
         const vk::VertexInputBindingDescription& bindingDescription,
-        std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions,
+        std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions,
         vk::raii::DescriptorSetLayout& descriptorSetLayout)
     {
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
@@ -238,9 +227,9 @@ private:
         pipelineLayoutInfo.setLayoutCount = 1, pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout,
             pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        PipelineLayout = vk::raii::PipelineLayout(GPipeline->GetDevice(), pipelineLayoutInfo);
+        PipelineLayout = vk::raii::PipelineLayout(GPipeline->Device, pipelineLayoutInfo);
 
-        auto& swapChainSurf = GPipeline->GetSwapChainSurfaceFormat();
+        auto& swapChainSurf = GPipeline->SwapChainSurfaceFormat;
 
         vk::PipelineRenderingCreateInfo pipelineRenderingCreateInfo;
         pipelineRenderingCreateInfo.colorAttachmentCount = 1;
@@ -260,7 +249,7 @@ private:
         graphicsPipelineCreateInfo.layout = PipelineLayout;
         graphicsPipelineCreateInfo.renderPass = nullptr;
 
-        GraphicsPipeline = vk::raii::Pipeline(GPipeline->GetDevice(), nullptr, graphicsPipelineCreateInfo);
+        GraphicsPipeline = vk::raii::Pipeline(GPipeline->Device, nullptr, graphicsPipelineCreateInfo);
     }
 
     vk::raii::ShaderModule CreateShaderModule(const uint32_t* data, size_t size)
@@ -270,7 +259,7 @@ private:
         createInfo.pCode = data;
 
         vk::raii::ShaderModule shaderModule{
-            GPipeline->GetDevice(),
+            GPipeline->Device,
             createInfo
         };
 

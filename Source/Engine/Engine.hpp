@@ -6,8 +6,8 @@
 #include "Tick.hpp"
 #include "Input.hpp"
 
-extern GameUserSettings* GUserSettings = new GameUserSettings();
-extern Pipeline* GPipeline = new Pipeline();
-extern Event* GEvent = new Event();
-extern Tick* GTick = new Tick();
-extern Input* GInput = new Input();
+extern GameUserSettings* GUserSettings;
+extern Pipeline* GPipeline;
+extern Event* GEvent;
+extern Tick* GTick;
+extern Input* GInput;

@@ -1,7 +1,7 @@
 #include "Engine/Engine.hpp"
 #include "Vulkan/Pipeline.hpp"
 #include "Vulkan/VertexBuffer.hpp"
-#include "Vulkan/Shaders.hpp"
+#include "Vulkan/Shader.hpp"
 #include "Io/Event.hpp"
 #include "Utils/System.hpp"
 #include <SDL3/SDL.h>
@@ -15,7 +15,6 @@
 
 int main(int argc, char** argv)
 {
-
     Event event;
     if (!GPipeline->Init())
         return -1;
@@ -23,10 +22,10 @@ int main(int argc, char** argv)
     auto currentDir = GetBaseDir();
 
     const std::vector<VKVertex> vertices = {
-        { {-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f} },
-        { {0.5f, -0.5f},  {0.0f, 1.0f, 0.0f} },
-        { {0.5f, 0.5f},   {0.0f, 0.0f, 1.0f} },
-        { {-0.5f, 0.5f},  {1.0f, 1.0f, 1.0f} }
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
     };
 
     const std::vector<uint16_t> indices = {
@@ -34,13 +33,20 @@ int main(int argc, char** argv)
         2, 3, 0
     };
 
+    auto texturefile = currentDir.string() + "Resources/Textures/Planks.png";
+    SharedPtr<VKTexture> texture = MakeShared<VKTexture>();
+    if (!texture->Init(texturefile))
+    {
+        return -1;
+    }
+
     VKVertexBuffer vbo;
-    vbo.Init(vertices, indices);
+    vbo.Init(vertices, indices, {texture});
 
     auto slangfile = currentDir.string() + "Resources/Shaders/Slang.spv";
     auto bindingDescription = VKVertex::GetBindingDescription();
-    VKShaders shader;
-    if (!shader.Init(slangfile, bindingDescription, VKVertex::GetAttributeDescriptions(), vbo.GetDescriptorSetLayout()))
+    VKShader shader;
+    if ( !shader.Init(slangfile, bindingDescription, VKVertex::GetAttributeDescriptions(), vbo.DescriptorSetLayout) )
     {
         return -1;
     }
@@ -60,14 +66,14 @@ int main(int argc, char** argv)
     };
     GPipeline->OnRender = [&](uint32_t frameIndex)
     {
-        auto& commandBuffer = GPipeline->GetCommandBuffer();
-        auto& swapChainExtent = GPipeline->GetSwapChainExtent();
+        auto& commandBuffer = GPipeline->CommandBuffers[GPipeline->FrameIndex];
+        auto& swapChainExtent = GPipeline->SwapChainExtent;
         shader.Bind();
 
         commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.0f, 1.0f));
         commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 
-        vbo.Bind(frameIndex, shader.GetPipelineLayout());
+        vbo.Bind(frameIndex, shader.PipelineLayout);
         commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
     };
     while (!shouldClose)
@@ -75,7 +81,7 @@ int main(int argc, char** argv)
         event.Run(EPool);
         GPipeline->Pool();
     }
-    GPipeline->GetDevice().waitIdle();
+    GPipeline->Device.waitIdle();
 
     return 0;
 }

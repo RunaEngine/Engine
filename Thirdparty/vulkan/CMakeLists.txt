@@ -10,7 +10,7 @@ target_include_directories(vulkan
 set_target_properties(vulkan PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)
 target_compile_definitions(vulkan 
         INTERFACE
-        VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL=0
+        VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL=1
         VK_NO_PROTOTYPES
         VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
 )

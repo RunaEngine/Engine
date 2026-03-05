@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <optional> // Added to declare std::optional
+#include <utility>  // Added to use std::forward
 
 class Object
 {
@@ -21,6 +23,9 @@ using UniquePtr = std::unique_ptr<T>;
 
 template <typename T>
 using SharedPtr = std::shared_ptr<T>;
+
+template <typename T>
+using OptionalPtr = std::optional<T>;
 
 template<typename T, typename ...Args>
 UniquePtr<T> MakeUnique(Args && ...args)
