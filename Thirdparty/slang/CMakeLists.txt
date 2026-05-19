@@ -1,7 +1,7 @@
 FetchContent_Declare(
         slang
         GIT_REPOSITORY https://github.com/shader-slang/slang.git
-        GIT_TAG v2026.3.1
+        GIT_TAG v2026.9
 )
 
 set(SLANG_ENABLE_REPLAYER OFF CACHE BOOL "")
@@ -35,7 +35,7 @@ set_target_properties(core PROPERTIES FOLDER "Thirdparty/slang")
 set_target_properties(compiler-core PROPERTIES FOLDER "Thirdparty/slang")
 set_target_properties(slang PROPERTIES FOLDER "Thirdparty/slang")
 set_target_properties(slang PROPERTIES FOLDER "Thirdparty/slang")
-set_target_properties(slang-proxy PROPERTIES FOLDER "Thirdparty/slang")
+#set_target_properties(slang-proxy PROPERTIES FOLDER "Thirdparty/slang")
 #set_target_properties(slang-common-objects PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangc PROPERTIES FOLDER "/Thirdparty/slang")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")

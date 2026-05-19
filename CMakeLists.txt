@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 23)
 set(USE_FOLDERS ON)
 add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 
-include(Content/Content.cmake)
+include(Contents/Content.cmake)
 include(Thirdparty/Thirdparty.cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -107,7 +107,7 @@ copy_target_shared_dlls(Runa
         miniz
 )
 
-include(Content/Content.cmake)
+#include(Content/Content.cmake)
 copy_resources_to_target(Runa)
 
 

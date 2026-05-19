@@ -1,7 +1,7 @@
 FetchContent_Declare(
         assimplib
         GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v6.0.4
+        GIT_TAG v6.0.5
 )
 
 set(ASSIMP_INSTALL_PD OFF CACHE INTERNAL "")
@@ -16,7 +16,9 @@ set(ASSIMP_DOUBLE_PRECISION ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(assimplib)
 
 set_target_properties(assimp PROPERTIES FOLDER "Thirdparty/assimp")
+target_compile_options(assimp PRIVATE -Wno-error=unused-but-set-variable)
 set_target_properties(unit PROPERTIES FOLDER "Thirdparty/assimp")
+target_compile_options(unit PRIVATE -Wno-error=unused-but-set-variable)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER "Thirdparty/assimp")
 endif ()

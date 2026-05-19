@@ -1,7 +1,7 @@
 FetchContent_Declare(
         libsdl3image
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-        GIT_TAG release-3.4.0
+        GIT_TAG release-3.4.4
 )
 
 set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")

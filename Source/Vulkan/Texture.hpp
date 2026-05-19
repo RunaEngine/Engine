@@ -1,6 +1,8 @@
 #pragma once
 
 //#include "Vulkan/Utils.hpp"
+#include <iostream>
+
 #include "Engine/Core/Object.hpp"
 #include "Engine/Engine.hpp"
 #include "Utils/Logs.hpp"
@@ -19,11 +21,29 @@ public:
 
     bool Init(const std::filesystem::path& filepath)
     {
-        SDL_Surface* surf = IMG_Load(filepath.string().c_str());
-        if (!surf)
+        SDL_Surface* surf = nullptr;
+        // Convert to 8 bits channel space if necessary
         {
-            Logs::SdlError();
-            return false;
+            SDL_Surface* rawSurf = IMG_Load(filepath.string().c_str());
+            if (!rawSurf)
+            {
+                Logs::SdlError();
+                return false;
+            }
+
+            const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(rawSurf->format);
+
+            if (rawSurf->format != SDL_PIXELFORMAT_RGBA32) {
+                surf = SDL_ConvertSurfaceAndColorspace(rawSurf, SDL_PIXELFORMAT_RGBA32, nullptr, SDL_COLORSPACE_RGB_DEFAULT, 0);
+                if (!surf)
+                {
+                    Logs::SdlError();
+                    return false;
+                }
+                SDL_DestroySurface(rawSurf);
+            } else {
+                surf = rawSurf;
+            }
         }
 
         const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(surf->format);
@@ -34,9 +54,8 @@ public:
             return false;
         }
 
-        uint8_t numChannels = (details->Rbits > 0) + (details->Gbits > 0) + (details->Bbits > 0) + (details->Abits > 0);
         int width = surf->w, height = surf->h;
-        vk::DeviceSize imageSize = width * height * numChannels;
+        vk::DeviceSize imageSize = surf->pitch * surf->h;
 
         vk::raii::Buffer stagingBuffer({});
         vk::raii::DeviceMemory stagingBufferMemory({});
