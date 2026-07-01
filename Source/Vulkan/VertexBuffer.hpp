@@ -1,8 +1,5 @@
 #pragma once
 
-
-
-
 #include "Vulkan/Pipeline.hpp"
 //#include "Vulkan/Utils.hpp"
 #include "Engine/Engine.hpp"
@@ -36,7 +33,7 @@ struct VKVertex
     static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
     {
         return {
-            vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, offsetof(VKVertex, Pos)),
+            vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Pos)),
             vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Color)),
             vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32Sfloat, offsetof(VKVertex, TexCoord))
         };
@@ -166,7 +163,8 @@ public:
         VKUniformBuffer ubo{};
         ubo.Model = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.View = lookAt(glm::vec3(0.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.Proj = glm::perspective(glm::radians(60.0f), static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height), 0.1f, 100.0f);
+        int h = swapChainExtent.height < 1 ? 1 : swapChainExtent.height;
+        ubo.Proj = glm::perspective(glm::radians(60.0f), static_cast<float>(swapChainExtent.width) / static_cast<float>(h), 0.1f, 100.0f);
         ubo.Model = glm::transpose(ubo.Model);
         ubo.View = glm::transpose(ubo.View);
         ubo.Proj = glm::transpose(ubo.Proj);
