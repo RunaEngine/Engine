@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         4, 5, 6, 6, 7, 4
     };
 
-    auto texturefile = currentDir.string() + "Resources/Textures/Statue.jpg";
+    auto texturefile = currentDir.string() + "Resources/Textures/UVCheck.png";
     SharedPtr<VKTexture> texture = MakeShared<VKTexture>();
     if (!texture->Init(texturefile))
     {
