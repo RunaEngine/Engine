@@ -78,7 +78,34 @@ namespace VKUtils
         EndSingleTimeCommands(commandCopyBuffer);
     }
 
-    vk::raii::ImageView CreateImageView(vk::raii::Image& image, vk::Format format)
+    std::pair<vk::raii::Image, vk::raii::DeviceMemory> CreateImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
+    {
+        vk::ImageCreateInfo imageInfo;
+        imageInfo.imageType   = vk::ImageType::e2D,
+        imageInfo.format      = format;
+        imageInfo.extent.width  = width,
+        imageInfo.extent.height = height,
+        imageInfo.extent.depth  = 1,
+        imageInfo.mipLevels   = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.samples     = vk::SampleCountFlagBits::e1;
+        imageInfo.tiling      = tiling;
+        imageInfo.usage       = usage;
+        imageInfo.sharingMode = vk::SharingMode::eExclusive;
+
+        vk::raii::Image image = vk::raii::Image(GPipeline->Device, imageInfo);
+
+        vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
+        vk::MemoryAllocateInfo allocInfo;
+        allocInfo.allocationSize  = memRequirements.size;
+        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+        vk::raii::DeviceMemory imageMemory = vk::raii::DeviceMemory(GPipeline->Device, allocInfo);
+        image.bindMemory(imageMemory, 0);
+
+        return {std::move(image), std::move(imageMemory)};
+    }
+
+    vk::raii::ImageView CreateImageView(vk::Image const &image, vk::Format format, vk::ImageAspectFlags aspectFlags)
     {
         auto& device = GPipeline->Device;
 
@@ -86,7 +113,33 @@ namespace VKUtils
         viewInfo.image = image,
             viewInfo.viewType = vk::ImageViewType::e2D,
             viewInfo.format = format,
-            viewInfo.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+            viewInfo.subresourceRange = { aspectFlags, 0, 1, 0, 1 };
         return vk::raii::ImageView(device, viewInfo);
+    }
+
+    vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
+        vk::FormatFeatureFlags features)
+    {
+        vk::raii::PhysicalDevice physicalDevice = GPipeline->PhysicalDevice;
+        for (const auto format : candidates) {
+            vk::FormatProperties props = physicalDevice.getFormatProperties(format);
+
+            if (((tiling == vk::ImageTiling::eLinear) && ((props.linearTilingFeatures & features) == features)) ||
+                ((tiling == vk::ImageTiling::eOptimal) && ((props.optimalTilingFeatures & features) == features)))
+            {
+                return format;
+            }
+        }
+
+        Logs::RuntimeError("failed to find supported format!");
+
+        return vk::Format::eUndefined;
+    }
+
+    vk::Format FindDepthFormat()
+    {
+        return FindSupportedFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
+                                   vk::ImageTiling::eOptimal,
+                                   vk::FormatFeatureFlagBits::eDepthStencilAttachment);
     }
 }

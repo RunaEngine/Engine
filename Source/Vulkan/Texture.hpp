@@ -13,6 +13,11 @@
 class VKTexture : public Object
 {
 public:
+    vk::raii::Image TextureImage = nullptr;
+    vk::raii::DeviceMemory TextureImageMemory = nullptr;
+    vk::raii::ImageView TextureImageView = nullptr;
+    vk::raii::Sampler TextureSampler = nullptr;
+
     VKTexture() = default;
     ~VKTexture() override
     {
@@ -66,7 +71,7 @@ public:
         memcpy(data, surf->pixels, imageSize);
         stagingBufferMemory.unmapMemory();
 
-        CreateImage(width, height, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
+        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(width, height, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
 
         TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
         CopyBufferToImage(stagingBuffer, TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
@@ -91,34 +96,7 @@ public:
     {
 
     }
-
-    vk::raii::Image TextureImage = nullptr;
-    vk::raii::DeviceMemory TextureImageMemory = nullptr;
-    vk::raii::ImageView TextureImageView = nullptr;
-    vk::raii::Sampler TextureSampler = nullptr;
-
 private:
-
-    void CreateImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties /*vk::raii::Image& image, vk::raii::DeviceMemory& imageMemory*/)
-    {
-        auto& device = GPipeline->Device;
-
-        vk::ImageCreateInfo imageInfo{};
-        imageInfo.imageType = vk::ImageType::e2D, imageInfo.format = format,
-        imageInfo.extent.width = width, imageInfo.extent.height = height, imageInfo.extent.depth = 1, imageInfo.mipLevels = 1, imageInfo.arrayLayers = 1,
-        imageInfo.samples = vk::SampleCountFlagBits::e1, imageInfo.tiling = tiling,
-        imageInfo.usage = usage, imageInfo.sharingMode = vk::SharingMode::eExclusive;
-
-        TextureImage = vk::raii::Image(device, imageInfo);
-        
-        vk::MemoryRequirements memRequirements = TextureImage.getMemoryRequirements();
-        vk::MemoryAllocateInfo allocInfo;
-        allocInfo.allocationSize = memRequirements.size,
-        allocInfo.memoryTypeIndex = VKUtils::FindMemoryType(memRequirements.memoryTypeBits, properties);
-        TextureImageMemory = vk::raii::DeviceMemory(device, allocInfo);
-        TextureImage.bindMemory(TextureImageMemory, 0);
-    }
-
     void TransitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
         auto commandBuffer = VKUtils::BeginSingleTimeCommands();
 
@@ -164,7 +142,7 @@ private:
 
     void CreateTextureImageView()
     {
-        TextureImageView = VKUtils::CreateImageView(TextureImage, vk::Format::eR8G8B8A8Srgb);
+        TextureImageView = VKUtils::CreateImageView(TextureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor);
     }
 
     void CreateTextureSampler()

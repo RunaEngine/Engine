@@ -13,6 +13,10 @@
 class VKShader : public Object
 {
 public:
+    vk::raii::PipelineLayout PipelineLayout = nullptr;
+    vk::raii::Pipeline GraphicsPipeline = nullptr;
+    std::vector<vk::raii::ShaderModule> ShaderModules;
+    
     VKShader() = default;
 
     ~VKShader() override
@@ -155,10 +159,6 @@ public:
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *GraphicsPipeline);
     }
 
-    vk::raii::PipelineLayout PipelineLayout = nullptr;
-    vk::raii::Pipeline GraphicsPipeline = nullptr;
-    std::vector<vk::raii::ShaderModule> ShaderModules;
-
     void CreateGraphicsPipeline(const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
         const vk::VertexInputBindingDescription& bindingDescription,
         std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions,
@@ -177,18 +177,18 @@ public:
         viewportState.viewportCount = 1;
         viewportState.scissorCount = 1;
 
-        //vk::PipelineRasterizationStateCreateInfo rasterizer;
-        //rasterizer.depthClampEnable = vk::False;
-        //rasterizer.rasterizerDiscardEnable = vk::False;
-        //rasterizer.polygonMode = vk::PolygonMode::eFill;
-        //rasterizer.cullMode = vk::CullModeFlagBits::eBack;
-        //rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
-        //rasterizer.depthBiasEnable = vk::False;
-        //rasterizer.depthBiasConstantFactor = 0.0f;
-        //rasterizer.depthBiasClamp = 0.0f;
-        //rasterizer.depthBiasSlopeFactor = 1.0f;
-        //rasterizer.lineWidth = 1.0f;
-
+        vk::PipelineRasterizationStateCreateInfo rasterizer;
+        rasterizer.depthClampEnable = vk::False;
+        rasterizer.rasterizerDiscardEnable = vk::False;
+        rasterizer.polygonMode = vk::PolygonMode::eFill;
+        rasterizer.cullMode = vk::CullModeFlagBits::eBack;
+        rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
+        rasterizer.depthBiasEnable = vk::False;
+        rasterizer.depthBiasConstantFactor = 0.0f;
+        rasterizer.depthBiasClamp = 0.0f;
+        rasterizer.depthBiasSlopeFactor = 1.0f;
+        rasterizer.lineWidth = 1.0f;
+/*
         vk::PipelineRasterizationStateCreateInfo rasterizer(
             {}, 
             vk::False, 
@@ -199,7 +199,7 @@ public:
             vk::False, 
             0.0f, 0.0f, 1.0f, 1.0f
         );
-
+*/
         vk::PipelineMultisampleStateCreateInfo multisampling;
         multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
         multisampling.sampleShadingEnable = vk::False;
@@ -235,21 +235,36 @@ public:
         pipelineRenderingCreateInfo.colorAttachmentCount = 1;
         pipelineRenderingCreateInfo.pColorAttachmentFormats = &swapChainSurf.format;
 
-        vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo;
-        graphicsPipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
-        graphicsPipelineCreateInfo.stageCount = shaderStages.size();
-        graphicsPipelineCreateInfo.pStages = shaderStages.data();
-        graphicsPipelineCreateInfo.pVertexInputState = &vertexInputInfo;
-        graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssembly;
-        graphicsPipelineCreateInfo.pViewportState = &viewportState;
-        graphicsPipelineCreateInfo.pRasterizationState = &rasterizer;
-        graphicsPipelineCreateInfo.pMultisampleState = &multisampling;
-        graphicsPipelineCreateInfo.pColorBlendState = &colorBlending;
-        graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
-        graphicsPipelineCreateInfo.layout = PipelineLayout;
-        graphicsPipelineCreateInfo.renderPass = nullptr;
+        vk::Format depthFormat = VKUtils::FindDepthFormat();
+        vk::PipelineDepthStencilStateCreateInfo depthStencil;
+        depthStencil.depthTestEnable = vk::True;
+        depthStencil.depthWriteEnable = vk::True;
+        depthStencil.depthCompareOp = vk::CompareOp::eLess;
+        depthStencil.depthBoundsTestEnable = vk::False;
+        depthStencil.stencilTestEnable = vk::False;
 
-        GraphicsPipeline = vk::raii::Pipeline(GPipeline->Device, nullptr, graphicsPipelineCreateInfo);
+        vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> pipelineCreateInfoChain;
+        //pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pNext = &pipelineRenderingCreateInfo;
+        //pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().stageCount = shaderStages.size();
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pStages = shaderStages.data();
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pVertexInputState = &vertexInputInfo;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pInputAssemblyState = &inputAssembly;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pViewportState = &viewportState;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pRasterizationState = &rasterizer;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pMultisampleState = &multisampling;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pDepthStencilState = &depthStencil;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pColorBlendState = &colorBlending;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pDynamicState = &dynamicState;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().layout = PipelineLayout;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().renderPass = nullptr;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().stageCount = 2;
+        pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pDepthStencilState = &depthStencil;
+
+        pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().colorAttachmentCount = 1;
+        pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().pColorAttachmentFormats = &GPipeline->SwapChainSurfaceFormat.format;
+        pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().depthAttachmentFormat = depthFormat;
+
+        GraphicsPipeline = vk::raii::Pipeline(GPipeline->Device, nullptr,  pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>());
     }
 
     vk::raii::ShaderModule CreateShaderModule(const uint32_t* data, size_t size)

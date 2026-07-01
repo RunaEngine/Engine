@@ -1,6 +1,7 @@
 #pragma once
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+
+
 
 #include "Vulkan/Pipeline.hpp"
 //#include "Vulkan/Utils.hpp"
@@ -9,21 +10,28 @@
 #include "Utils/Logs.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
+#include <chrono>
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
 
 #include "Texture.hpp"
 
 struct VKVertex
 {
-    glm::vec2 Pos;
+    glm::vec3 Pos;
     glm::vec3 Color;
     glm::vec2 TexCoord;
 
     static vk::VertexInputBindingDescription GetBindingDescription()
     {
-        return { 0, sizeof(VKVertex), vk::VertexInputRate::eVertex };
+        vk::VertexInputBindingDescription d;
+        d.binding = 0;
+        d.stride = sizeof(VKVertex);
+        d.inputRate =  vk::VertexInputRate::eVertex;
+        return d;
     }
     static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
     {
@@ -44,6 +52,24 @@ struct VKUniformBuffer {
 class VKVertexBuffer : public Object
 {
 public:
+    vk::raii::Buffer Buffer = nullptr;
+    vk::raii::DeviceMemory BufferMemory = nullptr;
+    vk::DeviceSize IndexOffset = 0;
+    vk::IndexType IndexType = vk::IndexType::eUint16;
+
+    // Uniform buffer object
+    VKUniformBuffer Ubo;
+
+    std::vector<vk::raii::Buffer> UniformBuffers;
+    std::vector<vk::raii::DeviceMemory> UniformBuffersMemory;
+    std::vector<UniquePtr<void*>> UniformBuffersMapped;
+
+    vk::raii::DescriptorPool DescriptorPool = nullptr;
+    vk::raii::DescriptorSetLayout DescriptorSetLayout = nullptr;
+    std::vector<vk::raii::DescriptorSet> DescriptorSets;
+
+    std::vector<SharedPtr<VKTexture>> Textures;
+
     VKVertexBuffer() = default;
     ~VKVertexBuffer() override
     {
@@ -148,24 +174,6 @@ public:
 
         memcpy(*UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
-
-    vk::raii::Buffer Buffer = nullptr;
-    vk::raii::DeviceMemory BufferMemory = nullptr;
-    vk::DeviceSize IndexOffset = 0;
-    vk::IndexType IndexType = vk::IndexType::eUint16;
-
-    // Uniform buffer object
-    VKUniformBuffer Ubo;
-
-    std::vector<vk::raii::Buffer> UniformBuffers;
-    std::vector<vk::raii::DeviceMemory> UniformBuffersMemory;
-    std::vector<UniquePtr<void*>> UniformBuffersMapped;
-
-    vk::raii::DescriptorPool DescriptorPool = nullptr;
-    vk::raii::DescriptorSetLayout DescriptorSetLayout = nullptr;
-    std::vector<vk::raii::DescriptorSet> DescriptorSets;
-
-    std::vector<SharedPtr<VKTexture>> Textures;
 private:
 
     void CreateVertexBuffer(const std::vector<VKVertex>& vertices)
