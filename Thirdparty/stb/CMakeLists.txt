@@ -31,7 +31,7 @@ set(STB_SOURCES
         ${STB_SOURCE_DIR}/stb_vorbis.c
         ${STB_SOURCE_DIR}/stb_voxel_render.h
 )
-add_library(stb SHARED ${STB_SOURCES})
+add_library(stb STATIC ${STB_SOURCES})
 target_include_directories(stb
         PUBLIC
         ${STB_SOURCE_DIR}

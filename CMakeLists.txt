@@ -76,9 +76,10 @@ target_link_libraries(Runa
         #USER INTERFACE LIBRARY
         imgui
         #IMAGE LIBRARY
-        SDL3_image-shared
+        stb
+        #SDL3_image-shared
         #OBJ LIBRARY
-        assimp
+        cgltf
         #COMPRESSION
         zlib
 )
@@ -100,8 +101,6 @@ endfunction()
 
 copy_target_shared_dlls(Runa
         SDL3-shared
-        SDL3_image-shared
-        assimp
         slang
         zlib
         miniz

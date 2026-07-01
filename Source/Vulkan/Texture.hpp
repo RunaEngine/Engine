@@ -8,7 +8,7 @@
 #include "Utils/Logs.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
-#include <SDL3_image/SDL_image.h>
+#include <stb_image.h>
 
 class VKTexture : public Object
 {
@@ -26,6 +26,7 @@ public:
 
     bool Init(const std::filesystem::path& filepath)
     {
+        /*
         SDL_Surface* surf = nullptr;
         // Convert to 8 bits channel space if necessary
         {
@@ -58,9 +59,21 @@ public:
             SDL_DestroySurface(surf);
             return false;
         }
+        */
 
-        int width = surf->w, height = surf->h;
-        vk::DeviceSize imageSize = surf->pitch * surf->h;
+        int texWidth, texHeight, texChannels;
+
+        // Force 4 channels (RGBA) using STBI_rgb_alpha
+        stbi_uc* pixels = stbi_load(filepath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+        if (!pixels) {
+            std::string errorMessage = "Failed to load texture image from " + filepath.string();
+            Logs::Error(errorMessage.c_str());
+            return false;
+        }
+
+        // Calculate total byte size (4 bytes per pixel)
+        VkDeviceSize imageSize = texWidth * texHeight * texChannels;
 
         vk::raii::Buffer stagingBuffer({});
         vk::raii::DeviceMemory stagingBufferMemory({});
@@ -68,19 +81,19 @@ public:
         VKUtils::CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         void* data = stagingBufferMemory.mapMemory(0, imageSize);
-        memcpy(data, surf->pixels, imageSize);
+        memcpy(data, pixels, imageSize);
         stagingBufferMemory.unmapMemory();
 
-        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(width, height, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
+        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(texWidth, texHeight, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
 
         TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-        CopyBufferToImage(stagingBuffer, TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        CopyBufferToImage(stagingBuffer, TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         TransitionImageLayout(TextureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         CreateTextureImageView();
         CreateTextureSampler();
 
-        SDL_DestroySurface(surf);
+        stbi_image_free(pixels);
 
         return true;
     }
@@ -90,11 +103,6 @@ public:
         TextureImageView.release();
         TextureImageMemory.release();
         TextureImage.release();
-    }
-
-    void Bind()
-    {
-
     }
 private:
     void TransitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {

@@ -24,8 +24,9 @@ add_subdirectory(${THIRDPARTY_DIR}/slang)
 add_subdirectory(${THIRDPARTY_DIR}/imgui)
 
 #IMAGE LIBRARY
-add_subdirectory(${THIRDPARTY_DIR}/sdlimage)
+#add_subdirectory(${THIRDPARTY_DIR}/sdlimage)
 add_subdirectory(${THIRDPARTY_DIR}/stb)
 
 #IMPORT LIBRARY
-add_subdirectory(${THIRDPARTY_DIR}/assimp)
+#add_subdirectory(${THIRDPARTY_DIR}/assimp)
+add_subdirectory(${THIRDPARTY_DIR}/cgltf)
