@@ -21,8 +21,8 @@ public:
     void Init(vk::Extent2D& swapChainExtent, vk::raii::Device& device)
     {
         vk::Format depthFormat = VKUtils::FindDepthFormat();
-        std::tie(DepthImage, DepthImageMemory) = VKUtils::CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
-        DepthImageView = VKUtils::CreateImageView(DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+        std::tie(DepthImage, DepthImageMemory) = VKUtils::CreateImage(swapChainExtent.width, swapChainExtent.height, 1, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        DepthImageView = VKUtils::CreateImageView(DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
     }
 
     void Deinit()

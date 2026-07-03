@@ -8,7 +8,7 @@
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
 #include <chrono>
-//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -24,11 +24,11 @@ struct VKVertex
 
     static vk::VertexInputBindingDescription GetBindingDescription()
     {
-        vk::VertexInputBindingDescription d;
-        d.binding = 0;
-        d.stride = sizeof(VKVertex);
-        d.inputRate =  vk::VertexInputRate::eVertex;
-        return d;
+        vk::VertexInputBindingDescription description;
+        description.binding = 0;
+        description.stride = sizeof(VKVertex);
+        description.inputRate =  vk::VertexInputRate::eVertex;
+        return description;
     }
     static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
     {
@@ -160,7 +160,7 @@ public:
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-        VKUniformBuffer ubo{};
+        VKUniformBuffer ubo;
         ubo.Model = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.View = lookAt(glm::vec3(0.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         int h = swapChainExtent.height < 1 ? 1 : swapChainExtent.height;

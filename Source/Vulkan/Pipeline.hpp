@@ -567,7 +567,7 @@ private:
         SwapChainImageViews.reserve(SwapChainImages.size());
 		for (auto &image : SwapChainImages)
 		{
-			SwapChainImageViews.emplace_back(VKUtils::CreateImageView(image, SwapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor));
+			SwapChainImageViews.emplace_back(VKUtils::CreateImageView(image, SwapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor, 1));
 		}
     }
 

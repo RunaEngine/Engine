@@ -13,6 +13,7 @@
 class VKTexture : public Object
 {
 public:
+    uint32_t MipLevels = 0;
     vk::raii::Image TextureImage = nullptr;
     vk::raii::DeviceMemory TextureImageMemory = nullptr;
     vk::raii::ImageView TextureImageView = nullptr;
@@ -66,6 +67,8 @@ public:
         // Force 4 channels (RGBA) using STBI_rgb_alpha
         stbi_uc* pixels = stbi_load(filepath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
+        MipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
         if (!pixels) {
             std::string errorMessage = "Failed to load texture image from " + filepath.string();
             Logs::Error(errorMessage.c_str());
@@ -84,11 +87,14 @@ public:
         memcpy(data, pixels, imageSize);
         stagingBufferMemory.unmapMemory();
 
-        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(texWidth, texHeight, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal/*, TextureImage, TextureImageMemory*/);
+        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(texWidth, texHeight, MipLevels, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-        TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        vk::raii::CommandBuffer commandBuffer = VKUtils::BeginSingleTimeCommands();
+        TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, MipLevels);
         CopyBufferToImage(stagingBuffer, TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        TransitionImageLayout(TextureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        //TransitionImageLayout(TextureImage, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, MipLevels);
+        VKUtils::GenerateMipmaps(commandBuffer, TextureImage, vk::Format::eR8G8B8A8Srgb, texWidth, texHeight, MipLevels);
+        VKUtils::EndSingleTimeCommands(commandBuffer);
 
         CreateTextureImageView();
         CreateTextureSampler();
@@ -105,11 +111,16 @@ public:
         TextureImage.release();
     }
 private:
-    void TransitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) {
+    void TransitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels) {
         auto commandBuffer = VKUtils::BeginSingleTimeCommands();
 
         vk::ImageMemoryBarrier barrier;
-        barrier.oldLayout = oldLayout, barrier.newLayout = newLayout, barrier.image = image, barrier.subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+        barrier.oldLayout = oldLayout; 
+        barrier.newLayout = newLayout;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor; 
+        barrier.subresourceRange.levelCount = mipLevels;
+        barrier.subresourceRange.layerCount = 1;
 
 
         vk::PipelineStageFlags sourceStage;
@@ -150,7 +161,7 @@ private:
 
     void CreateTextureImageView()
     {
-        TextureImageView = VKUtils::CreateImageView(TextureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor);
+        TextureImageView = VKUtils::CreateImageView(TextureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor, MipLevels);
     }
 
     void CreateTextureSampler()
@@ -160,17 +171,19 @@ private:
 
         vk::PhysicalDeviceProperties properties = physicalDevice.getProperties();
         vk::SamplerCreateInfo samplerInfo;
-        samplerInfo.magFilter = vk::Filter::eLinear,
-        samplerInfo.minFilter = vk::Filter::eLinear,
-        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear,
-        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat,
-        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat,
-        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat,
-        samplerInfo.mipLodBias = 0.0f,
-        samplerInfo.anisotropyEnable = vk::True,
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy,
-        samplerInfo.compareEnable = vk::False,
+        samplerInfo.magFilter = vk::Filter::eLinear;
+        samplerInfo.minFilter = vk::Filter::eLinear;
+        samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+        samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.anisotropyEnable = vk::True;
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+        samplerInfo.compareEnable = vk::False;
         samplerInfo.compareOp = vk::CompareOp::eAlways;
+        samplerInfo.minLod = 0;
+        samplerInfo.maxLod = vk::LodClampNone;
 
         TextureSampler = vk::raii::Sampler(device, samplerInfo);
     }
