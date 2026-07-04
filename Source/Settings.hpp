@@ -2,7 +2,6 @@
 
 #include "Engine/Core/Object.hpp"
 #include <algorithm>
-#include <cstdint>
 
 enum EWindowMode : uint8_t
 {
@@ -20,19 +19,9 @@ enum EVSync : int8_t
 class GameUserSettings : public Object
 {
 public:
+    bool UseVsync = false;
+
     GameUserSettings() = default;
-
-    void SetVsync(EVSync value)
-    {
-        //SDL_GL_SetSwapInterval((int)value);
-    }
-
-    EVSync GetVsync()
-    {
-        int value = 0;
-        //SDL_GL_GetSwapInterval(&value);
-        return (EVSync)value;
-    }
 
     void SetFramerateLimit(uint16_t value)
     {

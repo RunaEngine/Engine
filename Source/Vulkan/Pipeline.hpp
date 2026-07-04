@@ -194,11 +194,25 @@ private:
     // Vulkan Functions
     void DrawFrame()
     {
-        bool should_limit = GUserSettings->GetFramerateLimit() > 0 && GUserSettings->GetVsync() == Disable;
         uint64_t frame_time = 0;
-        if (should_limit)
+        if (GUserSettings->UseVsync)
         {
-            frame_time = 1000000000 / GUserSettings->GetFramerateLimit();
+            SDL_DisplayID displayID = SDL_GetDisplayForWindow(Window);
+            if (displayID == 0) {
+                Logs::SdlError();
+                GUserSettings->UseVsync = false;
+                DrawFrame();
+                return;
+            }
+
+            const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displayID);
+            uint16_t fps = int(std::round(mode->refresh_rate));
+            frame_time = 1000000000 / fps;
+        }
+        else
+        {
+            if (GUserSettings->GetFramerateLimit() > 0)
+                frame_time = 1000000000 / GUserSettings->GetFramerateLimit();
         }
 
         auto fenceResult = Device.waitForFences(*InFlightFences[FrameIndex], vk::True, UINT64_MAX);
@@ -269,12 +283,9 @@ private:
 
         FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
-        if (should_limit)
+        if (frame_time > 0 && frame_time > GTick->ElapsedNS())
         {
-            if (frame_time > 0 && frame_time > GTick->ElapsedNS())
-            {
-                SDL_DelayPrecise(frame_time - GTick->ElapsedNS());
-            }
+            SDL_DelayPrecise(frame_time - GTick->ElapsedNS());
         }
     }
 
@@ -560,9 +571,9 @@ private:
         SwapChainSurfaceFormat = ChooseSwapSurfaceFormat(PhysicalDevice.getSurfaceFormatsKHR(Surface));
         vk::SwapchainCreateInfoKHR SwapChainCreateInfo;
         SwapChainCreateInfo.surface = Surface;
-        SwapChainCreateInfo.minImageCount = ChooseSwapMinImageCount(surfaceCapabilities),
-        SwapChainCreateInfo.imageFormat = SwapChainSurfaceFormat.format,
-        SwapChainCreateInfo.imageColorSpace = SwapChainSurfaceFormat.colorSpace,
+        SwapChainCreateInfo.minImageCount = ChooseSwapMinImageCount(surfaceCapabilities);
+        SwapChainCreateInfo.imageFormat = SwapChainSurfaceFormat.format;
+        SwapChainCreateInfo.imageColorSpace = SwapChainSurfaceFormat.colorSpace;
         SwapChainCreateInfo.imageExtent = SwapChainExtent;
         SwapChainCreateInfo.imageArrayLayers = 1;
         SwapChainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
@@ -639,17 +650,19 @@ private:
             {
                 return presentMode == vk::PresentModeKHR::eFifo;
             }));
+            
+
         return std::ranges::any_of(
             availablePresentModes,
             [](const vk::PresentModeKHR value)
             {
                 return vk::PresentModeKHR::eMailbox == value;
             })
-            ? vk::PresentModeKHR::eMailbox
+            ? GUserSettings->UseVsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eMailbox
             : vk::PresentModeKHR::eFifo;
     }
 
-    void transition_image_layout(
+    void TransitionImageLayout(
         vk::Image image,
         vk::ImageLayout oldLayout,
         vk::ImageLayout newLayout,
@@ -693,7 +706,7 @@ private:
         commandBuffer.begin({});
 
         // Transition the image layout for rendering
-        transition_image_layout(
+        TransitionImageLayout(
             SwapChainImages[imageIndex],
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eColorAttachmentOptimal,
@@ -705,7 +718,7 @@ private:
         );
 
         // Transition depth image to depth attachment optimal layout
-        transition_image_layout(
+        TransitionImageLayout(
             *DepthBuffer->DepthImage,
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eDepthAttachmentOptimal,
@@ -757,7 +770,7 @@ private:
         commandBuffer.endRendering();
 
         // Transition the image layout for presentation
-        transition_image_layout(
+        TransitionImageLayout(
             SwapChainImages[imageIndex],
             vk::ImageLayout::eColorAttachmentOptimal,
             vk::ImageLayout::ePresentSrcKHR,

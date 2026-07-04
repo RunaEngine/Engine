@@ -15,7 +15,7 @@
 
 int main(int argc, char** argv)
 {
-    GUserSettings->SetFramerateLimit(120);
+    GUserSettings->UseVsync = true;
 
     Event event;
     if (!GPipeline->Init())
