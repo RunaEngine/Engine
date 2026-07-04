@@ -63,6 +63,10 @@ public:
     vk::Extent2D SwapChainExtent;
     std::vector<vk::raii::ImageView> SwapChainImageViews;
 
+    vk::raii::Image ColorImage = nullptr;
+    vk::raii::DeviceMemory ColorImageMemory = nullptr;
+    vk::raii::ImageView ColorImageView = nullptr;
+
     vk::raii::CommandPool CommandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> CommandBuffers;
 
@@ -194,25 +198,10 @@ private:
     // Vulkan Functions
     void DrawFrame()
     {
-        uint64_t frame_time = 0;
-        if (GUserSettings->UseVsync)
+        uint64_t frameTime = 0;
+        if (!GUserSettings->UseVsync && GUserSettings->GetFramerateLimit() > 0)
         {
-            SDL_DisplayID displayID = SDL_GetDisplayForWindow(Window);
-            if (displayID == 0) {
-                Logs::SdlError();
-                GUserSettings->UseVsync = false;
-                DrawFrame();
-                return;
-            }
-
-            const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displayID);
-            uint16_t fps = int(std::round(mode->refresh_rate));
-            frame_time = 1000000000 / fps;
-        }
-        else
-        {
-            if (GUserSettings->GetFramerateLimit() > 0)
-                frame_time = 1000000000 / GUserSettings->GetFramerateLimit();
+            frameTime = 1000000000 / GUserSettings->GetFramerateLimit();
         }
 
         auto fenceResult = Device.waitForFences(*InFlightFences[FrameIndex], vk::True, UINT64_MAX);
@@ -283,9 +272,9 @@ private:
 
         FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
-        if (frame_time > 0 && frame_time > GTick->ElapsedNS())
+        if (frameTime > 0 && frameTime > GTick->ElapsedNS())
         {
-            SDL_DelayPrecise(frame_time - GTick->ElapsedNS());
+            SDL_DelayPrecise(frameTime - GTick->ElapsedNS());
         }
     }
 
@@ -650,7 +639,6 @@ private:
             {
                 return presentMode == vk::PresentModeKHR::eFifo;
             }));
-            
 
         return std::ranges::any_of(
             availablePresentModes,
@@ -823,6 +811,20 @@ private:
             createFanceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
             InFlightFences.emplace_back(Device, createFanceInfo);
         }
+    }
+
+    vk::SampleCountFlagBits GetMaxUsableSampleCount() {
+        vk::PhysicalDeviceProperties physicalDeviceProperties = PhysicalDevice.getProperties();
+
+        vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+        if (counts & vk::SampleCountFlagBits::e64) { return vk::SampleCountFlagBits::e64; }
+        if (counts & vk::SampleCountFlagBits::e32) { return vk::SampleCountFlagBits::e32; }
+        if (counts & vk::SampleCountFlagBits::e16) { return vk::SampleCountFlagBits::e16; }
+        if (counts & vk::SampleCountFlagBits::e8) { return vk::SampleCountFlagBits::e8; }
+        if (counts & vk::SampleCountFlagBits::e4) { return vk::SampleCountFlagBits::e4; }
+        if (counts & vk::SampleCountFlagBits::e2) { return vk::SampleCountFlagBits::e2; }
+
+        return vk::SampleCountFlagBits::e1;
     }
 
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
