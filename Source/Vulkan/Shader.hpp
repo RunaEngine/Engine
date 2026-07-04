@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Engine/Engine.hpp"
 #include "Engine/Core/Object.hpp"
 #include "Utils/System.hpp"
 #include "Utils/Logs.hpp"

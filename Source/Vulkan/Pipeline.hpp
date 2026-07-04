@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Config.hpp"
+#include "Settings.hpp"
+#include "Tick.hpp"
+#include "Input.hpp"
 #include "Engine/Core/Object.hpp"
 #include "Vulkan/Depth.hpp"
 #include "Vulkan/Utils.hpp"
@@ -12,6 +15,10 @@
 #include <map>
 #include <algorithm>
 #include <functional>
+
+extern GameUserSettings* GUserSettings;
+extern Tick* GTick;
+extern Input* GInput;
 
 #ifdef NDEBUG
 constexpr bool EnableValidationLayers = false;
@@ -187,6 +194,13 @@ private:
     // Vulkan Functions
     void DrawFrame()
     {
+        bool should_limit = GUserSettings->GetFramerateLimit() > 0 && GUserSettings->GetVsync() == Disable;
+        uint64_t frame_time = 0;
+        if (should_limit)
+        {
+            frame_time = 1000000000 / GUserSettings->GetFramerateLimit();
+        }
+
         auto fenceResult = Device.waitForFences(*InFlightFences[FrameIndex], vk::True, UINT64_MAX);
         if (fenceResult != vk::Result::eSuccess)
         {
@@ -254,6 +268,14 @@ private:
         }
 
         FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        if (should_limit)
+        {
+            if (frame_time > 0 && frame_time > GTick->ElapsedNS())
+            {
+                SDL_DelayPrecise(frame_time - GTick->ElapsedNS());
+            }
+        }
     }
 
     void RecreateSwapChain()
@@ -317,17 +339,17 @@ private:
             // Check if the required layers are supported by the Vulkan implementation.
             auto layerProperties = Context->enumerateInstanceLayerProperties();
             auto unsupportedLayerIt = std::ranges::find_if(requiredLayers,
-                                                           [&layerProperties](auto const& requiredLayer)
-                                                           {
-                                                               return std::ranges::none_of(layerProperties,
-                                                                   [requiredLayer](auto const& layerProperty)
-                                                                   {
-                                                                       return strcmp(
-                                                                               layerProperty.layerName,
-                                                                               requiredLayer) ==
-                                                                           0;
-                                                                   });
-                                                           });
+                [&layerProperties](auto const& requiredLayer)
+                {
+                    return std::ranges::none_of(layerProperties,
+                        [requiredLayer](auto const& layerProperty)
+                        {
+                            return strcmp(
+                                layerProperty.layerName,
+                                requiredLayer) ==
+                                0;
+                        });
+                });
             isLayerSupported = unsupportedLayerIt == requiredLayers.end();
             if (!isLayerSupported)
             {
@@ -355,10 +377,10 @@ private:
         for (auto const& extName : instanceExtensions)
         {
             if (std::ranges::none_of(extensionProperties,
-                                     [extName](auto const& extensionProperty)
-                                     {
-                                         return strcmp(extensionProperty.extensionName, extName) == 0;
-                                     }))
+                [extName](auto const& extensionProperty)
+                {
+                    return strcmp(extensionProperty.extensionName, extName) == 0;
+                }))
             {
                 Logs::Log("Required extension not supported: %s", extName);
                 SDL_Quit();
@@ -422,27 +444,27 @@ private:
             // Check if any of the queue families support graphics operations
             auto queueFamilies = device.getQueueFamilyProperties();
             bool supportsGraphics = std::ranges::any_of(queueFamilies, [](auto const& qfp)
-            {
-                return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
-            });
+                {
+                    return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+                });
 
             // Check if all required device extensions are available
             auto availableDeviceExtensions = device.enumerateDeviceExtensionProperties();
             bool supportsAllRequiredExtensions = std::ranges::all_of(RequiredDeviceExtension,
-                                                                     [&availableDeviceExtensions](
-                                                                     auto const& requiredDeviceExtension)
-                                                                     {
-                                                                         return std::ranges::any_of(
-                                                                             availableDeviceExtensions,
-                                                                             [requiredDeviceExtension](
-                                                                             auto const& availableDeviceExtension)
-                                                                             {
-                                                                                 return strcmp(
-                                                                                     availableDeviceExtension.
-                                                                                     extensionName,
-                                                                                     requiredDeviceExtension) == 0;
-                                                                             });
-                                                                     });
+                [&availableDeviceExtensions](
+                    auto const& requiredDeviceExtension)
+                {
+                    return std::ranges::any_of(
+                        availableDeviceExtensions,
+                        [requiredDeviceExtension](
+                            auto const& availableDeviceExtension)
+                        {
+                            return strcmp(
+                                availableDeviceExtension.
+                                extensionName,
+                                requiredDeviceExtension) == 0;
+                        });
+                });
 
             auto features = device.template getFeatures2<
                 vk::PhysicalDeviceFeatures2,
@@ -451,7 +473,7 @@ private:
                 vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
             bool supportsRequiredFeatures = features.template get<
-                    vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+                vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
                 features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
                 features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
                 features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
@@ -539,9 +561,9 @@ private:
         vk::SwapchainCreateInfoKHR SwapChainCreateInfo;
         SwapChainCreateInfo.surface = Surface;
         SwapChainCreateInfo.minImageCount = ChooseSwapMinImageCount(surfaceCapabilities),
-            SwapChainCreateInfo.imageFormat = SwapChainSurfaceFormat.format,
-            SwapChainCreateInfo.imageColorSpace = SwapChainSurfaceFormat.colorSpace,
-            SwapChainCreateInfo.imageExtent = SwapChainExtent;
+        SwapChainCreateInfo.imageFormat = SwapChainSurfaceFormat.format,
+        SwapChainCreateInfo.imageColorSpace = SwapChainSurfaceFormat.colorSpace,
+        SwapChainCreateInfo.imageExtent = SwapChainExtent;
         SwapChainCreateInfo.imageArrayLayers = 1;
         SwapChainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
         SwapChainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
@@ -565,10 +587,10 @@ private:
         assert(SwapChainImageViews.empty());
 
         SwapChainImageViews.reserve(SwapChainImages.size());
-		for (auto &image : SwapChainImages)
-		{
-			SwapChainImageViews.emplace_back(VKUtils::CreateImageView(image, SwapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor, 1));
-		}
+        for (auto& image : SwapChainImages)
+        {
+            SwapChainImageViews.emplace_back(VKUtils::CreateImageView(image, SwapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor, 1));
+        }
     }
 
     vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
@@ -615,16 +637,16 @@ private:
             availablePresentModes,
             [](auto presentMode)
             {
-            return presentMode == vk::PresentModeKHR::eFifo;
+                return presentMode == vk::PresentModeKHR::eFifo;
             }));
         return std::ranges::any_of(
-                   availablePresentModes,
-                   [](const vk::PresentModeKHR value)
-                   {
-                       return vk::PresentModeKHR::eMailbox == value;
-                   })
-                   ? vk::PresentModeKHR::eMailbox
-                   : vk::PresentModeKHR::eFifo;
+            availablePresentModes,
+            [](const vk::PresentModeKHR value)
+            {
+                return vk::PresentModeKHR::eMailbox == value;
+            })
+            ? vk::PresentModeKHR::eMailbox
+            : vk::PresentModeKHR::eFifo;
     }
 
     void transition_image_layout(
@@ -684,14 +706,14 @@ private:
 
         // Transition depth image to depth attachment optimal layout
         transition_image_layout(
-		    *DepthBuffer->DepthImage,
-		    vk::ImageLayout::eUndefined,
-		    vk::ImageLayout::eDepthAttachmentOptimal,
-		    vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-		    vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-		    vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-		    vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-		    vk::ImageAspectFlagBits::eDepth);
+            *DepthBuffer->DepthImage,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eDepthAttachmentOptimal,
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+            vk::ImageAspectFlagBits::eDepth);
 
 
         // Set up the color attachment
@@ -791,9 +813,9 @@ private:
     }
 
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-                                                          vk::DebugUtilsMessageTypeFlagsEXT type,
-                                                          const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                          void*)
+        vk::DebugUtilsMessageTypeFlagsEXT type,
+        const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void*)
     {
         if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError || severity ==
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)

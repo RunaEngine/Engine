@@ -1,14 +1,11 @@
 #pragma once
 
-//#include "Vulkan/Utils.hpp"
-#include <iostream>
-
 #include "Engine/Core/Object.hpp"
-#include "Engine/Engine.hpp"
 #include "Utils/Logs.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
 #include <stb_image.h>
+#include <iostream>
 
 class VKTexture : public Object
 {

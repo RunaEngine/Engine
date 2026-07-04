@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Engine/Engine.hpp"
 #include "Engine/Core/Object.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include "Vulkan/Utils.hpp"

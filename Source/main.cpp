@@ -15,6 +15,8 @@
 
 int main(int argc, char** argv)
 {
+    GUserSettings->SetFramerateLimit(120);
+
     Event event;
     if (!GPipeline->Init())
         return -1;
@@ -83,8 +85,10 @@ int main(int argc, char** argv)
     };
     while (!shouldClose)
     {
+        GTick->UpdateCurrentTick();
         event.Run(EPool);
         GPipeline->Pool();
+        GTick->UpdateDeltaTime();
     }
     GPipeline->Device.waitIdle();
 
