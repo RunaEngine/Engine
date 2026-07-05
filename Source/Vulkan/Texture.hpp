@@ -84,7 +84,7 @@ public:
         memcpy(data, pixels, imageSize);
         stagingBufferMemory.unmapMemory();
 
-        std::tie(TextureImage, TextureImageMemory) = VKUtils::CreateImage(texWidth, texHeight, MipLevels, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        VKUtils::CreateImage(texWidth, texHeight, MipLevels, vk::SampleCountFlagBits::e1, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, TextureImage, TextureImageMemory);
 
         vk::raii::CommandBuffer commandBuffer = VKUtils::BeginSingleTimeCommands();
         TransitionImageLayout(TextureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, MipLevels);

@@ -78,32 +78,30 @@ namespace VKUtils
         EndSingleTimeCommands(commandCopyBuffer);
     }
 
-    std::pair<vk::raii::Image, vk::raii::DeviceMemory> CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
+    void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image &image, vk::raii::DeviceMemory &imageMemory)
     {
         vk::ImageCreateInfo imageInfo;
-        imageInfo.imageType = vk::ImageType::e2D,
-            imageInfo.format = format;
-        imageInfo.extent.width = width,
-            imageInfo.extent.height = height,
-            imageInfo.extent.depth = 1,
-            imageInfo.mipLevels = 1;
+        imageInfo.imageType = vk::ImageType::e2D;
+        imageInfo.format = format;
+        imageInfo.extent.width = width;
+        imageInfo.extent.height = height;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.samples = vk::SampleCountFlagBits::e1;
+        imageInfo.samples = numSamples;
         imageInfo.tiling = tiling;
         imageInfo.usage = usage;
         imageInfo.sharingMode = vk::SharingMode::eExclusive;
         imageInfo.mipLevels = mipLevels;
 
-        vk::raii::Image image = vk::raii::Image(GPipeline->Device, imageInfo);
+        image = vk::raii::Image(GPipeline->Device, imageInfo);
 
         vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
         vk::MemoryAllocateInfo allocInfo;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-        vk::raii::DeviceMemory imageMemory = vk::raii::DeviceMemory(GPipeline->Device, allocInfo);
+        imageMemory = vk::raii::DeviceMemory(GPipeline->Device, allocInfo);
         image.bindMemory(imageMemory, 0);
-
-        return { std::move(image), std::move(imageMemory) };
     }
 
     vk::raii::ImageView CreateImageView(vk::Image const& image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels)

@@ -20,7 +20,7 @@ public:
     void Init(vk::Extent2D& swapChainExtent, vk::raii::Device& device)
     {
         vk::Format depthFormat = VKUtils::FindDepthFormat();
-        std::tie(DepthImage, DepthImageMemory) = VKUtils::CreateImage(swapChainExtent.width, swapChainExtent.height, 1, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        VKUtils::CreateImage(swapChainExtent.width, swapChainExtent.height, 1, vk::SampleCountFlagBits::e1, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, DepthImage, DepthImageMemory);
         DepthImageView = VKUtils::CreateImageView(DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
     }
 

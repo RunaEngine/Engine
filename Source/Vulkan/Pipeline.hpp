@@ -63,10 +63,6 @@ public:
     vk::Extent2D SwapChainExtent;
     std::vector<vk::raii::ImageView> SwapChainImageViews;
 
-    vk::raii::Image ColorImage = nullptr;
-    vk::raii::DeviceMemory ColorImageMemory = nullptr;
-    vk::raii::ImageView ColorImageView = nullptr;
-
     vk::raii::CommandPool CommandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> CommandBuffers;
 

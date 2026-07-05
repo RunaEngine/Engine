@@ -11,7 +11,7 @@ enum EWindowMode : uint8_t
 
 enum EMSAASample : uint8_t
 {
-    Disabled = 0,
+    Disabled = 1,
     MSAA2x = 2,
     MSAA4X = 4,
     MSAA8X = 8,
