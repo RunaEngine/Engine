@@ -8,16 +8,16 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include <filesystem>
-#include <iostream>
 #include <vector>
-#include <cstdint>
 #include <chrono>
 
 int main(int argc, char** argv)
 {
-    GUserSettings->UseVsync = true;
+    GPipeline->GUserSettings->Vsync = Adaptative;
+    GPipeline->GUserSettings->SetFramerateLimit(60);
 
     Event event;
+
     if (!GPipeline->Init())
         return -1;
 
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
         {
             shouldClose = true;
         }
-        GInput->UpdateEvent(e);
+        GPipeline->GInput->UpdateEvent(e);
     };
     GPipeline->OnSwap = [&](uint32_t frameIndex)
     {
@@ -73,8 +73,8 @@ int main(int argc, char** argv)
     };
     GPipeline->OnRender = [&](uint32_t frameIndex)
     {
-        auto& commandBuffer = GPipeline->CommandBuffers[GPipeline->FrameIndex];
-        auto& swapChainExtent = GPipeline->SwapChainExtent;
+        auto& commandBuffer = GPipeline->Render->CommandBuffers[GPipeline->Render->FrameIndex];
+        auto& swapChainExtent = GPipeline->Render->SwapChainExtent;
         shader.Bind();
 
         commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.0f, 1.0f));
@@ -85,12 +85,12 @@ int main(int argc, char** argv)
     };
     while (!shouldClose)
     {
-        GTick->UpdateCurrentTick();
+        GPipeline->GTick->UpdateCurrentTick();
         event.Run(EPool);
         GPipeline->Pool();
-        GTick->UpdateDeltaTime();
+        GPipeline->GTick->UpdateDeltaTime();
     }
-    GPipeline->Device.waitIdle();
+    GPipeline->LogicalDevice->Get().waitIdle();
 
     return 0;
 }

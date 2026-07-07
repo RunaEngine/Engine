@@ -1,3 +1,5 @@
+#pragma once
+
 /* Build Data */
 constexpr const bool ENGINE_BUILD_DEBUG = @ENGINE_BUILD_DEBUG@;
 constexpr const bool ENGINE_BUILD_RELEASE = @ENGINE_BUILD_RELEASE@;

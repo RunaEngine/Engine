@@ -153,7 +153,7 @@ public:
 
     void Bind()
     {
-        auto& commandBuffer = GPipeline->CommandBuffers[GPipeline->FrameIndex];
+        auto& commandBuffer = GPipeline->Render->CommandBuffers[GPipeline->Render->FrameIndex];
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *GraphicsPipeline);
     }
@@ -226,9 +226,9 @@ public:
         pipelineLayoutInfo.setLayoutCount = 1, pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout,
             pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        PipelineLayout = vk::raii::PipelineLayout(GPipeline->Device, pipelineLayoutInfo);
+        PipelineLayout = vk::raii::PipelineLayout(GPipeline->LogicalDevice->Get(), pipelineLayoutInfo);
 
-        auto& swapChainSurf = GPipeline->SwapChainSurfaceFormat;
+        auto& swapChainSurf = GPipeline->Render->SwapChainSurfaceFormat;
 
         vk::PipelineRenderingCreateInfo pipelineRenderingCreateInfo;
         pipelineRenderingCreateInfo.colorAttachmentCount = 1;
@@ -260,10 +260,10 @@ public:
         pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>().pDepthStencilState = &depthStencil;
 
         pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().colorAttachmentCount = 1;
-        pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().pColorAttachmentFormats = &GPipeline->SwapChainSurfaceFormat.format;
+        pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().pColorAttachmentFormats = &GPipeline->Render->SwapChainSurfaceFormat.format;
         pipelineCreateInfoChain.get<vk::PipelineRenderingCreateInfo>().depthAttachmentFormat = depthFormat;
 
-        GraphicsPipeline = vk::raii::Pipeline(GPipeline->Device, nullptr,  pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>());
+        GraphicsPipeline = vk::raii::Pipeline(GPipeline->LogicalDevice->Get(), nullptr,  pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>());
     }
 
     vk::raii::ShaderModule CreateShaderModule(const uint32_t* data, size_t size)
@@ -273,7 +273,7 @@ public:
         createInfo.pCode = data;
 
         vk::raii::ShaderModule shaderModule{
-            GPipeline->Device,
+            GPipeline->LogicalDevice->Get(),
             createInfo
         };
 

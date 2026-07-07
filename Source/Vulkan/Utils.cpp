@@ -7,7 +7,7 @@ namespace VKUtils
     uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
     {
         auto& physicalDevice = GPipeline->PhysicalDevice;
-        vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
+        vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice->Get().getMemoryProperties();
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
         {
@@ -23,7 +23,7 @@ namespace VKUtils
 
     vk::raii::CommandBuffer BeginSingleTimeCommands()
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
         auto& commandPool = GPipeline->CommandPool;
 
         vk::CommandBufferAllocateInfo allocInfo;
@@ -43,7 +43,7 @@ namespace VKUtils
 
     void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory)
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         vk::BufferCreateInfo bufferInfo;
         bufferInfo.size = size;
@@ -61,7 +61,7 @@ namespace VKUtils
 
     void EndSingleTimeCommands(vk::raii::CommandBuffer& commandBuffer)
     {
-        auto& graphicsQueue = GPipeline->Queue;
+        auto& graphicsQueue = GPipeline->LogicalDevice->Queue;
 
         commandBuffer.end();
 
@@ -94,19 +94,19 @@ namespace VKUtils
         imageInfo.sharingMode = vk::SharingMode::eExclusive;
         imageInfo.mipLevels = mipLevels;
 
-        image = vk::raii::Image(GPipeline->Device, imageInfo);
+        image = vk::raii::Image(GPipeline->LogicalDevice->Get(), imageInfo);
 
         vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
         vk::MemoryAllocateInfo allocInfo;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-        imageMemory = vk::raii::DeviceMemory(GPipeline->Device, allocInfo);
+        imageMemory = vk::raii::DeviceMemory(GPipeline->LogicalDevice->Get(), allocInfo);
         image.bindMemory(imageMemory, 0);
     }
 
     vk::raii::ImageView CreateImageView(vk::Image const& image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels)
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         vk::ImageViewCreateInfo viewInfo;
         viewInfo.image = image;
@@ -123,7 +123,7 @@ namespace VKUtils
     vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling,
         vk::FormatFeatureFlags features)
     {
-        vk::raii::PhysicalDevice physicalDevice = GPipeline->PhysicalDevice;
+        vk::raii::PhysicalDevice physicalDevice = GPipeline->PhysicalDevice->Get();
         for (const auto format : candidates) {
             vk::FormatProperties props = physicalDevice.getFormatProperties(format);
 
@@ -148,7 +148,7 @@ namespace VKUtils
 
     void VKUtils::GenerateMipmaps(vk::raii::CommandBuffer& commandBuffer, vk::raii::Image& image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
     {
-        vk::FormatProperties formatProperties = GPipeline->PhysicalDevice.getFormatProperties(imageFormat);
+        vk::FormatProperties formatProperties = GPipeline->PhysicalDevice->Get().getFormatProperties(imageFormat);
         if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear))
         {
             Logs::RuntimeError("texture image format does not support linear blitting!");

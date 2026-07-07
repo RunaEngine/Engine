@@ -1,11 +1,12 @@
 #pragma once
 
+
 #include "Engine/Core/Object.hpp"
 #include "Utils/Logs.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
 #include <stb_image.h>
-#include <iostream>
+#include <filesystem>
 
 class VKTexture : public Object
 {
@@ -163,10 +164,10 @@ private:
 
     void CreateTextureSampler()
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
         auto& physicalDevice = GPipeline->PhysicalDevice;
 
-        vk::PhysicalDeviceProperties properties = physicalDevice.getProperties();
+        vk::PhysicalDeviceProperties properties = physicalDevice->Get().getProperties();
         vk::SamplerCreateInfo samplerInfo;
         samplerInfo.magFilter = vk::Filter::eLinear;
         samplerInfo.minFilter = vk::Filter::eLinear;

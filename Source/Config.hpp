@@ -1,3 +1,5 @@
+#pragma once
+
 /* Build Data */
 constexpr const bool ENGINE_BUILD_DEBUG = true;
 constexpr const bool ENGINE_BUILD_RELEASE = false;

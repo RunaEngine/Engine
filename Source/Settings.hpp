@@ -9,6 +9,13 @@ enum EWindowMode : uint8_t
     Windowed = 1
 };
 
+enum EVSync : uint8_t
+{
+    Immediate = 0,
+    Adaptative = 1,
+    TripleBuffering = 2,
+};
+
 enum EMSAASample : uint8_t
 {
     Disabled = 1,
@@ -21,7 +28,7 @@ enum EMSAASample : uint8_t
 class GameUserSettings : public Object
 {
 public:
-    bool UseVsync = false;
+    EVSync Vsync = Adaptative;
     EMSAASample MSAASamples = Disabled;
 
     GameUserSettings() = default;

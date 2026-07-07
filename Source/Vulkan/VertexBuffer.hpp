@@ -88,7 +88,7 @@ public:
 
         CreateDescriptorSetLayout();
 
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
         vk::DeviceSize indexBufferSize = sizeof(indices[0]) * indices.size();
@@ -143,7 +143,7 @@ public:
 
     void Bind(uint32_t frameIndex, vk::raii::PipelineLayout& pipelineLayout)
     {
-        auto& commandBuffer = GPipeline->CommandBuffers[GPipeline->FrameIndex];
+        auto& commandBuffer = GPipeline->Render->CommandBuffers[GPipeline->Render->FrameIndex];
 
         commandBuffer.bindVertexBuffers(0, *Buffer, { 0 });
         commandBuffer.bindIndexBuffer(*Buffer, IndexOffset, IndexType);
@@ -153,7 +153,7 @@ public:
 
     void UpdateUniformBuffer(uint32_t currentImage)
     {
-        auto& swapChainExtent = GPipeline->SwapChainExtent;
+        auto& swapChainExtent = GPipeline->Render->SwapChainExtent;
 
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -176,7 +176,7 @@ private:
 
     void CreateVertexBuffer(const std::vector<VKVertex>& vertices)
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
         /*
         vk::BufferCreateInfo bufferInfo;
         bufferInfo.size = sizeof(vertices[0]) * vertices.size();
@@ -210,7 +210,7 @@ private:
     // Uniform buffer object
     void CreateDescriptorSetLayout()
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         std::array bindings = {
             vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr),
@@ -242,7 +242,7 @@ private:
 
     void CreateDescriptorPool()
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         std::array poolSize{
             vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
@@ -260,7 +260,7 @@ private:
 
     void CreateDescriptorSets()
     {
-        auto& device = GPipeline->Device;
+        auto& device = GPipeline->LogicalDevice->Get();
 
         std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *DescriptorSetLayout);
         vk::DescriptorSetAllocateInfo allocInfo;
