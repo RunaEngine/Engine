@@ -17,10 +17,21 @@ public:
         Deinit();
     }
 
-    void Init(vk::Extent2D& swapChainExtent, vk::raii::Device& device)
+    void Init(vk::Extent2D& swapChainExtent, vk::SampleCountFlagBits numSamples)
     {
         vk::Format depthFormat = VKUtils::FindDepthFormat();
-        VKUtils::CreateImage(swapChainExtent.width, swapChainExtent.height, 1, vk::SampleCountFlagBits::e1, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, DepthImage, DepthImageMemory);
+        VKUtils::CreateImage(
+            swapChainExtent.width,
+            swapChainExtent.height,
+            1,
+            numSamples,
+            depthFormat,
+            vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eDepthStencilAttachment,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            DepthImage,
+            DepthImageMemory
+        );
         DepthImageView = VKUtils::CreateImageView(DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
     }
 

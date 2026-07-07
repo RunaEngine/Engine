@@ -200,8 +200,9 @@ public:
         );
 */
         vk::PipelineMultisampleStateCreateInfo multisampling;
-        multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
-        multisampling.sampleShadingEnable = vk::False;
+        multisampling.rasterizationSamples = GPipeline->Render->MSAASamples;
+        multisampling.sampleShadingEnable = vk::True;
+        multisampling.minSampleShading = .2f;
 
         vk::PipelineColorBlendAttachmentState colorBlendAttachment;
         colorBlendAttachment.blendEnable = vk::False;

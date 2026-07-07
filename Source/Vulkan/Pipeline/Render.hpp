@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
+#include "Vulkan/RenderPass/Color.hpp"
 #include "Vulkan/RenderPass/Depth.hpp"
 #include "Settings.hpp"
 #include "Tick.hpp"
@@ -8,8 +9,6 @@
 #include "SDL3/SDL_video.h"
 #include <vulkan/vulkan_raii.hpp>
 #include <vector>
-
-#include "Vulkan/RenderPass/MSAA.hpp"
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -49,29 +48,32 @@ public:
     bool FramebufferResized = false;
 
     // Render passes
-    vk::raii::RenderPass RenderPass = nullptr;
-    UniquePtr<VKMSAA> MSAABuffer = nullptr;
+    vk::SampleCountFlagBits MSAASamples = vk::SampleCountFlagBits::e1;
+    UniquePtr<VKColor> ColorBuffer = nullptr;
     UniquePtr<VKDepth> DepthBuffer = nullptr;
+    vk::raii::RenderPass RenderPass = nullptr;
 
     VKRender() = default;
     VKRender(SharedPtr<GameUserSettings>& userSettings, SharedPtr<Tick>& tick, SharedPtr<Input>& input, vk::raii::PhysicalDevice& physicalDevice, vk::raii::Device& device, vk::raii::Queue& queue, SDL_Window* window, vk::SurfaceKHR& surface, vk::raii::CommandPool& commandPool, std::function<void(uint32_t)>& onSwap, std::function<void(uint32_t)>& onRender) : GUserSettings(userSettings), GTick(tick), GInput(input), PhysicalDevice(physicalDevice), Device(device), Queue(queue), Window(window), Surface(surface), CommandPool(commandPool), OnSwap(onSwap), OnRender(onRender) {}
     ~VKRender() override
     {
-        MSAABuffer->Deinit();
+        ColorBuffer->Deinit();
         DepthBuffer->Deinit();
         CleanupSwapChain();
     }
 
     void Init()
     {
+        MSAASamples = VKUtils::GetMaxUsableSampleCount();
+
         CreateSwapChain();
         CreateImageViews();
 
         // Render passes
-        MSAABuffer = MakeUnique<VKMSAA>(PhysicalDevice, SwapChainSurfaceFormat, SwapChainExtent);
-        MSAABuffer->Init();
+        ColorBuffer = MakeUnique<VKColor>(PhysicalDevice, SwapChainSurfaceFormat, SwapChainExtent);
+        ColorBuffer->Init(MSAASamples);
         DepthBuffer = MakeUnique<VKDepth>();
-        DepthBuffer->Init(SwapChainExtent, Device);
+        DepthBuffer->Init(SwapChainExtent, MSAASamples);
 
         CreateRenderPass();
         CreateFramebuffers();
@@ -224,9 +226,9 @@ private:
     void CreateRenderPass() {
         vk::AttachmentDescription colorAttachment;
         colorAttachment.format = SwapChainSurfaceFormat.format;
-        colorAttachment.samples = MSAABuffer->MSAASamples;
+        colorAttachment.samples = MSAASamples;
         colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
-        colorAttachment.storeOp =  vk::AttachmentStoreOp::eStore;
+        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
         colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
         colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
@@ -238,13 +240,13 @@ private:
 
         vk::AttachmentDescription depthAttachment;
         depthAttachment.format = VKUtils::FindDepthFormat();
-        depthAttachment.samples = MSAABuffer->MSAASamples;
+        depthAttachment.samples = MSAASamples;
         depthAttachment.loadOp = vk::AttachmentLoadOp::eDontCare;
-        depthAttachment.storeOp =  vk::AttachmentStoreOp::eStore;
+        depthAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         depthAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
         depthAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
         depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
-        depthAttachment.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        depthAttachment.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
         vk::AttachmentReference depthAttachmentRef;
         depthAttachmentRef.attachment = 1;
@@ -254,7 +256,7 @@ private:
         colorAttachmentResolve.format = SwapChainSurfaceFormat.format;
         colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
         colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
-        colorAttachmentResolve.storeOp =  vk::AttachmentStoreOp::eStore;
+        colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
         colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
         colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
@@ -281,7 +283,7 @@ private:
         dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
         // CRIAÇÃO DO RENDER PASS
-        std::array<vk::AttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+        std::array<vk::AttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
         vk::RenderPassCreateInfo renderPassInfo;
         renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -300,7 +302,7 @@ private:
 
         for (size_t i = 0; i < SwapChainImageViews.size(); i++) {
             std::array<vk::ImageView, 3> attachments = {
-                MSAABuffer->ColorImageView,
+                ColorBuffer->ColorImageView,
                 DepthBuffer->DepthImageView,
                 SwapChainImageViews[i]
             };
@@ -373,13 +375,13 @@ private:
             return vk::PresentModeKHR::eFifo;
         case TripleBuffering:
             return std::ranges::any_of(
-            availablePresentModes,
-            [this](const vk::PresentModeKHR value)
-            {
-                return value == vk::PresentModeKHR::eMailbox;
-            })
-            ? vk::PresentModeKHR::eMailbox
-            : vk::PresentModeKHR::eFifo;
+                availablePresentModes,
+                [this](const vk::PresentModeKHR value)
+                {
+                    return value == vk::PresentModeKHR::eMailbox;
+                })
+                ? vk::PresentModeKHR::eMailbox
+                : vk::PresentModeKHR::eFifo;
         }
 
         return vk::PresentModeKHR::eFifo;
@@ -399,7 +401,7 @@ private:
     void RecreateSwapChain()
     {
         int width = 0, height = 0;
-        while (width == 0 || height == 0)
+        while (width < 1 || height < 1)
         {
             if (!SDL_GetWindowSizeInPixels(Window, &width, &height))
             {
@@ -409,13 +411,12 @@ private:
         }
 
         Device.waitIdle();
-        Device.waitIdle();
 
         CleanupSwapChain();
         CreateSwapChain();
         CreateImageViews();
-        MSAABuffer->Init();
-        DepthBuffer->Init(SwapChainExtent, Device);
+        ColorBuffer->Init(MSAASamples);
+        DepthBuffer->Init(SwapChainExtent, MSAASamples);
 
         CreateFramebuffers();
     }
@@ -425,9 +426,9 @@ private:
         auto& commandBuffer = CommandBuffers[FrameIndex];
         commandBuffer.begin({});
 
-        // Transition the image layout for msaa
+        // 1. Transition the MSAA Color Buffer (Crucial Fix)
         TransitionImageLayout(
-            *MSAABuffer->ColorImage,
+            *ColorBuffer->ColorImage, // Assuming ColorImage is exposed or accessible here
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eColorAttachmentOptimal,
             {},
@@ -437,10 +438,11 @@ private:
             vk::ImageAspectFlagBits::eColor
         );
 
-        // Transition the image layout for rendering
+        // 2. Transition the Swapchain Resolve Target
+        // Note: Changing oldLayout from eUndefined to ePresentSrcKHR matches its post-present state
         TransitionImageLayout(
             SwapChainImages[imageIndex],
-            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eUndefined, // or vk::ImageLayout::ePresentSrcKHR if tracking state
             vk::ImageLayout::eColorAttachmentOptimal,
             {},
             vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -449,7 +451,7 @@ private:
             vk::ImageAspectFlagBits::eColor
         );
 
-        // Transition depth image to depth attachment optimal layout
+        // 3. Transition the Depth Buffer
         TransitionImageLayout(
             *DepthBuffer->DepthImage,
             vk::ImageLayout::eUndefined,
@@ -458,24 +460,21 @@ private:
             vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
             vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
             vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-            vk::ImageAspectFlagBits::eDepth);
+            vk::ImageAspectFlagBits::eDepth
+        );
 
-
-        // Set up the color attachment
         vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
-        vk::RenderingAttachmentInfo attachmentInfo;
-        //attachmentInfo.imageView = SwapChainImageViews[imageIndex];
-        attachmentInfo.imageView = MSAABuffer->ColorImageView;
-        attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-        attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        attachmentInfo.clearValue = clearColor;
+        vk::RenderingAttachmentInfo colorAttachmentInfo;
+        colorAttachmentInfo.imageView = ColorBuffer->ColorImageView;
+        colorAttachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        colorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+        colorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachmentInfo.clearValue = clearColor;
 
-        attachmentInfo.resolveImageView = SwapChainImageViews[imageIndex];
-        attachmentInfo.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        attachmentInfo.resolveMode = vk::ResolveModeFlagBits::eAverage;
+        colorAttachmentInfo.resolveImageView = SwapChainImageViews[imageIndex];
+        colorAttachmentInfo.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        colorAttachmentInfo.resolveMode = vk::ResolveModeFlagBits::eAverage;
 
-        // Set up the deph attachment
         vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
         vk::RenderingAttachmentInfo depthAttachmentInfo;
         depthAttachmentInfo.imageView = DepthBuffer->DepthImageView;
@@ -484,7 +483,6 @@ private:
         depthAttachmentInfo.storeOp = vk::AttachmentStoreOp::eDontCare;
         depthAttachmentInfo.clearValue = clearDepth;
 
-        // Set up the rendering info
         vk::Rect2D renderArea;
         renderArea.offset.x = 0;
         renderArea.offset.y = 0;
@@ -494,19 +492,16 @@ private:
         renderingInfo.renderArea = renderArea;
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachments = &attachmentInfo;
+        renderingInfo.pColorAttachments = &colorAttachmentInfo;
         renderingInfo.pDepthAttachment = &depthAttachmentInfo;
 
-        // Begin rendering
         commandBuffer.beginRendering(renderingInfo);
 
-        // Rendering commands will go here
         if (OnRender) OnRender(FrameIndex);
 
-        // End rendering
         commandBuffer.endRendering();
 
-        // Transition the image layout for presentation
+        // 4. Transition only the Swapchain Image to Present Layout
         TransitionImageLayout(
             SwapChainImages[imageIndex],
             vk::ImageLayout::eColorAttachmentOptimal,

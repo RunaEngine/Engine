@@ -24,4 +24,6 @@ namespace VKUtils
     vk::Format FindDepthFormat();
 
     void GenerateMipmaps(vk::raii::CommandBuffer& commandBuffer, vk::raii::Image& image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+
+    vk::SampleCountFlagBits GetMaxUsableSampleCount();
 };

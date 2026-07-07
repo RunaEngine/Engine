@@ -47,6 +47,7 @@ public:
         > featureChain;
 
         featureChain.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy = true;
+        featureChain.get<vk::PhysicalDeviceFeatures2>().features.sampleRateShading = true;
         featureChain.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters = true;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 = true;
         featureChain.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering = true;

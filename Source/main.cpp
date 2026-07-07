@@ -13,8 +13,8 @@
 
 int main(int argc, char** argv)
 {
-    GPipeline->GUserSettings->Vsync = Adaptative;
-    GPipeline->GUserSettings->SetFramerateLimit(60);
+    GPipeline->GUserSettings->Vsync = TripleBuffering;
+    //GPipeline->GUserSettings->SetFramerateLimit(60);
 
     Event event;
 
