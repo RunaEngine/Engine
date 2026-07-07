@@ -7,8 +7,10 @@
 #include "Tick.hpp"
 #include "Input.hpp"
 #include "SDL3/SDL_video.h"
+#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include <vector>
+#include <string>
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -48,6 +50,7 @@ public:
     bool FramebufferResized = false;
 
     // Render passes
+    vk::SampleCountFlagBits MaxMSAASamples = vk::SampleCountFlagBits::e1;
     vk::SampleCountFlagBits MSAASamples = vk::SampleCountFlagBits::e1;
     UniquePtr<VKColor> ColorBuffer = nullptr;
     UniquePtr<VKDepth> DepthBuffer = nullptr;
@@ -64,7 +67,8 @@ public:
 
     void Init()
     {
-        MSAASamples = VKUtils::GetMaxUsableSampleCount();
+        MaxMSAASamples = VKUtils::GetMaxUsableSampleCount();
+        MSAASamples = (vk::SampleCountFlagBits)GUserSettings->MSAASamples;
 
         CreateSwapChain();
         CreateImageViews();
@@ -224,6 +228,9 @@ private:
     }
 
     void CreateRenderPass() {
+        bool useMSAA = (MSAASamples != vk::SampleCountFlagBits::e1);
+
+        // 1. Anexo de Cor Principal
         vk::AttachmentDescription colorAttachment;
         colorAttachment.format = SwapChainSurfaceFormat.format;
         colorAttachment.samples = MSAASamples;
@@ -232,12 +239,14 @@ private:
         colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
         colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
         colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
-        colorAttachment.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        // Se NÃO usa MSAA, o destino final já é o Present do Swapchain
+        colorAttachment.finalLayout = useMSAA ? vk::ImageLayout::eColorAttachmentOptimal : vk::ImageLayout::ePresentSrcKHR;
 
         vk::AttachmentReference colorAttachmentRef;
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
+        // 2. Anexo de Profundidade
         vk::AttachmentDescription depthAttachment;
         depthAttachment.format = VKUtils::FindDepthFormat();
         depthAttachment.samples = MSAASamples;
@@ -252,27 +261,37 @@ private:
         depthAttachmentRef.attachment = 1;
         depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-        vk::AttachmentDescription colorAttachmentResolve;
-        colorAttachmentResolve.format = SwapChainSurfaceFormat.format;
-        colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
-        colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
-        colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
-        colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-        colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
-        colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-        vk::AttachmentReference colorAttachmentResolveRef;
-        colorAttachmentResolveRef.attachment = 2;
-        colorAttachmentResolveRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-        // SUBPASS
+        // 3. Configuração do Subpass
         vk::SubpassDescription subpass;
         subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
-        subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+        // O pulo do gato: Só criamos e passamos o Resolve Attachment se o MSAA estiver ativo
+        vk::AttachmentDescription colorAttachmentResolve;
+        vk::AttachmentReference colorAttachmentResolveRef;
+        std::vector<vk::AttachmentDescription> attachments = { colorAttachment, depthAttachment };
+
+        if (useMSAA) {
+            colorAttachmentResolve.format = SwapChainSurfaceFormat.format;
+            colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
+            colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
+            colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
+            colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+            colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+            colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
+            colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+
+            colorAttachmentResolveRef.attachment = 2;
+            colorAttachmentResolveRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+            subpass.pResolveAttachments = &colorAttachmentResolveRef;
+            attachments.push_back(colorAttachmentResolve); // Array com 3 elementos
+        }
+        else {
+            subpass.pResolveAttachments = nullptr; // Sem resolve para 1-sample
+        }
 
         vk::SubpassDependency dependency;
         dependency.srcSubpass = vk::SubpassExternal;
@@ -282,8 +301,6 @@ private:
         dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
         dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
-        // CRIAÇÃO DO RENDER PASS
-        std::array<vk::AttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
         vk::RenderPassCreateInfo renderPassInfo;
         renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -300,12 +317,26 @@ private:
         SwapChainFramebuffers.clear();
         SwapChainFramebuffers.reserve(SwapChainImageViews.size());
 
+        bool useMSAA = (MSAASamples != vk::SampleCountFlagBits::e1);
+
         for (size_t i = 0; i < SwapChainImageViews.size(); i++) {
-            std::array<vk::ImageView, 3> attachments = {
-                ColorBuffer->ColorImageView,
-                DepthBuffer->DepthImageView,
-                SwapChainImageViews[i]
-            };
+            std::vector<vk::ImageView> attachments;
+
+            if (useMSAA) {
+                // Ordem com MSAA: [0]=ColorBuffer (MSAA), [1]=DepthBuffer (MSAA), [2]=Swapchain (Resolve)
+                attachments = {
+                    ColorBuffer->ColorImageView,
+                    DepthBuffer->DepthImageView,
+                    SwapChainImageViews[i]
+                };
+            }
+            else {
+                // Ordem sem MSAA: [0]=Swapchain (Direct Color), [1]=DepthBuffer (Standard)
+                attachments = {
+                    SwapChainImageViews[i],
+                    DepthBuffer->DepthImageView
+                };
+            }
 
             vk::FramebufferCreateInfo framebufferInfo;
             framebufferInfo.sType = vk::StructureType::eFramebufferCreateInfo;
@@ -398,6 +429,19 @@ private:
         }
     }
 
+    void SyncUserSettings()
+    {
+        if ((uint8_t)GUserSettings->MSAASamples != (uint8_t)MSAASamples)
+        {
+            MSAASamples = (vk::SampleCountFlagBits)GUserSettings->MSAASamples;
+            if (MSAASamples > MaxMSAASamples)
+            {
+                MSAASamples = MaxMSAASamples;
+                GUserSettings->MSAASamples = (EMSAASample)MaxMSAASamples;
+            }
+        }
+    }
+
     void RecreateSwapChain()
     {
         int width = 0, height = 0;
@@ -412,6 +456,7 @@ private:
 
         Device.waitIdle();
 
+        SyncUserSettings();
         CleanupSwapChain();
         CreateSwapChain();
         CreateImageViews();
@@ -426,9 +471,28 @@ private:
         auto& commandBuffer = CommandBuffers[FrameIndex];
         commandBuffer.begin({});
 
-        // 1. Transition the MSAA Color Buffer (Crucial Fix)
+        // Se MSAA estiver ativo, renderizamos no ColorBuffer e resolvemos no Swapchain.
+        // Se for e1, renderizamos DIRETO no Swapchain.
+        bool useMSAA = (MSAASamples != vk::SampleCountFlagBits::e1);
+
+        if (useMSAA)
+        {
+            // 1. Transita o buffer multi-sampled (MSAA)
+            TransitionImageLayout(
+                *ColorBuffer->ColorImage,
+                vk::ImageLayout::eUndefined,
+                vk::ImageLayout::eColorAttachmentOptimal,
+                {},
+                vk::AccessFlagBits2::eColorAttachmentWrite,
+                vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                vk::ImageAspectFlagBits::eColor
+            );
+        }
+
+        // 2. Transita a imagem que receberá a renderização final/direta (Swapchain)
         TransitionImageLayout(
-            *ColorBuffer->ColorImage, // Assuming ColorImage is exposed or accessible here
+            SwapChainImages[imageIndex],
             vk::ImageLayout::eUndefined,
             vk::ImageLayout::eColorAttachmentOptimal,
             {},
@@ -438,20 +502,7 @@ private:
             vk::ImageAspectFlagBits::eColor
         );
 
-        // 2. Transition the Swapchain Resolve Target
-        // Note: Changing oldLayout from eUndefined to ePresentSrcKHR matches its post-present state
-        TransitionImageLayout(
-            SwapChainImages[imageIndex],
-            vk::ImageLayout::eUndefined, // or vk::ImageLayout::ePresentSrcKHR if tracking state
-            vk::ImageLayout::eColorAttachmentOptimal,
-            {},
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::ImageAspectFlagBits::eColor
-        );
-
-        // 3. Transition the Depth Buffer
+        // 3. Transita o Depth Buffer
         TransitionImageLayout(
             *DepthBuffer->DepthImage,
             vk::ImageLayout::eUndefined,
@@ -465,15 +516,27 @@ private:
 
         vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
         vk::RenderingAttachmentInfo colorAttachmentInfo;
-        colorAttachmentInfo.imageView = ColorBuffer->ColorImageView;
+
+        if (useMSAA)
+        {
+            // Com MSAA: Alvo principal é o ColorBuffer, Swapchain é o resolve
+            colorAttachmentInfo.imageView = ColorBuffer->ColorImageView;
+            colorAttachmentInfo.resolveImageView = SwapChainImageViews[imageIndex];
+            colorAttachmentInfo.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+            colorAttachmentInfo.resolveMode = vk::ResolveModeFlagBits::eAverage;
+        }
+        else
+        {
+            // Sem MSAA (e1): Alvo principal é direto o Swapchain, sem resolve
+            colorAttachmentInfo.imageView = SwapChainImageViews[imageIndex];
+            colorAttachmentInfo.resolveImageView = nullptr;
+            colorAttachmentInfo.resolveMode = vk::ResolveModeFlagBits::eNone;
+        }
+
         colorAttachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         colorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
         colorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachmentInfo.clearValue = clearColor;
-
-        colorAttachmentInfo.resolveImageView = SwapChainImageViews[imageIndex];
-        colorAttachmentInfo.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        colorAttachmentInfo.resolveMode = vk::ResolveModeFlagBits::eAverage;
 
         vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
         vk::RenderingAttachmentInfo depthAttachmentInfo;
@@ -501,7 +564,7 @@ private:
 
         commandBuffer.endRendering();
 
-        // 4. Transition only the Swapchain Image to Present Layout
+        // 4. Transita a imagem do Swapchain de ColorAttachment para Present
         TransitionImageLayout(
             SwapChainImages[imageIndex],
             vk::ImageLayout::eColorAttachmentOptimal,

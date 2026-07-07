@@ -14,6 +14,7 @@
 int main(int argc, char** argv)
 {
     GPipeline->GUserSettings->Vsync = TripleBuffering;
+    GPipeline->GUserSettings->MSAASamples = Disabled;
     //GPipeline->GUserSettings->SetFramerateLimit(60);
 
     Event event;
