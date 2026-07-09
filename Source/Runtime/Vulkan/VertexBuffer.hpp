@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Vulkan/Pipeline.hpp"
+#include "Runtime/Vulkan/Pipeline.hpp"
 //#include "Vulkan/Utils.hpp"
 #include "Engine/Engine.hpp"
 #include "Engine/Core/Object.hpp"
-#include "Utils/Logs.hpp"
+#include "Runtime/Utils/Logs.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
 #include <chrono>
@@ -18,8 +18,9 @@
 
 struct VKVertex
 {
-    glm::vec3 Pos;
+    glm::vec3 Position;
     glm::vec3 Color;
+    glm::vec3 Normal;
     glm::vec2 TexCoord;
 
     static vk::VertexInputBindingDescription GetBindingDescription()
@@ -27,15 +28,16 @@ struct VKVertex
         vk::VertexInputBindingDescription description;
         description.binding = 0;
         description.stride = sizeof(VKVertex);
-        description.inputRate =  vk::VertexInputRate::eVertex;
+        description.inputRate = vk::VertexInputRate::eVertex;
         return description;
     }
-    static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
+    static std::array<vk::VertexInputAttributeDescription, 4> GetAttributeDescriptions()
     {
         return {
-            vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Pos)),
+            vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Position)),
             vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Color)),
-            vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32Sfloat, offsetof(VKVertex, TexCoord))
+            vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32B32Sfloat, offsetof(VKVertex, Normal)),
+            vk::VertexInputAttributeDescription(3, 0, vk::Format::eR32G32Sfloat, offsetof(VKVertex, TexCoord))
         };
     }
 };
@@ -53,6 +55,7 @@ public:
     vk::raii::DeviceMemory BufferMemory = nullptr;
     vk::DeviceSize IndexOffset = 0;
     vk::IndexType IndexType = vk::IndexType::eUint16;
+    vk::DeviceSize IndexSize = 0;
 
     // Uniform buffer object
     VKUniformBuffer Ubo;
@@ -92,6 +95,7 @@ public:
 
         vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
         vk::DeviceSize indexBufferSize = sizeof(indices[0]) * indices.size();
+        IndexSize = indices.size();
         vk::DeviceSize totalSize = vertexBufferSize + indexBufferSize;
         IndexOffset = vertexBufferSize;
 
@@ -171,6 +175,12 @@ public:
         ubo.Proj[1][1] *= -1;
 
         memcpy(*UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    }
+
+    void UpdateTextures(const std::vector<SharedPtr<VKTexture>>& textures = {})
+    {
+        Textures = textures;
+        CreateDescriptorSets();
     }
 private:
 
@@ -268,7 +278,8 @@ private:
         DescriptorSets.clear();
         DescriptorSets = device.allocateDescriptorSets(allocInfo);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+        {
             std::vector<vk::WriteDescriptorSet> descriptorWrites;
 
             vk::DescriptorBufferInfo bufferInfo;
@@ -290,26 +301,6 @@ private:
             }
 
             device.updateDescriptorSets(descriptorWrites, {});
-
-            /*
-            vk::DescriptorImageInfo imageInfo;
-            imageInfo.sampler = TextureSampler,
-            imageInfo.imageView = TextureImageView,
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-            vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo.buffer = UniformBuffers[i], bufferInfo.offset = 0, bufferInfo.range = sizeof(VKUniformBuffer);
-            vk::WriteDescriptorSet uniformDescriptor;
-            uniformDescriptor.dstSet = DescriptorSets[i], uniformDescriptor.dstBinding = 0, uniformDescriptor.dstArrayElement = 0, uniformDescriptor.descriptorCount = 1, uniformDescriptor.descriptorType = vk::DescriptorType::eUniformBuffer, uniformDescriptor.pBufferInfo = &bufferInfo;
-            vk::WriteDescriptorSet imageDescriptor;
-            imageDescriptor.dstSet = DescriptorSets[i], imageDescriptor.dstBinding = 1, imageDescriptor.dstArrayElement = 0, imageDescriptor.descriptorCount = 1, imageDescriptor.descriptorType = vk::DescriptorType::eCombinedImageSampler, imageDescriptor.pImageInfo = &imageInfo;
-            
-            std::array descriptorWrites{
-                uniformDescriptor,
-                imageDescriptor
-            };
-            device.updateDescriptorSets(descriptorWrites, {});
-            */
         }
     }
 };

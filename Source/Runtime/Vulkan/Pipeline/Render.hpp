@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include "Vulkan/RenderPass/Color.hpp"
-#include "Vulkan/RenderPass/Depth.hpp"
-#include "Settings.hpp"
-#include "Tick.hpp"
-#include "Input.hpp"
+#include "Runtime/Vulkan/RenderPass/Color.hpp"
+#include "Runtime/Vulkan/RenderPass/Depth.hpp"
+#include "Runtime/Settings.hpp"
+#include "Runtime/Tick.hpp"
+#include "Runtime/Input.hpp"
 #include "SDL3/SDL_video.h"
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>

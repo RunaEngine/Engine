@@ -1,7 +1,7 @@
 FetchContent_Declare(
         slang
         GIT_REPOSITORY https://github.com/shader-slang/slang.git
-        GIT_TAG v2026.12.1
+        GIT_TAG v2026.12.2
 )
 
 set(SLANG_ENABLE_REPLAYER OFF CACHE BOOL "")

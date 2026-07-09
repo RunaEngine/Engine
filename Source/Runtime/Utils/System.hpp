@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Utils/Logs.hpp"
+#include "Runtime/Utils/Logs.hpp"
 #include <SDL3/SDL.h>
 #include <filesystem>
 #include <string>

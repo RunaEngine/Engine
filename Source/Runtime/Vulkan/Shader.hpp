@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include "Utils/System.hpp"
-#include "Utils/Logs.hpp"
+#include "Runtime/Utils/System.hpp"
+#include "Runtime/Utils/Logs.hpp"
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include <filesystem>
@@ -25,7 +25,7 @@ public:
 
     bool Init(const std::filesystem::path& filepath,
         vk::VertexInputBindingDescription& bindingDescription,
-        std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions,
+        std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions,
         vk::raii::DescriptorSetLayout& descriptorSetLayout
         )
     {
@@ -160,7 +160,7 @@ public:
 
     void CreateGraphicsPipeline(const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
         const vk::VertexInputBindingDescription& bindingDescription,
-        std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions,
+        std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions,
         vk::raii::DescriptorSetLayout& descriptorSetLayout)
     {
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;

@@ -1,7 +1,8 @@
 struct VSInput {
-    float3 inPos;
-    float3 inColor;
-    float2 inTexCoord;
+    float3 inPos : POSITION;
+    float3 inColor : COLOR;
+    float3 inNormal : NORMAL; 
+    float2 inTexCoord : TEXCOORD;
 };
 
 struct UniformBuffer {
@@ -14,8 +15,9 @@ ConstantBuffer<UniformBuffer> ubo;
 struct VSOutput
 {
     float4 pos : SV_Position;
-    float3 fragColor;
-    float2 fragTexCoord;
+    float3 fragColor : COLOR;
+    float2 fragTexCoord : TEXCOORD;
+    float3 fragNormal : NORMAL;
 };
 
 [shader("vertex")]
@@ -24,12 +26,15 @@ VSOutput VertexMain(VSInput input) {
     output.pos = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(input.inPos, 1.0))));
     output.fragColor = input.inColor;
     output.fragTexCoord = input.inTexCoord;
+    output.fragNormal = mul((float3x3)ubo.model, input.inNormal); 
     return output;
 }
 
 Sampler2D texture;
+SamplerState texSampler;
 
 [shader("fragment")]
 float4 FragmentMain(VSOutput vertIn) : SV_TARGET {
-   return texture.Sample(vertIn.fragTexCoord);
+   //return texture.Sample(vertIn.fragTexCoord);
+   return float4(vertIn.fragColor * vertIn.fragNormal, 1.0);
 }

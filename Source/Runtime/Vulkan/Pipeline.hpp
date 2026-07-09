@@ -1,17 +1,17 @@
 #pragma once
 
 //#include "Config.hpp"
-#include "Vulkan/Pipeline/Instance.hpp"
-#include "Vulkan/Pipeline/PhysicalDevice.hpp"
-#include "Vulkan/Pipeline/Window.hpp"
-#include "Vulkan/Pipeline/LogicalDevices.hpp"
-#include "Vulkan/Pipeline/Render.hpp"
+#include "Runtime/Vulkan/Pipeline/Instance.hpp"
+#include "Runtime/Vulkan/Pipeline/PhysicalDevice.hpp"
+#include "Runtime/Vulkan/Pipeline/Window.hpp"
+#include "Runtime/Vulkan/Pipeline/LogicalDevices.hpp"
+#include "Runtime/Vulkan/Pipeline/Render.hpp"
 #include "Engine/Core/Object.hpp"
-#include "Vulkan/Utils.hpp"
-#include "Utils/Logs.hpp"
-#include "Settings.hpp"
-#include "Tick.hpp"
-#include "Input.hpp"
+#include "Runtime/Vulkan/Utils.hpp"
+#include "Runtime/Utils/Logs.hpp"
+#include "Runtime/Settings.hpp"
+#include "Runtime/Tick.hpp"
+#include "Runtime/Input.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan_raii.hpp>
