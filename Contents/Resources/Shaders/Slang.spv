@@ -23,10 +23,13 @@ struct VSOutput
 [shader("vertex")]
 VSOutput VertexMain(VSInput input) {
     VSOutput output;
-    output.pos = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(input.inPos, 1.0))));
+    output.pos = mul(mul(mul(float4(input.inPos, 1.0), ubo.model), ubo.view), ubo.proj);
+
     output.fragColor = input.inColor;
     output.fragTexCoord = input.inTexCoord;
-    output.fragNormal = mul((float3x3)ubo.model, input.inNormal); 
+
+    output.fragNormal = mul(input.inNormal, (float3x3)ubo.model);
+
     return output;
 }
 

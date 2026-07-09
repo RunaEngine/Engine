@@ -2,7 +2,7 @@
 #include "Runtime/Vulkan/Pipeline.hpp"
 #include "Runtime/Vulkan/VertexBuffer.hpp"
 #include "Runtime/Vulkan/Shader.hpp"
-#include "Runtime/Io/Event.hpp"
+#include "Runtime/Event.hpp"
 #include "Runtime/Utils/System.hpp"
 #include "Runtime/Io/Import.hpp"
 #include <SDL3/SDL.h>
@@ -67,13 +67,14 @@ int main(int argc, char** argv)
     }
 
     bool shouldClose = false;
-    event.OnEvent = [&](SDL_Event& e)
+    GPipeline->GEvent->OnEvent = [&](SDL_Event& e)
     {
         if (e.type == SDL_EVENT_QUIT)
         {
             shouldClose = true;
         }
         GPipeline->GInput->UpdateEvent(e);
+        GPipeline->GCamera->Inputs(e);
     };
     GPipeline->OnSwap = [&](uint32_t frameIndex)
     {
@@ -93,10 +94,7 @@ int main(int argc, char** argv)
     };
     while (!shouldClose)
     {
-        GPipeline->GTick->UpdateCurrentTick();
-        event.Run(EPool);
         GPipeline->Pool();
-        GPipeline->GTick->UpdateDeltaTime();
     }
     GPipeline->LogicalDevice->Get().waitIdle();
 

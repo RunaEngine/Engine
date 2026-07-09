@@ -69,7 +69,7 @@ target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
         vulkan
-        SDL3-shared
+        SDL3-static
         glad
         glm-header-only
         slang
@@ -81,7 +81,7 @@ target_link_libraries(Runa
         #OBJ LIBRARY
         cgltf
         #COMPRESSION
-        zlib
+        zlibstatic
 )
 #set_target_properties(Runa PROPERTIES FOLDER "Source")
 
@@ -100,9 +100,7 @@ function(copy_target_shared_dlls target)
 endfunction()
 
 copy_target_shared_dlls(Runa
-        SDL3-shared
         slang
-        zlib
         miniz
 )
 

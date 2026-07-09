@@ -2,8 +2,6 @@
 
 #include "Engine/Core/Object.hpp"
 #include <SDL3/SDL.h>
-#include <imgui_impl_sdl3.h>
-#include <glm/gtc/constants.hpp>
 #include <cstdint>
 #include <functional>
 

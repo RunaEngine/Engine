@@ -7,52 +7,26 @@
 #include "Runtime/Vulkan/Pipeline/LogicalDevices.hpp"
 #include "Runtime/Vulkan/Pipeline/Render.hpp"
 #include "Engine/Core/Object.hpp"
-#include "Runtime/Vulkan/Utils.hpp"
 #include "Runtime/Utils/Logs.hpp"
 #include "Runtime/Settings.hpp"
+#include "Runtime/Event.hpp"
 #include "Runtime/Tick.hpp"
 #include "Runtime/Input.hpp"
+#include "Camera.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan_raii.hpp>
 #include <functional>
-
-
-extern GameUserSettings* GUserSettings;
-extern Tick* GTick;
-extern Input* GInput;
-/*
-#ifdef NDEBUG
-constexpr bool EnableValidationLayers = false;
-#else
-constexpr bool EnableValidationLayers = true;
-#endif
-*/
-
-/*
-const std::vector<char const*> ValidationLayers = {
-    "VK_LAYER_KHRONOS_validation"
-};
-*/
-/*
-const std::vector<const char*> RequiredDeviceExtension = {
-    vk::KHRSwapchainExtensionName
-};
-*/
-
-struct Render
-{
-    UniquePtr<VKWindow> Window;
-    UniquePtr<VKLogicalDevice> LogicalDevice;
-};
 
 class Pipeline : public Object
 {
 public:
     // Globals
     SharedPtr<GameUserSettings> GUserSettings = nullptr;
+    SharedPtr<Event> GEvent = nullptr;
     SharedPtr<Tick> GTick = nullptr;
     SharedPtr<Input> GInput = nullptr;
+    SharedPtr<VKCamera> GCamera = nullptr;
 
     // Envents
     std::function<void(uint32_t)> OnSwap;
@@ -70,6 +44,7 @@ public:
     Pipeline()
     {
         GUserSettings = MakeShared<GameUserSettings>();
+        GEvent = MakeShared<Event>();
         GTick = MakeShared<Tick>();
         GInput = MakeShared<Input>();
     }
@@ -135,6 +110,8 @@ public:
         Render->CreateCommandBuffers();
         Render->CreateSyncObjects();
 
+        GCamera = MakeShared<VKCamera>(Window->Get(), GInput);
+
         return true;
     }
 
@@ -155,7 +132,12 @@ public:
 
     void Pool()
     {
+        GTick->UpdateCurrentTick();
+        GEvent->Run(EPool);
+        GCamera->Tick(GTick->Delta());
+        GCamera->UpdateMatrix(60.0f, 0.1f, 100.0f);
         Render->DrawFrame();
+        GTick->UpdateDeltaTime();
     }
 
 private:

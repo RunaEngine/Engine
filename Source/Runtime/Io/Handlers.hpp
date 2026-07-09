@@ -1,42 +1,9 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
 #include <functional>
-#include <utility>
-
-
-enum ERunMode : uint8_t
-{
-    Poll = 0,
-    Wait = 1
-};
-
-class Events : public Object
-{
-public:
-    Events() = default;
-
-    void Run(ERunMode mode)
-    {
-        while ((mode == Poll ? SDL_PollEvent(&e) : SDL_WaitEvent(&e)))
-        {
-            if (OnEvent) OnEvent(e);
-        }
-    }
-
-    bool Push(SDL_Event& userEvent)
-    {
-        return SDL_PushEvent(&userEvent);
-    }
-
-    std::function<void(SDL_Event&)> OnEvent;
-
-private:
-    SDL_Event e;
-};
 
 class Timer : public Object
 {

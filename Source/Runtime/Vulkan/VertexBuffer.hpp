@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Runtime/Vulkan/Pipeline.hpp"
-//#include "Vulkan/Utils.hpp"
 #include "Engine/Engine.hpp"
 #include "Engine/Core/Object.hpp"
-#include "Runtime/Utils/Logs.hpp"
+#include "Runtime/Vulkan/Texture.hpp"
 #include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.hpp>
 #include <chrono>
@@ -12,9 +11,6 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include "Texture.hpp"
 
 struct VKVertex
 {
@@ -157,24 +153,15 @@ public:
 
     void UpdateUniformBuffer(uint32_t currentImage)
     {
-        auto& swapChainExtent = GPipeline->Render->SwapChainExtent;
-
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        const SharedPtr<VKCamera>& camera = GPipeline->GCamera;
 
         VKUniformBuffer ubo;
-        ubo.Model = rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.View = lookAt(glm::vec3(0.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        int h = swapChainExtent.height < 1 ? 1 : swapChainExtent.height;
-        ubo.Proj = glm::perspective(glm::radians(60.0f), static_cast<float>(swapChainExtent.width) / static_cast<float>(h), 0.1f, 100.0f);
-        ubo.Model = glm::transpose(ubo.Model);
-        ubo.View = glm::transpose(ubo.View);
-        ubo.Proj = glm::transpose(ubo.Proj);
-        ubo.Proj[1][1] *= -1;
 
-        memcpy(*UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        ubo.Model = glm::mat4(1.0f);
+        ubo.View  = camera->GetViewMatrix();
+        ubo.Proj  = camera->GetProjectionMatrix();
+
+        std::memcpy(*UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 
     void UpdateTextures(const std::vector<SharedPtr<VKTexture>>& textures = {})
