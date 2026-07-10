@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv)
 {
-    GPipeline->GUserSettings->Vsync = Adaptative;
+    GPipeline->GUserSettings->Vsync = TripleBuffering;
     GPipeline->GUserSettings->MSAASamples = MSAA8X;
     //GPipeline->GUserSettings->SetFramerateLimit(60);
 
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
         return -1;
 
     auto currentDir = GetBaseDir();
-/*
+
     const std::vector<VKVertex> vertices = {
         {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
         {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
@@ -41,9 +41,9 @@ int main(int argc, char** argv)
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4
     };
-*/
 
-    Import assimp;
+
+    //Import assimp;
 
     auto texturefile = currentDir.string() + "Resources/Textures/UVCheck.png";
     SharedPtr<VKTexture> texture = MakeShared<VKTexture>();
@@ -53,10 +53,10 @@ int main(int argc, char** argv)
     }
 
     VKVertexBuffer vbo;
-    auto gltfFile = currentDir.string() + "Resources/Cube/cube.glb";
-    assimp.LoadAsset(gltfFile, vbo);
+    //auto gltfFile = currentDir.string() + "Resources/Cube/cube.glb";
+    //assimp.LoadAsset(gltfFile, vbo);
     //vbo.UpdateTextures({texture});
-    //vbo.Init(vertices, indices, {texture});
+    vbo.Init(vertices, indices, {texture});
 
     auto slangfile = currentDir.string() + "Resources/Shaders/Slang.spv";
     auto bindingDescription = VKVertex::GetBindingDescription();

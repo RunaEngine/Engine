@@ -74,7 +74,7 @@ public:
         }
 
         // Calculate total byte size (4 bytes per pixel)
-        VkDeviceSize imageSize = texWidth * texHeight * texChannels;
+        VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         vk::raii::Buffer stagingBuffer({});
         vk::raii::DeviceMemory stagingBufferMemory({});

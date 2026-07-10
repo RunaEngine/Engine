@@ -5,8 +5,9 @@
 
 namespace VKUtils
 {
-    uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
+    uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties, bool forceSystemRam)
     {
+        /*
         auto& physicalDevice = GPipeline->PhysicalDevice;
         vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice->Get().getMemoryProperties();
 
@@ -14,6 +15,26 @@ namespace VKUtils
         {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
             {
+                return i;
+            }
+        }
+
+        Logs::RuntimeError("Failed to find suitable memory type");
+        return 0;
+        */
+
+        auto& physicalDevice = GPipeline->PhysicalDevice;
+        vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice->Get().getMemoryProperties();
+
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                if (forceSystemRam && (memProperties.memoryTypes[i].propertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal))
+                {
+                    continue;
+                }
+
                 return i;
             }
         }
@@ -45,6 +66,31 @@ namespace VKUtils
     void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory)
     {
         auto& device = GPipeline->LogicalDevice->Get();
+        vk::MemoryPropertyFlags fallbackProperties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+
+        vk::StructureChain<vk::PhysicalDeviceMemoryProperties2, vk::PhysicalDeviceMemoryBudgetPropertiesEXT> memoryChain;
+        const auto& budgetProps = memoryChain.get<vk::PhysicalDeviceMemoryBudgetPropertiesEXT>();
+        vk::DeviceSize freeVramSize = 0;
+
+        if (budgetProps.heapBudget[0] > 0 &&
+            budgetProps.heapBudget[0] >= budgetProps.heapUsage[0])
+        {
+            freeVramSize = budgetProps.heapBudget[0] - budgetProps.heapUsage[0];
+        }
+        else
+        {
+            freeVramSize = std::numeric_limits<vk::DeviceSize>::max();
+        }
+
+        bool forceSystemRam = false;
+        if (size > freeVramSize)
+        {
+            Logs::Warning("%.2f MB texture does not fit in free VRAM (%.2f MB). Moving to system RAM to avoid crashes",
+                static_cast<float>(size) / (1024.0f * 1024.0f),
+                static_cast<float>(budgetProps.heapUsage[0]) / (1024.0f * 1024.0f));
+
+            forceSystemRam = true;
+        }
 
         vk::BufferCreateInfo bufferInfo;
         bufferInfo.size = size;
@@ -55,8 +101,28 @@ namespace VKUtils
         vk::MemoryRequirements memRequirements = buffer.getMemoryRequirements();
         vk::MemoryAllocateInfo allocInfo;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-        bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, forceSystemRam ? fallbackProperties : properties, forceSystemRam);
+
+        if (budgetProps.heapBudget[0] > 0 &&
+            budgetProps.heapBudget[0] >= budgetProps.heapUsage[0])
+        {
+            bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+        }
+        else
+        {
+            try
+            {
+                bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+            }
+            catch (const vk::OutOfDeviceMemoryError& e)
+            {
+                Logs::Warning("Out of vram, fallingback to ram");
+
+                allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, fallbackProperties, true);
+                bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+            }
+        }
+
         buffer.bindMemory(*bufferMemory, 0);
     }
 
@@ -79,7 +145,7 @@ namespace VKUtils
         EndSingleTimeCommands(commandCopyBuffer);
     }
 
-    void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image &image, vk::raii::DeviceMemory &imageMemory)
+    void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image& image, vk::raii::DeviceMemory& imageMemory)
     {
         vk::ImageCreateInfo imageInfo;
         imageInfo.imageType = vk::ImageType::e2D;

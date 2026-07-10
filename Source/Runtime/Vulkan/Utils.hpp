@@ -5,7 +5,7 @@
 
 namespace VKUtils
 {
-    uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+    uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties, bool forceSystemRam = false);
 
     vk::raii::CommandBuffer BeginSingleTimeCommands();
 

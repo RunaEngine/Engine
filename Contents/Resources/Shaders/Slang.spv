@@ -38,6 +38,6 @@ SamplerState texSampler;
 
 [shader("fragment")]
 float4 FragmentMain(VSOutput vertIn) : SV_TARGET {
-   //return texture.Sample(vertIn.fragTexCoord);
-   return float4(vertIn.fragColor * vertIn.fragNormal, 1.0);
+   return texture.Sample(vertIn.fragTexCoord);
+   //return float4(vertIn.fragColor * vertIn.fragNormal, 1.0);
 }

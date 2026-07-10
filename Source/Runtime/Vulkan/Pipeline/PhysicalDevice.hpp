@@ -7,7 +7,8 @@
 #include <functional>
 
 const std::vector<const char*> RequiredDeviceExtension = {
-    vk::KHRSwapchainExtensionName
+    vk::KHRSwapchainExtensionName,
+    vk::EXTMemoryBudgetExtensionName
 };
 
 class VKPhysicalDevice : public Object
