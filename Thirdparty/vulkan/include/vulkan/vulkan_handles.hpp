@@ -164,8 +164,8 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   using MemoryRequirements2KHR = MemoryRequirements2;
   struct SparseImageMemoryRequirements2;
   using SparseImageMemoryRequirements2KHR = SparseImageMemoryRequirements2;
-  struct PhysicalDeviceFeatures2;
-  using PhysicalDeviceFeatures2KHR = PhysicalDeviceFeatures2;
+  struct VKPhysicalDeviceFeatures2;
+  using PhysicalDeviceFeatures2KHR = VKPhysicalDeviceFeatures2;
   struct PhysicalDeviceProperties2;
   using PhysicalDeviceProperties2KHR = PhysicalDeviceProperties2;
   struct FormatProperties2;
@@ -20400,12 +20400,12 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     // wrapper function for command vkGetPhysicalDeviceFeatures2, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
     template <typename Dispatch = VULKAN_HPP_DEFAULT_DISPATCHER_TYPE, typename std::enable_if<IS_DISPATCHED( vkGetPhysicalDeviceFeatures2 ), bool>::type = true>
-    void getFeatures2( PhysicalDeviceFeatures2 * pFeatures, Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
+    void getFeatures2( VKPhysicalDeviceFeatures2 * pFeatures, Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
 #ifndef VULKAN_HPP_DISABLE_ENHANCED_MODE
     // wrapper function for command vkGetPhysicalDeviceFeatures2, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
     template <typename Dispatch = VULKAN_HPP_DEFAULT_DISPATCHER_TYPE, typename std::enable_if<IS_DISPATCHED( vkGetPhysicalDeviceFeatures2 ), bool>::type = true>
-    VULKAN_HPP_NODISCARD PhysicalDeviceFeatures2 getFeatures2( Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
+    VULKAN_HPP_NODISCARD VKPhysicalDeviceFeatures2 getFeatures2( Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
     // wrapper function for command vkGetPhysicalDeviceFeatures2, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
     template <typename X,
@@ -21131,13 +21131,13 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
     template <typename Dispatch                                                                     = VULKAN_HPP_DEFAULT_DISPATCHER_TYPE,
               typename std::enable_if<IS_DISPATCHED( vkGetPhysicalDeviceFeatures2KHR ), bool>::type = true>
-    void getFeatures2KHR( PhysicalDeviceFeatures2 * pFeatures, Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
+    void getFeatures2KHR( VKPhysicalDeviceFeatures2 * pFeatures, Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
 #ifndef VULKAN_HPP_DISABLE_ENHANCED_MODE
     // wrapper function for command vkGetPhysicalDeviceFeatures2KHR, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
     template <typename Dispatch                                                                     = VULKAN_HPP_DEFAULT_DISPATCHER_TYPE,
               typename std::enable_if<IS_DISPATCHED( vkGetPhysicalDeviceFeatures2KHR ), bool>::type = true>
-    VULKAN_HPP_NODISCARD PhysicalDeviceFeatures2 getFeatures2KHR( Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
+    VULKAN_HPP_NODISCARD VKPhysicalDeviceFeatures2 getFeatures2KHR( Dispatch const & d VULKAN_HPP_DEFAULT_DISPATCHER_ASSIGNMENT ) const VULKAN_HPP_NOEXCEPT;
     // wrapper function for command vkGetPhysicalDeviceFeatures2KHR, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
     template <typename X,

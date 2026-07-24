@@ -68,13 +68,16 @@ target_sources(Runa
 target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
-        vulkan
+        #vulkan
+        #vma
+        wgpu_native
         SDL3-static
-        glad
+        sdlwgpu
+        #glad
         glm-header-only
-        slang
+        #slang
         #USER INTERFACE LIBRARY
-        imgui
+        #imgui
         #IMAGE LIBRARY
         stb
         #SDL3_image-shared
@@ -82,17 +85,27 @@ target_link_libraries(Runa
         cgltf
         #COMPRESSION
         zlibstatic
+        #UTILS
+        bsthreadpool
 )
+
 #set_target_properties(Runa PROPERTIES FOLDER "Source")
 
 function(copy_target_shared_dlls target)
         foreach(lib IN LISTS ARGN)
-                if(TARGET ${lib})
+                if(${lib} STREQUAL "wgpu_native")
+                        add_custom_command(TARGET ${target} POST_BUILD
+                                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                        "${WGPU_BINARY}"
+                                        $<TARGET_FILE_DIR:${target}>
+                        )
+                elseif(TARGET ${lib})
                         add_custom_command(TARGET ${target} POST_BUILD
                                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                                         $<TARGET_FILE:${lib}>
                                         $<TARGET_FILE_DIR:${target}>
                         )
+                
                 else()
                         message(VERBOSE "copy_target_shared_dlls: target '${lib}' não encontrado; pulando cópia")
                 endif()
@@ -100,8 +113,9 @@ function(copy_target_shared_dlls target)
 endfunction()
 
 copy_target_shared_dlls(Runa
-        slang
+        #slang
         miniz
+        wgpu_native
 )
 
 #include(Content/Content.cmake)

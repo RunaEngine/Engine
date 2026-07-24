@@ -9,3 +9,5 @@ constexpr const char* ENGINE_NAME = "@ENGINE_NAME@";
 constexpr const int ENGINE_MAJOR_VERSION = @ENGINE_MAJOR_VERSION@;
 constexpr const int ENGINE_MINOR_VERSION = @ENGINE_MINOR_VERSION@;
 constexpr const int ENGINE_PATH_VERSION = @ENGINE_PATH_VERSION@;
+
+/* Render Data */

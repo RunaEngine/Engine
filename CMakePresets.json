@@ -7,6 +7,26 @@
   },
   "configurePresets": [
     {
+      "name": "msvc-debug",
+      "displayName": "msvc-debug",
+      "description": "Visual Studio build using Debug",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "msvc-release",
+      "displayName": "msvc-release",
+      "description": "Visual Studio build using Release",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "debug",
       "displayName": "debug",
       "description": "Default build using Debug",

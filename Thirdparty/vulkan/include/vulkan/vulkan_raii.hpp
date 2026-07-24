@@ -3822,7 +3822,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
       // wrapper function for command vkGetPhysicalDeviceFeatures2, see
       // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
-      VULKAN_HPP_NODISCARD PhysicalDeviceFeatures2 getFeatures2() const VULKAN_HPP_NOEXCEPT;
+      VULKAN_HPP_NODISCARD VKPhysicalDeviceFeatures2 getFeatures2() const VULKAN_HPP_NOEXCEPT;
 
       // wrapper function for command vkGetPhysicalDeviceFeatures2, see
       // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
@@ -4023,7 +4023,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
       // wrapper function for command vkGetPhysicalDeviceFeatures2KHR, see
       // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
-      VULKAN_HPP_NODISCARD PhysicalDeviceFeatures2 getFeatures2KHR() const VULKAN_HPP_NOEXCEPT;
+      VULKAN_HPP_NODISCARD VKPhysicalDeviceFeatures2 getFeatures2KHR() const VULKAN_HPP_NOEXCEPT;
 
       // wrapper function for command vkGetPhysicalDeviceFeatures2KHR, see
       // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
@@ -17672,12 +17672,12 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
     // wrapper function for command vkGetPhysicalDeviceFeatures2, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2.html
-    VULKAN_HPP_NODISCARD VULKAN_HPP_INLINE PhysicalDeviceFeatures2 PhysicalDevice::getFeatures2() const VULKAN_HPP_NOEXCEPT
+    VULKAN_HPP_NODISCARD VULKAN_HPP_INLINE VKPhysicalDeviceFeatures2 PhysicalDevice::getFeatures2() const VULKAN_HPP_NOEXCEPT
     {
       VULKAN_HPP_ASSERT( getDispatcher()->vkGetPhysicalDeviceFeatures2 &&
                          "Function <vkGetPhysicalDeviceFeatures2> requires <VK_KHR_get_physical_device_properties2> or <VK_VERSION_1_1>" );
 
-      PhysicalDeviceFeatures2 features;
+      VKPhysicalDeviceFeatures2 features;
       getDispatcher()->vkGetPhysicalDeviceFeatures2( static_cast<VkPhysicalDevice>( m_physicalDevice ),
                                                      reinterpret_cast<VkPhysicalDeviceFeatures2 *>( &features ) );
 
@@ -17693,7 +17693,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
                          "Function <vkGetPhysicalDeviceFeatures2> requires <VK_KHR_get_physical_device_properties2> or <VK_VERSION_1_1>" );
 
       StructureChain<X, Y, Z...> structureChain;
-      PhysicalDeviceFeatures2 &  features = structureChain.template get<PhysicalDeviceFeatures2>();
+      VKPhysicalDeviceFeatures2 &  features = structureChain.template get<VKPhysicalDeviceFeatures2>();
       getDispatcher()->vkGetPhysicalDeviceFeatures2( static_cast<VkPhysicalDevice>( m_physicalDevice ),
                                                      reinterpret_cast<VkPhysicalDeviceFeatures2 *>( &features ) );
 
@@ -20465,12 +20465,12 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
     // wrapper function for command vkGetPhysicalDeviceFeatures2KHR, see
     // https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetPhysicalDeviceFeatures2KHR.html
-    VULKAN_HPP_NODISCARD VULKAN_HPP_INLINE PhysicalDeviceFeatures2 PhysicalDevice::getFeatures2KHR() const VULKAN_HPP_NOEXCEPT
+    VULKAN_HPP_NODISCARD VULKAN_HPP_INLINE VKPhysicalDeviceFeatures2 PhysicalDevice::getFeatures2KHR() const VULKAN_HPP_NOEXCEPT
     {
       VULKAN_HPP_ASSERT( getDispatcher()->vkGetPhysicalDeviceFeatures2KHR &&
                          "Function <vkGetPhysicalDeviceFeatures2KHR> requires <VK_KHR_get_physical_device_properties2> or <VK_VERSION_1_1>" );
 
-      PhysicalDeviceFeatures2 features;
+      VKPhysicalDeviceFeatures2 features;
       getDispatcher()->vkGetPhysicalDeviceFeatures2KHR( static_cast<VkPhysicalDevice>( m_physicalDevice ),
                                                         reinterpret_cast<VkPhysicalDeviceFeatures2 *>( &features ) );
 
@@ -20486,7 +20486,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
                          "Function <vkGetPhysicalDeviceFeatures2KHR> requires <VK_KHR_get_physical_device_properties2> or <VK_VERSION_1_1>" );
 
       StructureChain<X, Y, Z...> structureChain;
-      PhysicalDeviceFeatures2 &  features = structureChain.template get<PhysicalDeviceFeatures2>();
+      VKPhysicalDeviceFeatures2 &  features = structureChain.template get<VKPhysicalDeviceFeatures2>();
       getDispatcher()->vkGetPhysicalDeviceFeatures2KHR( static_cast<VkPhysicalDevice>( m_physicalDevice ),
                                                         reinterpret_cast<VkPhysicalDeviceFeatures2 *>( &features ) );
 

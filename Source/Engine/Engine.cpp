@@ -1,3 +1,3 @@
-#include "Engine/Engine.hpp"
+//#include "Engine/Engine.hpp"
 
-Pipeline* GPipeline = new Pipeline();
+//Pipeline* GPipeline = new Pipeline();
