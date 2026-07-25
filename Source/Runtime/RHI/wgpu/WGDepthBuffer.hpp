@@ -27,7 +27,7 @@ public:
             .usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding,
             .dimension = WGPUTextureDimension_2D,
             .size = extend,
-            .format = WGPUTextureFormat_Depth32Float,
+            .format = WGPUTextureFormat_Depth32FloatStencil8,
             .mipLevelCount = 1,
             .sampleCount = 1
         };
@@ -35,7 +35,7 @@ public:
         DepthTexture = wgpuDeviceCreateTexture(device, &depthDesc);
 
         WGPUTextureViewDescriptor depthViewDesc = {
-            .format = WGPUTextureFormat_Depth32Float,
+            .format = WGPUTextureFormat_Depth32FloatStencil8,
             .dimension = WGPUTextureViewDimension_2D,
             .baseMipLevel = 0,
             .mipLevelCount = 1,
@@ -53,7 +53,7 @@ public:
             .mipmapFilter = WGPUMipmapFilterMode_Nearest,
             .lodMinClamp = 0.f,
             .lodMaxClamp = 100.f,
-            .compare = WGPUCompareFunction_Greater,
+            .compare = WGPUCompareFunction_Less,
             .maxAnisotropy = 1,
         };
 

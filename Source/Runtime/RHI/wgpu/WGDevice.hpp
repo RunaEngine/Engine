@@ -21,7 +21,11 @@ public:
 
     bool Init(WGPUInstance instance, WGPUAdapter adapter)
     {
-        WGPUDeviceDescriptor deviceDesc = {};
+        WGPUFeatureName requiredFeatures[] = { WGPUFeatureName_Depth32FloatStencil8 };
+        WGPUDeviceDescriptor deviceDesc = {
+            .requiredFeatureCount = sizeof(requiredFeatures),
+            .requiredFeatures = requiredFeatures,
+        };
 
         WGPURequestDeviceCallbackInfo callbackInfo = {
             .mode = WGPUCallbackMode_AllowProcessEvents,

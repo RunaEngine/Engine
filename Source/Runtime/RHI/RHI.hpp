@@ -39,7 +39,6 @@ public:
     WGPUQueue Queue = nullptr;
     uint8_t Multisample = 4;
 
-    std::function<void(SDL_Event&)> OnEvent;
     std::function<void(WGPURenderPassEncoder, WGPUQueue)> OnRender;
 
     RHI() = default;
@@ -194,7 +193,6 @@ public:
         wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
         GCamera = MakeShared<WGCamera>(Device.Get(), Queue, Window, GInput);
-        UpdateSurface();
         DepthBuffer.Init(Device.Get(), SurfaceConfig);
 
         return true;
@@ -224,29 +222,27 @@ public:
         GTick->UpdateDeltaTime();
     }
 
-private:
-    void UpdateSurface()
+    void UpdateSurface(SDL_Event& e)
     {
-        GEvent->OnEvent = [&](SDL_Event &e)
+        Logs::Log("Teste");
+        switch (e.type)
         {
-            switch (e.type)
+        case SDL_EVENT_WINDOW_RESIZED:
+            if (e.window.data1 > 0 && e.window.data2 > 0 &&
+                (SurfaceConfig.width != e.window.data1 || SurfaceConfig.height != e.window.data2))
             {
-            case SDL_EVENT_WINDOW_RESIZED:
-                if (e.window.data1 > 0 && e.window.data2 > 0 &&
-                    (SurfaceConfig.width != e.window.data1 || SurfaceConfig.height != e.window.data2))
-                {
-                    SurfaceConfig.width = e.window.data1;
-                    SurfaceConfig.height = e.window.data2;
-                    ConfigureSurface();
-                    DepthBuffer.Init(Device.Get(), SurfaceConfig);
-                }
-                break;
-            default:
-                break;
+                SurfaceConfig.width = e.window.data1;
+                SurfaceConfig.height = e.window.data2;
+                ConfigureSurface();
+                DepthBuffer.Init(Device.Get(), SurfaceConfig);
             }
-        };
+            break;
+        default:
+            break;
+        }
     }
 
+private:
     void ConfigureSurface()
     {
         if (!Surface || !Device.Get())
@@ -294,7 +290,7 @@ private:
         default:
             return;
         }
-        
+
         WGPUTextureView view = wgpuTextureCreateView(
             output.texture,
             nullptr
@@ -325,11 +321,15 @@ private:
                 .a = 1.0,
             }
         };
-        
+
         WGPURenderPassDepthStencilAttachment depthAtt = {
             .view = DepthBuffer.DepthTextureView,
             .depthLoadOp = WGPULoadOp_Clear,
-            .depthStoreOp = WGPUStoreOp_Store
+            .depthStoreOp = WGPUStoreOp_Store,
+            .depthClearValue = 1.0f,
+            .stencilLoadOp = WGPULoadOp_Clear,
+            .stencilStoreOp = WGPUStoreOp_Discard,
+            .stencilClearValue = 0
         };
         WGPURenderPassDescriptor renderDesc = {
             .colorAttachmentCount = 1,

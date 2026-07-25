@@ -150,7 +150,7 @@ private:
         PrimitiveState = {
             .nextInChain = (WGPUChainedStruct*)&primitiveExtra,
             .topology = WGPUPrimitiveTopology_TriangleList,
-            .frontFace = WGPUFrontFace_CW,
+            .frontFace = WGPUFrontFace_CCW,
             .cullMode = WGPUCullMode_Back,
             .unclippedDepth = false,
         };
@@ -159,9 +159,9 @@ private:
     void CreateDepthStencil()
     {
         DepthStencil = {
-            .format = WGPUTextureFormat_Depth32Float,
+            .format = WGPUTextureFormat_Depth32FloatStencil8,
             .depthWriteEnabled = WGPUOptionalBool_True,
-            .depthCompare = WGPUCompareFunction_Greater
+            .depthCompare = WGPUCompareFunction_Less
         };
     }
 };
