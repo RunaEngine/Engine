@@ -2,13 +2,14 @@
 
 #include "Engine/Core/Object.hpp"
 #include "Runtime/RHI/wgpu/WGBuffer.hpp"
+#include <glm/glm.hpp>
 #include <webgpu/wgpu.h>
 #include <array>
 
 struct WGVertex
 {
-    float Position[3];
-    float TexCoord[2];
+    glm::vec3 Position;
+    glm::vec2 TexCoord;
     //float Color[3];
 
     static WGPUVertexBufferLayout GetLayout()
@@ -27,10 +28,11 @@ struct WGVertex
         attributes[1].offset = offsetof(WGVertex, TexCoord);
         attributes[1].shaderLocation = 1;
 
-        WGPUVertexBufferLayout layout = {};
-        layout.arrayStride = sizeof(WGVertex);
-        layout.attributeCount = static_cast<uint32_t>(attributes.size());
-        layout.attributes = attributes.data();
+        WGPUVertexBufferLayout layout = {
+            .arrayStride = sizeof(WGVertex),
+            .attributeCount = static_cast<uint32_t>(attributes.size()),
+            .attributes = attributes.data()
+        };
 
         return layout;
     }

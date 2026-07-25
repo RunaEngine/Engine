@@ -14,8 +14,9 @@ private:
     WGPUDevice Device = nullptr;
     WGPUSurfaceConfiguration SurfaceConfig;
     SharedPtr<WGShader> Shader = nullptr;
-
+    
 public:
+    SharedPtr<WGCamera> Camera = nullptr;
     WGPUPrimitiveState PrimitiveState = {};
     WGPUColorTargetState ColorTarget = {};
     WGPUBlendState BlendState = {};
@@ -34,30 +35,33 @@ public:
         Device = nullptr;
     }
 
-    void Init(SharedPtr<WGShader> shader, std::vector<SharedPtr<WGTexture>> textures = {})
+    void Init(SharedPtr<WGShader> shader, SharedPtr<WGCamera> camera, std::vector<SharedPtr<WGTexture>> textures = {})
     {
         Deinit();
         Shader = shader;
+        Camera = camera;
 
-        std::vector<WGPUBindGroupLayout> textureBindGroupLayouts;
-        textureBindGroupLayouts.reserve(textures.size());
+        std::vector<WGPUBindGroupLayout> pipelineBindGroupLayouts;
+        pipelineBindGroupLayouts.reserve(textures.size() + 1);
 
         for (auto& texture : textures)
         {
             if (texture && texture->TextureBindGroupLayout) {
-                textureBindGroupLayouts.push_back(texture->TextureBindGroupLayout);
+                pipelineBindGroupLayouts.push_back(texture->TextureBindGroupLayout);
             }
         }
+        pipelineBindGroupLayouts.push_back(camera->CameraBindGroupLayout);
 
         WGPUPipelineLayoutDescriptor layoutDesc = {
             .nextInChain = nullptr,
-            .bindGroupLayoutCount = textureBindGroupLayouts.size(),
-            .bindGroupLayouts = textureBindGroupLayouts.empty() ? nullptr : textureBindGroupLayouts.data(),
+            .bindGroupLayoutCount = pipelineBindGroupLayouts.size(),
+            .bindGroupLayouts = pipelineBindGroupLayouts.empty() ? nullptr : pipelineBindGroupLayouts.data(),
             .immediateSize = 0
         };
 
         PipelineLayout = wgpuDeviceCreatePipelineLayout(Device, &layoutDesc);
 
+        CreateBlendState();
         UpdateColorTarget();
         CreateFragmentState(shader);
 

@@ -95,7 +95,7 @@ public:
         };
         TextureSampler = wgpuDeviceCreateSampler(Device, &samplerDesc);
 
-
+        std::array<WGPUBindGroupLayoutEntry, 2> bindGroupLayoutEntries;
         WGPUBindGroupLayoutEntry bindGroupTextureEntry = {
             .binding = 0,
             .visibility = WGPUShaderStage_Fragment,
@@ -105,7 +105,7 @@ public:
                 .multisampled = false
             },
         };
-
+        bindGroupLayoutEntries[0] = bindGroupTextureEntry;
         WGPUBindGroupLayoutEntry bindGroupSamplerEntry = {
             .binding = 1,
             .visibility = WGPUShaderStage_Fragment,
@@ -113,27 +113,24 @@ public:
                 .type = WGPUSamplerBindingType_Filtering,
             }
         };
-
-        const std::array<WGPUBindGroupLayoutEntry, 2> bindGroupLayoutEntries = { bindGroupTextureEntry, bindGroupSamplerEntry };
-
+        bindGroupLayoutEntries[1] = bindGroupSamplerEntry;
         WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {
             .entryCount = static_cast<uint32_t>(bindGroupLayoutEntries.size()),
             .entries = bindGroupLayoutEntries.data(),
         };
         TextureBindGroupLayout = wgpuDeviceCreateBindGroupLayout(Device, &bindGroupLayoutDesc);
 
+        std::array<WGPUBindGroupEntry, 2> bindGroupEntries;
         WGPUBindGroupEntry bindGroupTextureView = {
             .binding = 0,
             .textureView = TextureView
         };
-
+        bindGroupEntries[0] = bindGroupTextureView;
         WGPUBindGroupEntry bindGroupSamplerView = {
             .binding = 1,
             .sampler = TextureSampler
         };
-
-        std::array<WGPUBindGroupEntry, 2> bindGroupEntries = { bindGroupTextureView, bindGroupSamplerView };
-
+        bindGroupEntries[1] = bindGroupSamplerView;
         WGPUBindGroupDescriptor bindGroupDesc = {
             .layout = TextureBindGroupLayout,
             .entryCount = static_cast<uint32_t>(bindGroupEntries.size()),
@@ -148,11 +145,20 @@ public:
 
     void Deinit()
     {
-        if (Texture) wgpuTextureRelease(Texture);
+        if (Texture) 
+        {
+            wgpuTextureDestroy(Texture);
+            wgpuTextureRelease(Texture);
+        }
         if (TextureView) wgpuTextureViewRelease(TextureView);
         if (TextureSampler) wgpuSamplerRelease(TextureSampler);
         if (TextureBindGroupLayout) wgpuBindGroupLayoutRelease(TextureBindGroupLayout);
         if (TextureBindGroup) wgpuBindGroupRelease(TextureBindGroup);
 
+        Texture = nullptr;
+        TextureView = nullptr;
+        TextureSampler = nullptr;
+        TextureBindGroupLayout = nullptr;
+        TextureBindGroup = nullptr;
     }
 };

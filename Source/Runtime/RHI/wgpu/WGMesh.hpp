@@ -28,6 +28,13 @@ public:
             0,
             nullptr
         );
+        wgpuRenderPassEncoderSetBindGroup(
+            pass,
+            1,
+            Material->Pipeline->Camera->CameraBindGroup,
+            0,
+            nullptr
+        );
         wgpuRenderPassEncoderSetVertexBuffer(
             pass,
             0,

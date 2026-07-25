@@ -46,7 +46,7 @@ public:
 
     bool Upload(const void* data, uint64_t size, uint64_t offset = 0)
     {
-        if (!Buffer || Uploaded)
+        if (!Buffer)
             return false;
 
         if (offset + size > Size)
@@ -67,11 +67,10 @@ public:
 
     void Destroy()
     {
-        if (Uploaded && Buffer)
-        {
+        if (Buffer)
             wgpuBufferDestroy(Buffer);
-            Uploaded = false;
-        }
+
+        Uploaded = false;
     }
 
     void* Map()

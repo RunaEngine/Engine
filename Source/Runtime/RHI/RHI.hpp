@@ -2,7 +2,11 @@
 
 #include "Config.hpp"
 #include "Engine/Core/Object.hpp"
+#include "Runtime/Event.hpp"
+#include "Runtime/Input.hpp"
+#include "Runtime/Tick.hpp"
 #include "Runtime/Utils/Logs.hpp"
+#include "Runtime/RHI/wgpu/WGCamera.hpp"
 #include "Runtime/RHI/wgpu/WGAdapter.hpp"
 #include "Runtime/RHI/wgpu/WGDevice.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
@@ -16,6 +20,12 @@ class RHI : public Object
 private:
 
 public:
+    // Globals
+    SharedPtr<WGCamera> GCamera = nullptr;
+    SharedPtr<Event> GEvent = MakeShared<Event>();
+    SharedPtr<Input> GInput = MakeShared<Input>();
+    SharedPtr<Tick> GTick = MakeShared<Tick>();
+
     SDL_Window* Window = nullptr;
     WGPUSurface Surface = nullptr;
     WGPUInstance Instance = nullptr;
@@ -180,6 +190,8 @@ public:
 
         wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
+        GCamera = MakeShared<WGCamera>(Device.Get(), Queue, Window, GInput);
+
         return true;
     }
 
@@ -199,35 +211,14 @@ public:
 
     void Pool()
     {
-        bool shouldQuit = false;
-        SDL_Event event;
-        while (!shouldQuit)
-        {
-            while (SDL_PollEvent(&event))
-            {
-                switch (event.type)
-                {
-                case SDL_EVENT_QUIT:
-                    shouldQuit = true;
-                    return;
-                case SDL_EVENT_WINDOW_RESIZED:
-                    if (event.window.data1 > 0 && event.window.data2 > 0 &&
-                        (SurfaceConfig.width != event.window.data1 || SurfaceConfig.height != event.window.data2))
-                    {
-                        SurfaceConfig.width = event.window.data1;
-                        SurfaceConfig.height = event.window.data2;
-                        ConfigureSurface();
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
-            Render();
-        }
+        GTick->UpdateCurrentTick();
+        GEvent->Run(EPool);
+        GCamera->Tick(GTick->Delta());
+        GCamera->UpdateMatrix();
+        Render();
+        GTick->UpdateDeltaTime();
     }
 
-private:
     void ConfigureSurface()
     {
         if (!Surface || !Device.Get())
@@ -247,6 +238,9 @@ private:
             &SurfaceConfig
         );
     }
+
+private:
+    
 
     void Render()
     {
