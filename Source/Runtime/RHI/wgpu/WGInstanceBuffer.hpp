@@ -59,3 +59,13 @@ struct WGInstance
         };
     }
 };
+
+class WGInstanceBuffer : Object
+{
+public:
+    std::vector<WGInstance> Instances;
+    WGBuffer Buffer;
+
+    WGInstanceBuffer();
+    ~WGInstanceBuffer();
+};

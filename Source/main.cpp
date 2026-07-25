@@ -1,18 +1,6 @@
+#pragma once
+
 #include "Engine/Engine.hpp"
-/*
-#include "Runtime/Vulkan/Pipeline.hpp"
-#include "Runtime/Vulkan/VertexBuffer.hpp"
-#include "Runtime/Vulkan/Shader.hpp"
-#include "Runtime/Event.hpp"
-#include "Runtime/Utils/System.hpp"
-#include "Runtime/Io/Import.hpp"
-#include <SDL3/SDL.h>
-#include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_raii.hpp>
-#include <filesystem>
-#include <vector>
-#include <chrono>
-*/
 #include "Runtime/RHI/RHI.hpp"
 #include "Runtime/RHI/wgpu/WGMesh.hpp"
 #include "Runtime/RHI/wgpu/WGMaterial.hpp"
@@ -48,7 +36,7 @@ int main(int argc, char** argv)
         return -1;
 
     auto material = MakeShared<WGMaterial>(rhi->Device.Get(), shader);
-    material->Init(rhi->SurfaceConfig, rhi->GCamera, { texture });
+    material->Init(rhi->SurfaceConfig, rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, { texture });
 
     auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device.Get(), rhi->Queue);
     vertexBuffer->Init(vertices, indices);
@@ -57,7 +45,7 @@ int main(int argc, char** argv)
     //mesh->Init(material, vertexBuffer);
 
     rhi->GCamera->Position = glm::vec3(0.0f, 1.0f, 2.0f);
-
+    
     bool shouldClose = false;
     rhi->GEvent->OnEvent = [&](SDL_Event& e)
         {
@@ -66,15 +54,6 @@ int main(int argc, char** argv)
             case SDL_EVENT_QUIT:
                 shouldClose = true;
                 return;
-            case SDL_EVENT_WINDOW_RESIZED:
-                if (e.window.data1 > 0 && e.window.data2 > 0 &&
-                    (rhi->SurfaceConfig.width != e.window.data1 || rhi->SurfaceConfig.height != e.window.data2))
-                {
-                    rhi->SurfaceConfig.width = e.window.data1;
-                    rhi->SurfaceConfig.height = e.window.data2;
-                    rhi->ConfigureSurface();
-                }
-                break;
             default:
                 break;
             }

@@ -12,20 +12,21 @@ class WGPipeline : Object
 {
 private:
     WGPUDevice Device = nullptr;
-    WGPUSurfaceConfiguration SurfaceConfig;
-    SharedPtr<WGShader> Shader = nullptr;
+    WGPUSurfaceConfiguration& SurfaceConfig;
     
 public:
-    SharedPtr<WGCamera> Camera = nullptr;
     WGPUPrimitiveState PrimitiveState = {};
     WGPUColorTargetState ColorTarget = {};
     WGPUBlendState BlendState = {};
     WGPUVertexBufferLayout VertexLayout = {};
     WGPUFragmentState FragmentState = {};
+    WGPUDepthStencilState DepthStencil = {};
+    WGPUBindGroupLayout& CameraBindGroupLayout;
+    WGPUBindGroup& CameraBindGroup;
     WGPUPipelineLayout PipelineLayout = nullptr;
     WGPURenderPipeline RenderPipeline = nullptr;
 
-    WGPipeline(WGPUDevice device, WGPUSurfaceConfiguration surfaceConfig) : Device(device), SurfaceConfig(surfaceConfig)
+    WGPipeline(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout, WGPUBindGroup& cameraBindGroup) : Device(device), SurfaceConfig(surfaceConfig), CameraBindGroupLayout(cameraBindGroupLayout), CameraBindGroup(cameraBindGroup)
     {
     }
 
@@ -35,11 +36,9 @@ public:
         Device = nullptr;
     }
 
-    void Init(SharedPtr<WGShader> shader, SharedPtr<WGCamera> camera, std::vector<SharedPtr<WGTexture>> textures = {})
+    void Init(SharedPtr<WGShader> shader, std::vector<SharedPtr<WGTexture>> textures = {})
     {
         Deinit();
-        Shader = shader;
-        Camera = camera;
 
         std::vector<WGPUBindGroupLayout> pipelineBindGroupLayouts;
         pipelineBindGroupLayouts.reserve(textures.size() + 1);
@@ -50,7 +49,7 @@ public:
                 pipelineBindGroupLayouts.push_back(texture->TextureBindGroupLayout);
             }
         }
-        pipelineBindGroupLayouts.push_back(camera->CameraBindGroupLayout);
+        pipelineBindGroupLayouts.push_back(CameraBindGroupLayout);
 
         WGPUPipelineLayoutDescriptor layoutDesc = {
             .nextInChain = nullptr,
@@ -62,14 +61,16 @@ public:
         PipelineLayout = wgpuDeviceCreatePipelineLayout(Device, &layoutDesc);
 
         CreateBlendState();
-        UpdateColorTarget();
+        CreateColorTarget();
+        CreatePrimitiveState();
+        CreateDepthStencil();
         CreateFragmentState(shader);
 
         WGPURenderPipelineDescriptor renderDesc = {
             .layout = PipelineLayout,
-            .vertex = CreateVertexState(Shader),
+            .vertex = CreateVertexState(shader),
             .primitive = PrimitiveState,
-            //.depthStencil = nullptr,
+            .depthStencil = &DepthStencil,
             .multisample = {
                 .count = 1,
                 .mask = (uint32_t)~0,
@@ -87,7 +88,8 @@ public:
         if (PipelineLayout) wgpuPipelineLayoutRelease(PipelineLayout);
     }
 
-    void UpdateColorTarget()
+private:
+    void CreateColorTarget()
     {
         ColorTarget = {
             .format = SurfaceConfig.format,
@@ -96,7 +98,6 @@ public:
         };
     }
 
-private:
     WGPUVertexState CreateVertexState(SharedPtr<WGShader> shader)
     {
         auto layout = WGVertex::GetLayout();
@@ -136,6 +137,31 @@ private:
             .alpha = {
                 .operation = WGPUBlendOperation_Add,
             }
+        };
+    }
+
+    void CreatePrimitiveState()
+    {
+        
+        WGPUPrimitiveStateExtras primitiveExtra = {
+            .polygonMode = WGPUPolygonMode_Fill,
+            .conservative = false
+        };
+        PrimitiveState = {
+            .nextInChain = (WGPUChainedStruct*)&primitiveExtra,
+            .topology = WGPUPrimitiveTopology_TriangleList,
+            .frontFace = WGPUFrontFace_CW,
+            .cullMode = WGPUCullMode_Back,
+            .unclippedDepth = false,
+        };
+    }
+
+    void CreateDepthStencil()
+    {
+        DepthStencil = {
+            .format = WGPUTextureFormat_Depth32Float,
+            .depthWriteEnabled = WGPUOptionalBool_True,
+            .depthCompare = WGPUCompareFunction_Greater
         };
     }
 };

@@ -27,11 +27,11 @@ public:
         Deinit();
     }
 
-    void Init(WGPUSurfaceConfiguration surfaceConfig, SharedPtr<WGCamera> camera, const std::vector<SharedPtr<WGTexture>>& textures = {})
+    void Init(WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout, WGPUBindGroup& cameraBindGroup, const std::vector<SharedPtr<WGTexture>>& textures = {})
     {
         Textures = textures;
-        Pipeline = MakeUnique<WGPipeline>(Device, surfaceConfig);
-        Pipeline->Init(Shader, camera, Textures);
+        Pipeline = MakeUnique<WGPipeline>(Device, surfaceConfig, cameraBindGroupLayout, cameraBindGroup);
+        Pipeline->Init(Shader, Textures);
     }
 
     void Deinit()

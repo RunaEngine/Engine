@@ -7,6 +7,7 @@
 #include "Runtime/Tick.hpp"
 #include "Runtime/Utils/Logs.hpp"
 #include "Runtime/RHI/wgpu/WGCamera.hpp"
+#include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGAdapter.hpp"
 #include "Runtime/RHI/wgpu/WGDevice.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
@@ -34,7 +35,9 @@ public:
     WGPUTextureFormat SurfaceFormat = {};
     WGPUSurfaceConfigurationExtras SurfaceExtras = {};
     WGPUSurfaceConfiguration SurfaceConfig = {};
+    WGDepthBuffer DepthBuffer;
     WGPUQueue Queue = nullptr;
+    uint8_t Multisample = 4;
 
     std::function<void(SDL_Event&)> OnEvent;
     std::function<void(WGPURenderPassEncoder, WGPUQueue)> OnRender;
@@ -191,6 +194,8 @@ public:
         wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
         GCamera = MakeShared<WGCamera>(Device.Get(), Queue, Window, GInput);
+        UpdateSurface();
+        DepthBuffer.Init(Device.Get(), SurfaceConfig);
 
         return true;
     }
@@ -212,11 +217,34 @@ public:
     void Pool()
     {
         GTick->UpdateCurrentTick();
-        GEvent->Run(EPool);
+        GEvent->Run();
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
         Render();
         GTick->UpdateDeltaTime();
+    }
+
+private:
+    void UpdateSurface()
+    {
+        GEvent->OnEvent = [&](SDL_Event &e)
+        {
+            switch (e.type)
+            {
+            case SDL_EVENT_WINDOW_RESIZED:
+                if (e.window.data1 > 0 && e.window.data2 > 0 &&
+                    (SurfaceConfig.width != e.window.data1 || SurfaceConfig.height != e.window.data2))
+                {
+                    SurfaceConfig.width = e.window.data1;
+                    SurfaceConfig.height = e.window.data2;
+                    ConfigureSurface();
+                    DepthBuffer.Init(Device.Get(), SurfaceConfig);
+                }
+                break;
+            default:
+                break;
+            }
+        };
     }
 
     void ConfigureSurface()
@@ -238,9 +266,6 @@ public:
             &SurfaceConfig
         );
     }
-
-private:
-    
 
     void Render()
     {
@@ -269,7 +294,7 @@ private:
         default:
             return;
         }
-
+        
         WGPUTextureView view = wgpuTextureCreateView(
             output.texture,
             nullptr
@@ -287,24 +312,32 @@ private:
             &encoderDesc
         );
 
-        WGPURenderPassDescriptor renderDesc = {};
-
-        WGPURenderPassColorAttachment colorAttachment = {};
-        colorAttachment.view = view;
-        colorAttachment.resolveTarget = nullptr;
-        colorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-        colorAttachment.loadOp = WGPULoadOp_Clear;
-        colorAttachment.storeOp = WGPUStoreOp_Store;
-        colorAttachment.clearValue.r = 0.1;
-        colorAttachment.clearValue.g = 0.2;
-        colorAttachment.clearValue.b = 0.3;
-        colorAttachment.clearValue.a = 1.0;
-
-        renderDesc.colorAttachments = &colorAttachment;
-        renderDesc.colorAttachmentCount = 1;
-        renderDesc.depthStencilAttachment = nullptr;
-        renderDesc.occlusionQuerySet = nullptr;
-        renderDesc.timestampWrites = nullptr;
+        WGPURenderPassColorAttachment colorAttachment = {
+            .view = view,
+            .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+            .resolveTarget = nullptr,
+            .loadOp = WGPULoadOp_Clear,
+            .storeOp = WGPUStoreOp_Store,
+            .clearValue = {
+                .r = 0.1,
+                .g = 0.2,
+                .b = 0.3,
+                .a = 1.0,
+            }
+        };
+        
+        WGPURenderPassDepthStencilAttachment depthAtt = {
+            .view = DepthBuffer.DepthTextureView,
+            .depthLoadOp = WGPULoadOp_Clear,
+            .depthStoreOp = WGPUStoreOp_Store
+        };
+        WGPURenderPassDescriptor renderDesc = {
+            .colorAttachmentCount = 1,
+            .colorAttachments = &colorAttachment,
+            .depthStencilAttachment = &depthAtt,
+            .occlusionQuerySet = nullptr,
+            .timestampWrites = nullptr,
+        };
 
         WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderDesc);
 

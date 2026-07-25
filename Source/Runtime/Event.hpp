@@ -14,11 +14,14 @@ enum EEventMode : uint8_t
 class Event : public Object
 {
 public:
+    EEventMode EventMode = EPool;
+    SDL_Event e;
+
     Event() = default;
 
-    void Run(EEventMode mode)
+    void Run()
     {
-        if (mode == EPool)
+        if (EventMode == EPool)
         {
             while (SDL_PollEvent(&e))
             {
@@ -37,7 +40,4 @@ public:
     }
 
     std::function<void(SDL_Event&)> OnEvent;
-
-private:
-    SDL_Event e;
 };

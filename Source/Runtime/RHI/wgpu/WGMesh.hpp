@@ -21,17 +21,21 @@ public:
     void Draw(WGPURenderPassEncoder pass)
     {
         wgpuRenderPassEncoderSetPipeline(pass, Material->Pipeline->RenderPipeline);
-        wgpuRenderPassEncoderSetBindGroup(
-            pass,
-            0,
-            Material->Textures[0]->TextureBindGroup,
-            0,
-            nullptr
-        );
+        for (auto& texture : Material->Textures)
+        {
+            wgpuRenderPassEncoderSetBindGroup(
+                pass,
+                0,
+                texture->TextureBindGroup,
+                0,
+                nullptr
+            );
+        }
+
         wgpuRenderPassEncoderSetBindGroup(
             pass,
             1,
-            Material->Pipeline->Camera->CameraBindGroup,
+            Material->Pipeline->CameraBindGroup,
             0,
             nullptr
         );
