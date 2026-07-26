@@ -4,7 +4,6 @@
 #include "Runtime/RHI/wgpu/WGBuffer.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <webgpu/wgpu.h>
 #include <array>
@@ -44,17 +43,18 @@ struct InstanceRaw
     }
 };
 
-struct WGInstance 
+struct WGInstance
 {
     glm::vec3 Position;
     glm::quat Rotation;
 
-    InstanceRaw ToInstance() const {
+    InstanceRaw ToInstance() const
+    {
         glm::mat4 identity = glm::mat4(1.0f);
         glm::mat4 translationMat = glm::translate(identity, Position);
         glm::mat4 rotationMat = glm::toMat4(Rotation);
 
-        return InstanceRaw {
+        return InstanceRaw{
             .Model = translationMat * rotationMat
         };
     }

@@ -7,6 +7,7 @@
 #include "Runtime/Tick.hpp"
 #include "Runtime/Utils/Logs.hpp"
 #include "Runtime/RHI/wgpu/WGCamera.hpp"
+#include "Runtime/RHI/wgpu/WGMultisample.hpp"
 #include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGAdapter.hpp"
 #include "Runtime/RHI/wgpu/WGDevice.hpp"
@@ -30,18 +31,25 @@ public:
     SDL_Window* Window = nullptr;
     WGPUSurface Surface = nullptr;
     WGPUInstance Instance = nullptr;
-    WGAdapter Adapter;
-    WGDevice Device;
+    UniquePtr<WGAdapter> Adapter = nullptr;
+    UniquePtr<WGDevice> Device = nullptr;
     WGPUTextureFormat SurfaceFormat = {};
     WGPUSurfaceConfigurationExtras SurfaceExtras = {};
     WGPUSurfaceConfiguration SurfaceConfig = {};
-    WGDepthBuffer DepthBuffer;
+    UniquePtr<WGMultisample> Multisample = nullptr;
+    UniquePtr<WGDepthBuffer> DepthBuffer = nullptr;
     WGPUQueue Queue = nullptr;
-    uint8_t Multisample = 4;
 
+    std::function<void(UniquePtr<WGMultisample>&)> OnMsaaEnabledChange;
     std::function<void(WGPURenderPassEncoder, WGPUQueue)> OnRender;
 
-    RHI() = default;
+    RHI()
+    {
+        Adapter = MakeUnique<WGAdapter>();
+        Device = MakeUnique<WGDevice>();
+        Multisample = MakeUnique<WGMultisample>();
+        DepthBuffer = MakeUnique<WGDepthBuffer>(Multisample->Enabled);
+    }
 
     ~RHI()
     {
@@ -111,25 +119,25 @@ public:
         }
 
         // Adapter
-        if (!Adapter.Init(Instance, Surface))
+        if (!Adapter->Init(Instance, Surface))
         {
             Deinit();
             return false;
         }
         WGPUAdapterInfo adapterInfo = {};
 
-        wgpuAdapterGetInfo(Adapter.Get(), &adapterInfo);
+        wgpuAdapterGetInfo(Adapter->Get(), &adapterInfo);
         Logs::Log("Adapter: %.*s", (int)adapterInfo.device.length, adapterInfo.device.data);
 
         // Device
-        if (!Device.Init(Instance, Adapter.Get()))
+        if (!Device->Init(Instance, Adapter->Get()))
         {
             Deinit();
             return false;
         }
 
         // Queue
-        Queue = wgpuDeviceGetQueue(Device.Get());
+        Queue = wgpuDeviceGetQueue(Device->Get());
         if (!Queue)
         {
             Logs::Error("Failed to get queue");
@@ -142,7 +150,7 @@ public:
 
         WGPUStatus status = wgpuSurfaceGetCapabilities(
             Surface,
-            Adapter.Get(),
+            Adapter->Get(),
             &capabilities
         );
 
@@ -179,7 +187,7 @@ public:
         SurfaceConfig.nextInChain = (WGPUChainedStruct*)&SurfaceExtras;
         SurfaceConfig.usage = WGPUTextureUsage_RenderAttachment;
         SurfaceConfig.format = SurfaceFormat;
-        SurfaceConfig.device = Device.Get();
+        SurfaceConfig.device = Device->Get();
         SurfaceConfig.width = windowWidth;
         SurfaceConfig.height = windowHeight;
         SurfaceConfig.presentMode = presentMode;
@@ -192,8 +200,9 @@ public:
 
         wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
-        GCamera = MakeShared<WGCamera>(Device.Get(), Queue, Window, GInput);
-        DepthBuffer.Init(Device.Get(), SurfaceConfig);
+        GCamera = MakeShared<WGCamera>(Device->Get(), Queue, Window, GInput);
+        Multisample->Init(Device->Get(), SurfaceConfig);
+        DepthBuffer->Init(Device->Get(), SurfaceConfig);
 
         return true;
     }
@@ -201,8 +210,8 @@ public:
     void Deinit()
     {
         if (Queue) wgpuQueueRelease(Queue);
-        Device.Deinit();
-        Adapter.Deinit();
+        Device->Deinit();
+        Adapter->Deinit();
         if (Surface) wgpuSurfaceRelease(Surface);
         if (Instance) wgpuInstanceRelease(Instance);
         if (Window) SDL_DestroyWindow(Window);
@@ -215,6 +224,14 @@ public:
     void Pool()
     {
         GTick->UpdateCurrentTick();
+        if (Multisample->Enabled != Multisample->PreviousEnabled)
+        {
+            Multisample->PreviousEnabled = Multisample->Enabled;
+            Multisample->Init(Device->Get(), SurfaceConfig);
+            DepthBuffer->Init(Device->Get(), SurfaceConfig);
+            if (OnMsaaEnabledChange)
+                OnMsaaEnabledChange(Multisample);
+        }
         GEvent->Run();
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
@@ -224,7 +241,6 @@ public:
 
     void UpdateSurface(SDL_Event& e)
     {
-        Logs::Log("Teste");
         switch (e.type)
         {
         case SDL_EVENT_WINDOW_RESIZED:
@@ -234,7 +250,8 @@ public:
                 SurfaceConfig.width = e.window.data1;
                 SurfaceConfig.height = e.window.data2;
                 ConfigureSurface();
-                DepthBuffer.Init(Device.Get(), SurfaceConfig);
+                Multisample->Init(Device->Get(), SurfaceConfig);
+                DepthBuffer->Init(Device->Get(), SurfaceConfig);
             }
             break;
         default:
@@ -245,7 +262,7 @@ public:
 private:
     void ConfigureSurface()
     {
-        if (!Surface || !Device.Get())
+        if (!Surface || !Device->Get())
         {
             Logs::Error("Cannot configure surface: invalid surface or device");
             return;
@@ -304,16 +321,16 @@ private:
 
         WGPUCommandEncoderDescriptor encoderDesc = {};
         WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(
-            Device.Get(),
+            Device->Get(),
             &encoderDesc
         );
 
         WGPURenderPassColorAttachment colorAttachment = {
-            .view = view,
+            .view = Multisample->Enabled ? Multisample->TextureView : view,
             .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-            .resolveTarget = nullptr,
+            .resolveTarget = Multisample->Enabled ? view : nullptr,
             .loadOp = WGPULoadOp_Clear,
-            .storeOp = WGPUStoreOp_Store,
+            .storeOp = Multisample->Enabled ? WGPUStoreOp_Discard : WGPUStoreOp_Store,
             .clearValue = {
                 .r = 0.1,
                 .g = 0.2,
@@ -323,7 +340,7 @@ private:
         };
 
         WGPURenderPassDepthStencilAttachment depthAtt = {
-            .view = DepthBuffer.DepthTextureView,
+            .view = DepthBuffer->DepthTextureView,
             .depthLoadOp = WGPULoadOp_Clear,
             .depthStoreOp = WGPUStoreOp_Store,
             .depthClearValue = 1.0f,

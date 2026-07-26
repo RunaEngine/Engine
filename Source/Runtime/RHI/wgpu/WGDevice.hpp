@@ -21,7 +21,7 @@ public:
 
     bool Init(WGPUInstance instance, WGPUAdapter adapter)
     {
-        WGPUFeatureName requiredFeatures[] = { WGPUFeatureName_Depth32FloatStencil8 };
+        WGPUFeatureName requiredFeatures[] = {WGPUFeatureName_Depth32FloatStencil8};
         WGPUDeviceDescriptor deviceDesc = {
             .requiredFeatureCount = sizeof(requiredFeatures),
             .requiredFeatures = requiredFeatures,

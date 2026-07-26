@@ -2,7 +2,6 @@
 
 #include "Engine/Core/Object.hpp"
 #include <SDL3/SDL.h>
-#include <cstdint>
 #include <functional>
 
 enum EEventMode : uint8_t

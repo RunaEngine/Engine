@@ -12,6 +12,7 @@ class WGTexture : Object
 private:
     WGPUDevice Device = nullptr;
     WGPUQueue Queue = nullptr;
+
 public:
     WGPUTexture Texture = nullptr;
     WGPUTextureView TextureView = nullptr;
@@ -19,7 +20,10 @@ public:
     WGPUBindGroupLayout TextureBindGroupLayout = nullptr;
     WGPUBindGroup TextureBindGroup = nullptr;
 
-    WGTexture(WGPUDevice device, WGPUQueue queue) : Device(device), Queue(queue) {}
+    WGTexture(WGPUDevice device, WGPUQueue queue) : Device(device), Queue(queue)
+    {
+    }
+
     ~WGTexture() override = default;
 
     bool Init(const std::filesystem::path& filepath)
@@ -57,7 +61,7 @@ public:
         WGPUTexelCopyTextureInfo textureInfo = {
             .texture = Texture,
             .mipLevel = 0,
-            .origin = { 0, 0, 0 },
+            .origin = {0, 0, 0},
             .aspect = WGPUTextureAspect_All,
         };
         WGPUTexelCopyBufferLayout bufferLayout = {
@@ -145,7 +149,7 @@ public:
 
     void Deinit()
     {
-        if (Texture) 
+        if (Texture)
         {
             wgpuTextureDestroy(Texture);
             wgpuTextureRelease(Texture);

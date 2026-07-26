@@ -11,6 +11,7 @@ class Input : public Object
 private:
     std::map<SDL_Scancode, SDL_KeyboardEvent> Scancodes;
     std::map<int, SDL_MouseButtonEvent> Mouseflags;
+
 public:
     Input() = default;
     ~Input() override = default;
@@ -88,4 +89,3 @@ public:
         return axis;
     }
 };
-

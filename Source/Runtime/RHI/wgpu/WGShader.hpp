@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include "Runtime/Utils/Logs.hpp"
 #include "Runtime/Utils/System.hpp"
 #include <webgpu/wgpu.h>
 

@@ -25,6 +25,7 @@ class WGCamera : public Object
 
     int Width = 0;
     int Height = 0;
+
 public:
     WGPUBindGroupLayout CameraBindGroupLayout = nullptr;
     WGPUBindGroup CameraBindGroup = nullptr;
@@ -40,7 +41,8 @@ public:
     float Speed = 4.0f;
     float Sensitivity = 120.0f;
 
-    WGCamera(WGPUDevice device, WGPUQueue queue, SDL_Window* window, SharedPtr<Input> input) : Window(window), GInput(input), CameraBuffer(device, queue)
+    WGCamera(WGPUDevice device, WGPUQueue queue, SDL_Window* window, SharedPtr<Input> input) : Window(window),
+        GInput(input), CameraBuffer(device, queue)
     {
         CameraBuffer.Init(sizeof(glm::mat4), WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst);
 
@@ -119,7 +121,7 @@ public:
                 float rotY = Sensitivity * (float)xrel / Width;
 
                 glm::vec3 newOrientation = glm::rotate(Orientantion, glm::radians(rotX),
-                    glm::normalize(glm::cross(Orientantion, Up)));
+                                                       glm::normalize(glm::cross(Orientantion, Up)));
 
                 if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
                 {
@@ -142,5 +144,4 @@ public:
         Rotation = glm::clamp(Rotation, glm::vec3(-1.0f), glm::vec3(1.0f));
         Position += Speed * Rotation * Delta;
     }
-
 };

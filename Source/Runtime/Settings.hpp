@@ -52,4 +52,3 @@ public:
 private:
     uint16_t FramerateLimit = 0;
 };
-

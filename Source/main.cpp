@@ -35,19 +35,20 @@ int main(int argc, char** argv)
     auto rhi = MakeUnique<RHI>();
     if (!rhi->Init(/*WGPUInstanceBackend_Vulkan*/))
         return -1;
+    rhi->Multisample->Enabled = true;
 
-    auto shader = MakeShared<WGShader>(rhi->Device.Get());
+    auto shader = MakeShared<WGShader>(rhi->Device->Get());
     if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
         return -1;
 
-    auto texture = MakeShared<WGTexture>(rhi->Device.Get(), rhi->Queue);
+    auto texture = MakeShared<WGTexture>(rhi->Device->Get(), rhi->Queue);
     if (!texture->Init(currentDir.string() + "Resources/Textures/UVCheck.png"))
         return -1;
 
-    auto material = MakeShared<WGMaterial>(rhi->Device.Get(), shader);
-    material->Init(rhi->SurfaceConfig, rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, { texture });
+    auto material = MakeShared<WGMaterial>(rhi->Device->Get(), shader);
+    material->Init(rhi->SurfaceConfig, rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, rhi->Multisample->Enabled, { texture });
 
-    auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device.Get(), rhi->Queue);
+    auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device->Get(), rhi->Queue);
     vertexBuffer->Init(vertices, indices);
 
     auto mesh = MakeShared<WGMesh>(vertexBuffer, material);
@@ -70,6 +71,10 @@ int main(int argc, char** argv)
             rhi->GInput->UpdateEvent(e);
             rhi->GCamera->Inputs(e);
         };
+    rhi->OnMsaaEnabledChange = [&](UniquePtr<WGMultisample>& multisample)
+    {
+        mesh->Material->UpdatePipeline();
+    };
     rhi->OnRender = [&](WGPURenderPassEncoder pass, WGPUQueue queue)
         {
             mesh->Draw(pass);

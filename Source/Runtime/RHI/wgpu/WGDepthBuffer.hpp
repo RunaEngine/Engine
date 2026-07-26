@@ -6,11 +6,14 @@
 class WGDepthBuffer : Object
 {
 public:
+    bool& MSAAEnabled;
     WGPUTexture DepthTexture = nullptr;
     WGPUTextureView DepthTextureView = nullptr;
     WGPUSampler DepthTextureSampler = nullptr;
 
-    WGDepthBuffer() = default;
+    WGDepthBuffer(bool& msaaEnabled) : MSAAEnabled(msaaEnabled)
+    {
+    }
     ~WGDepthBuffer() override = default;
 
     void Init(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig)
@@ -29,7 +32,7 @@ public:
             .size = extend,
             .format = WGPUTextureFormat_Depth32FloatStencil8,
             .mipLevelCount = 1,
-            .sampleCount = 1
+            .sampleCount = MSAAEnabled ? uint8_t(4) : uint8_t(1)
         };
 
         DepthTexture = wgpuDeviceCreateTexture(device, &depthDesc);
@@ -66,6 +69,8 @@ public:
         if (DepthTextureView) wgpuTextureViewRelease(DepthTextureView);
         if (DepthTexture) wgpuTextureRelease(DepthTexture);
 
-        DepthTexture = nullptr; DepthTextureView = nullptr; DepthTextureSampler = nullptr;
+        DepthTexture = nullptr;
+        DepthTextureView = nullptr;
+        DepthTextureSampler = nullptr;
     }
 };

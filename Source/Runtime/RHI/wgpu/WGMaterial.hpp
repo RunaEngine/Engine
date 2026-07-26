@@ -3,8 +3,6 @@
 #include "Engine/Core/Object.hpp"
 #include "Runtime/RHI/wgpu/WGShader.hpp"
 #include "Runtime/RHI/wgpu/WGTexture.hpp"
-#include "Runtime/Utils/Logs.hpp"
-#include "Runtime/Utils/System.hpp"
 #include <webgpu/wgpu.h>
 
 
@@ -27,10 +25,11 @@ public:
         Deinit();
     }
 
-    void Init(WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout, WGPUBindGroup& cameraBindGroup, const std::vector<SharedPtr<WGTexture>>& textures = {})
+    void Init(WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout,
+              WGPUBindGroup& cameraBindGroup, bool& msaaEnabled, const std::vector<SharedPtr<WGTexture>>& textures = {})
     {
         Textures = textures;
-        Pipeline = MakeUnique<WGPipeline>(Device, surfaceConfig, cameraBindGroupLayout, cameraBindGroup);
+        Pipeline = MakeUnique<WGPipeline>(Device, surfaceConfig, cameraBindGroupLayout, cameraBindGroup, msaaEnabled);
         Pipeline->Init(Shader, Textures);
     }
 
@@ -38,5 +37,10 @@ public:
     {
         Pipeline->Deinit();
         Shader->Deinit();
+    }
+
+    void UpdatePipeline()
+    {
+        Pipeline->Init(Shader, Textures);
     }
 };

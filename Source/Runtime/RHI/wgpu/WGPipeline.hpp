@@ -5,7 +5,6 @@
 #include "Runtime/RHI/wgpu/WGShader.hpp"
 #include "Runtime/RHI/wgpu/WGTexture.hpp"
 #include <webgpu/wgpu.h>
-#include <cstring>
 
 
 class WGPipeline : Object
@@ -13,7 +12,7 @@ class WGPipeline : Object
 private:
     WGPUDevice Device = nullptr;
     WGPUSurfaceConfiguration& SurfaceConfig;
-    
+
 public:
     WGPUPrimitiveState PrimitiveState = {};
     WGPUColorTargetState ColorTarget = {};
@@ -23,10 +22,15 @@ public:
     WGPUDepthStencilState DepthStencil = {};
     WGPUBindGroupLayout& CameraBindGroupLayout;
     WGPUBindGroup& CameraBindGroup;
+    bool& MSAAEnabled;
     WGPUPipelineLayout PipelineLayout = nullptr;
     WGPURenderPipeline RenderPipeline = nullptr;
 
-    WGPipeline(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout, WGPUBindGroup& cameraBindGroup) : Device(device), SurfaceConfig(surfaceConfig), CameraBindGroupLayout(cameraBindGroupLayout), CameraBindGroup(cameraBindGroup)
+    WGPipeline(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout,
+               WGPUBindGroup& cameraBindGroup, bool& msaaEnabled) : Device(device), SurfaceConfig(surfaceConfig),
+                                                 CameraBindGroupLayout(cameraBindGroupLayout),
+                                                 CameraBindGroup(cameraBindGroup),
+                                                 MSAAEnabled(msaaEnabled)
     {
     }
 
@@ -45,7 +49,8 @@ public:
 
         for (auto& texture : textures)
         {
-            if (texture && texture->TextureBindGroupLayout) {
+            if (texture && texture->TextureBindGroupLayout)
+            {
                 pipelineBindGroupLayouts.push_back(texture->TextureBindGroupLayout);
             }
         }
@@ -72,7 +77,7 @@ public:
             .primitive = PrimitiveState,
             .depthStencil = &DepthStencil,
             .multisample = {
-                .count = 1,
+                .count = MSAAEnabled ? uint8_t(4) : uint8_t(1),
                 .mask = (uint32_t)~0,
                 .alphaToCoverageEnabled = false
             },
@@ -142,7 +147,6 @@ private:
 
     void CreatePrimitiveState()
     {
-        
         WGPUPrimitiveStateExtras primitiveExtra = {
             .polygonMode = WGPUPolygonMode_Fill,
             .conservative = false

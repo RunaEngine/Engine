@@ -13,6 +13,7 @@ private:
     uint64_t Size = 0;
     WGPUBufferUsage Usage = WGPUBufferUsage_None;
     bool Uploaded = false;
+
 public:
     WGBuffer(WGPUDevice device, WGPUQueue queue) : Device(device), Queue(queue)
     {
