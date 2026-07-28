@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         return -1;
 
     auto texture = MakeShared<WGTexture>(rhi->Device, rhi->Queue);
-    if (!texture->Init(currentDir.string() + "Resources/Textures/Stone.jpg"))
+    if (!texture->Init(currentDir.string() + "Resources/Textures/UVCheck.png"))
         return -1;
 
     auto material = MakeShared<WGMaterial>(rhi->Device, rhi->Queue, shader);
