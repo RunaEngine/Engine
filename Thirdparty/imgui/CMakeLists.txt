@@ -66,15 +66,15 @@ add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC ${IMGUI_SOURCE_DIR} ${IMGUI_SOURCE_DIR}/backends)
 target_link_libraries(imgui
         PUBLIC
-        SDL3::SDL3
-        wgpu_native
+        SDL3::SDL3-shared
+        dawn::webgpu_dawn
         #glad
         #vulkan
 )
 
 target_compile_definitions(imgui
         PUBLIC
-        IMGUI_IMPL_WEBGPU_BACKEND_WGPU
+        IMGUI_IMPL_WEBGPU_BACKEND_DAWN
 )
 
 set_target_properties(imgui PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)

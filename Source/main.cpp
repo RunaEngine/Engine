@@ -10,51 +10,43 @@ int main(int argc, char** argv)
 {
     const std::vector<WGVertex> vertices = 
     {
-        WGVertex {.Position = {-0.5f, 0.5f, 0.0f }, .TexCoord = {0.0f, 1.0f} },
-        WGVertex {.Position = { 0.5f, 0.5f, 0.0f }, .TexCoord = {1.0f, 1.0f} },
-        WGVertex {.Position = {-0.5f, -0.5f, 0.0f }, .TexCoord = {0.0f, 0.0f} },
-        WGVertex {.Position = { 0.5f, -0.5f, 0.0f }, .TexCoord = {1.0f, 0.0f} },
-
-        WGVertex {.Position = {-0.5f, 0.5f, -0.5f }, .TexCoord = {0.0f, 1.0f} },
-        WGVertex {.Position = { 0.5f, 0.5f, -0.5f }, .TexCoord = {1.0f, 1.0f} },
-        WGVertex {.Position = {-0.5f, -0.5f, -0.5f }, .TexCoord = {0.0f, 0.0f} },
-        WGVertex {.Position = { 0.5f, -0.5f, -0.5f }, .TexCoord = {1.0f, 0.0f} },
+        WGVertex {.Position = {-500.0f, 0.0f, 500.0f }, .TexCoord = {0.0f, 100.0f} },
+        WGVertex {.Position = { 500.0f, 0.0f, 500.0f }, .TexCoord = {100.0f, 100.0f} },
+        WGVertex {.Position = {-500.0f, 0.0f, -500.0f }, .TexCoord = {0.0f, 0.0f} },
+        WGVertex {.Position = { 500.0f, 0.0f, -500.0f }, .TexCoord = {100.0f, 0.0f} },
     };
 
     const std::vector<uint32_t> indices =
     {
         0, 1, 2,
         2, 1, 3,
-
-        4, 5, 6,
-        6, 5, 7,
     };
 
     auto currentDir = GetBaseDir();
 
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(/*WGPUInstanceBackend_Vulkan*/))
+    if (!rhi->Init(/*wgpu::BackendType::Vulkan*/))
         return -1;
-    rhi->Multisample->Enabled = true;
+    rhi->Multisample->Enabled = false;
 
-    auto shader = MakeShared<WGShader>(rhi->Device->Get());
+    auto shader = MakeShared<WGShader>(rhi->Device);
     if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
         return -1;
 
-    auto texture = MakeShared<WGTexture>(rhi->Device->Get(), rhi->Queue);
-    if (!texture->Init(currentDir.string() + "Resources/Textures/UVCheck.png"))
+    auto texture = MakeShared<WGTexture>(rhi->Device, rhi->Queue);
+    if (!texture->Init(currentDir.string() + "Resources/Textures/Stone.jpg"))
         return -1;
 
-    auto material = MakeShared<WGMaterial>(rhi->Device->Get(), shader);
-    material->Init(rhi->SurfaceConfig, rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, rhi->Multisample->Enabled, { texture });
+    auto material = MakeShared<WGMaterial>(rhi->Device, rhi->Queue, shader);
+    material->Init(rhi->SurfaceConfig, rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, rhi->Multisample->Enabled, { texture }, true);
 
-    auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device->Get(), rhi->Queue);
+    auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device, rhi->Queue);
     vertexBuffer->Init(vertices, indices);
 
     auto mesh = MakeShared<WGMesh>(vertexBuffer, material);
     //mesh->Init(material, vertexBuffer);
 
-    rhi->GCamera->Position = glm::vec3(0.0f, 1.0f, 2.0f);
+    rhi->GCamera->Position = glm::vec3(0.0f, -10.0f, 0.0f);
 
     bool shouldClose = false;
     rhi->GEvent->OnEvent = [&](SDL_Event& e)
@@ -75,7 +67,7 @@ int main(int argc, char** argv)
     {
         mesh->Material->UpdatePipeline();
     };
-    rhi->OnRender = [&](WGPURenderPassEncoder pass, WGPUQueue queue)
+    rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)
         {
             mesh->Draw(pass);
         };

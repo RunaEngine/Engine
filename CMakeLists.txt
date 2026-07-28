@@ -70,8 +70,8 @@ target_link_libraries(Runa
         #GRAPHICS LIBRARY
         #vulkan
         #vma
-        wgpu_native
-        SDL3-static
+        dawn::webgpu_dawn
+        SDL3::SDL3
         sdlwgpu
         #glad
         glm-header-only
@@ -93,12 +93,15 @@ target_link_libraries(Runa
 
 function(copy_target_shared_dlls target)
         foreach(lib IN LISTS ARGN)
-                if(${lib} STREQUAL "wgpu_native")
-                        add_custom_command(TARGET ${target} POST_BUILD
+                if(${lib} STREQUAL "dawn")
+                    if (WIN32)
+                        add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
                                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                                        "${WGPU_BINARY}"
-                                        $<TARGET_FILE_DIR:${target}>
+                                "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/dxil.dll"
+                                "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/dxcompiler.dll"
+                                $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>
                         )
+                    endif()
                 elseif(TARGET ${lib})
                         add_custom_command(TARGET ${target} POST_BUILD
                                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -113,9 +116,9 @@ function(copy_target_shared_dlls target)
 endfunction()
 
 copy_target_shared_dlls(Runa
-        #slang
+        dawn
         miniz
-        wgpu_native
+        #wgpu_native
 )
 
 #include(Content/Content.cmake)

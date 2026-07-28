@@ -1,57 +1,54 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 
 class WGMultisample : Object
 {
 public:
     bool Enabled = true;
     bool PreviousEnabled = Enabled;
-    WGPUTexture Texture = nullptr;
-    WGPUTextureView TextureView = nullptr;
+    wgpu::Texture Texture = nullptr;
+    wgpu::TextureView TextureView = nullptr;
 
     WGMultisample() = default;
     ~WGMultisample() override = default;
 
-    void Init(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig)
+    void Init(wgpu::Device device, wgpu::SurfaceConfiguration& surfaceConfig)
     {
         Deinit();
 
-        WGPUExtent3D extend = {
+        wgpu::Extent3D extend = {
             .width = surfaceConfig.width,
             .height = surfaceConfig.height,
             .depthOrArrayLayers = 1
         };
 
-        WGPUTextureDescriptor msaaDesc = {
-            .usage = WGPUTextureUsage_RenderAttachment,
-            .dimension = WGPUTextureDimension_2D,
+        wgpu::TextureDescriptor msaaDesc = {
+            .usage = wgpu::TextureUsage::RenderAttachment,
+            .dimension = wgpu::TextureDimension::e2D,
             .size = extend,
             .format = surfaceConfig.format,
             .mipLevelCount = 1,
             .sampleCount = 4
         };
 
-        Texture = wgpuDeviceCreateTexture(device, &msaaDesc);
+        Texture = device.CreateTexture(&msaaDesc);
 
-        WGPUTextureViewDescriptor msaaViewDesc = {
+        wgpu::TextureViewDescriptor msaaViewDesc = {
             .format = surfaceConfig.format,
-            .dimension = WGPUTextureViewDimension_2D,
+            .dimension = wgpu::TextureViewDimension::e2D,
             .baseMipLevel = 0,
             .mipLevelCount = 1,
             .baseArrayLayer = 0,
             .arrayLayerCount = 1,
         };
-        TextureView = wgpuTextureCreateView(Texture, &msaaViewDesc);
+        TextureView = Texture.CreateView(&msaaViewDesc);
     }
 
     void Deinit()
     {
-        if (TextureView) wgpuTextureViewRelease(TextureView);
-        if (Texture) wgpuTextureRelease(Texture);
-
-        Texture = nullptr;
         TextureView = nullptr;
+        Texture = nullptr;
     }
 };

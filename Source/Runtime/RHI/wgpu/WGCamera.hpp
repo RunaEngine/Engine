@@ -27,8 +27,8 @@ class WGCamera : public Object
     int Height = 0;
 
 public:
-    WGPUBindGroupLayout CameraBindGroupLayout = nullptr;
-    WGPUBindGroup CameraBindGroup = nullptr;
+    wgpu::BindGroupLayout CameraBindGroupLayout = nullptr;
+    wgpu::BindGroup CameraBindGroup = nullptr;
 
     glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 Rotation = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -36,41 +36,41 @@ public:
 
     float Fovdeg = 60.f;
     float NearPlane = 0.1f;
-    float FarPlane = 100.f;
+    float FarPlane = 500.f;
 
     float Speed = 4.0f;
     float Sensitivity = 120.0f;
 
-    WGCamera(WGPUDevice device, WGPUQueue queue, SDL_Window* window, SharedPtr<Input> input) : Window(window),
+    WGCamera(wgpu::Device device, wgpu::Queue queue, SDL_Window* window, SharedPtr<Input> input) : Window(window),
         GInput(input), CameraBuffer(device, queue)
     {
-        CameraBuffer.Init(sizeof(glm::mat4), WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst);
+        CameraBuffer.Init(sizeof(glm::mat4), wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst);
 
-        WGPUBindGroupLayoutEntry cameraLayoutEntry = {};
+        wgpu::BindGroupLayoutEntry cameraLayoutEntry = {};
         cameraLayoutEntry.binding = 0;
-        cameraLayoutEntry.visibility = WGPUShaderStage_Vertex;
-        cameraLayoutEntry.buffer.type = WGPUBufferBindingType_Uniform;
+        cameraLayoutEntry.visibility = wgpu::ShaderStage::Vertex;
+        cameraLayoutEntry.buffer.type = wgpu::BufferBindingType::Uniform;
         cameraLayoutEntry.buffer.hasDynamicOffset = false;
         cameraLayoutEntry.buffer.minBindingSize = sizeof(glm::mat4);
 
-        WGPUBindGroupLayoutDescriptor cameraLayoutDesc = {};
+        wgpu::BindGroupLayoutDescriptor cameraLayoutDesc = {};
         cameraLayoutDesc.entryCount = 1;
         cameraLayoutDesc.entries = &cameraLayoutEntry;
 
-        CameraBindGroupLayout = wgpuDeviceCreateBindGroupLayout(device, &cameraLayoutDesc);
+        CameraBindGroupLayout = device.CreateBindGroupLayout(&cameraLayoutDesc);
 
-        WGPUBindGroupEntry cameraBindGroupEntry = {};
+        wgpu::BindGroupEntry cameraBindGroupEntry = {};
         cameraBindGroupEntry.binding = 0;
         cameraBindGroupEntry.buffer = CameraBuffer.Get();
         cameraBindGroupEntry.offset = 0;
         cameraBindGroupEntry.size = sizeof(glm::mat4);
 
-        WGPUBindGroupDescriptor cameraBindGroupDesc = {};
+        wgpu::BindGroupDescriptor cameraBindGroupDesc = {};
         cameraBindGroupDesc.layout = CameraBindGroupLayout;
         cameraBindGroupDesc.entryCount = 1;
         cameraBindGroupDesc.entries = &cameraBindGroupEntry;
 
-        CameraBindGroup = wgpuDeviceCreateBindGroup(device, &cameraBindGroupDesc);
+        CameraBindGroup = device.CreateBindGroup(&cameraBindGroupDesc);
     }
 
     void UpdateMatrix()

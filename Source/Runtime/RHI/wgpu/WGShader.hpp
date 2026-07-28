@@ -2,18 +2,19 @@
 
 #include "Engine/Core/Object.hpp"
 #include "Runtime/Utils/System.hpp"
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 
 class WGShader : Object
 {
 private:
-    WGPUDevice Device = nullptr;
-    WGPUShaderModule Shader = nullptr;
+    wgpu::Device Device;
     std::string_view VertexEntry = "vs_main";
     std::string_view FragmentEntry = "fs_main";
 
 public:
-    WGShader(WGPUDevice device) : Device(device)
+    wgpu::ShaderModule Shader = nullptr;
+
+    WGShader(wgpu::Device device) : Device(device)
     {
     }
 
@@ -30,41 +31,27 @@ public:
         {
             return false;
         }
+        wgpu::ShaderSourceWGSL shaderSource = {};
+        shaderSource.sType = wgpu::SType::ShaderSourceWGSL;
+        shaderSource.code.data = wgsl.data();
+        shaderSource.code.length = wgsl.size();
 
-        WGPUShaderSourceWGSL shaderSource = {
-            .chain = {
-                .next = nullptr,
-                .sType = WGPUSType_ShaderSourceWGSL
-            },
-            .code = {
-                .data = wgsl.data(),
-                .length = wgsl.size()
-            }
-        };
+        wgpu::ShaderModuleDescriptor shaderDesc = {};
+        shaderDesc.nextInChain = (wgpu::ChainedStruct*)&shaderSource;
+        shaderDesc.label.data = filename.data();
+        shaderDesc.label.length = filename.size();
 
-        WGPUShaderModuleDescriptor shaderDesc = {
-            .nextInChain = (WGPUChainedStruct*)&shaderSource,
-            .label = {
-                .data = filename.data(),
-                .length = filename.size()
-            }
-        };
-
-        Shader = wgpuDeviceCreateShaderModule(
-            Device,
-            &shaderDesc
-        );
+        Shader = Device.CreateShaderModule(&shaderDesc);
 
         return Shader != nullptr;
     }
 
     void Deinit()
     {
-        if (Shader) wgpuShaderModuleRelease(Shader);
         Shader = nullptr;
     }
 
-    WGPUShaderModule Get() { return Shader; }
+    wgpu::ShaderModule& Get() { return Shader; }
 
     bool IsValid() const
     {

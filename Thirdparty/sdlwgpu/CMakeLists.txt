@@ -10,7 +10,7 @@ target_include_directories(sdlwgpu
 )
 target_link_libraries(sdlwgpu
         PUBLIC
-        SDL3-static
-        wgpu_native
+        SDL3::SDL3-shared
+        dawn::webgpu_dawn
 )
 set_target_properties(sdlwgpu PROPERTIES FOLDER "Thirdparty")

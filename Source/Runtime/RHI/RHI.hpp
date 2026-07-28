@@ -9,11 +9,9 @@
 #include "Runtime/RHI/wgpu/WGCamera.hpp"
 #include "Runtime/RHI/wgpu/WGMultisample.hpp"
 #include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
-#include "Runtime/RHI/wgpu/WGAdapter.hpp"
-#include "Runtime/RHI/wgpu/WGDevice.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
 #include <sdl3webgpu.h>
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 #include <SDL3/SDL.h>
 
 
@@ -29,24 +27,21 @@ public:
     SharedPtr<Tick> GTick = MakeShared<Tick>();
 
     SDL_Window* Window = nullptr;
-    WGPUSurface Surface = nullptr;
-    WGPUInstance Instance = nullptr;
-    UniquePtr<WGAdapter> Adapter = nullptr;
-    UniquePtr<WGDevice> Device = nullptr;
-    WGPUTextureFormat SurfaceFormat = {};
-    WGPUSurfaceConfigurationExtras SurfaceExtras = {};
-    WGPUSurfaceConfiguration SurfaceConfig = {};
+    wgpu::Surface Surface;
+    wgpu::Instance Instance;
+    wgpu::Adapter Adapter;
+    wgpu::Device Device;
+    wgpu::TextureFormat SurfaceFormat = {};
+    wgpu::SurfaceConfiguration SurfaceConfig = {};
     UniquePtr<WGMultisample> Multisample = nullptr;
     UniquePtr<WGDepthBuffer> DepthBuffer = nullptr;
-    WGPUQueue Queue = nullptr;
+    wgpu::Queue Queue;
 
     std::function<void(UniquePtr<WGMultisample>&)> OnMsaaEnabledChange;
-    std::function<void(WGPURenderPassEncoder, WGPUQueue)> OnRender;
+    std::function<void(wgpu::RenderPassEncoder&, wgpu::Queue&)> OnRender;
 
     RHI()
     {
-        Adapter = MakeUnique<WGAdapter>();
-        Device = MakeUnique<WGDevice>();
         Multisample = MakeUnique<WGMultisample>();
         DepthBuffer = MakeUnique<WGDepthBuffer>(Multisample->Enabled);
     }
@@ -56,7 +51,7 @@ public:
         Deinit();
     }
 
-    bool Init(WGPUInstanceBackend backend = WGPUInstanceBackend_Primary)
+    bool Init(wgpu::BackendType backend = wgpu::BackendType::Null)
     {
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
@@ -70,10 +65,13 @@ public:
             return false;
         }
 
+        SDL_WindowFlags windowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
+        if (backend == wgpu::BackendType::Vulkan)
+            windowFlags |= SDL_WINDOW_VULKAN;
         Window = SDL_CreateWindow(
             ENGINE_NAME,
             1024, 576,
-            SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE
+            windowFlags
         );
         if (!Window)
         {
@@ -83,78 +81,132 @@ public:
         }
 
         // Instance
-        std::string_view os = SDL_GetPlatform();
+        wgpu::InstanceFeatureName featureNames[] = {
+            wgpu::InstanceFeatureName::TimedWaitAny
+        };
+        wgpu::InstanceDescriptor instanceDescriptor = {
+            .requiredFeatureCount = sizeof(featureNames) / sizeof(featureNames[0]),
+            .requiredFeatures = featureNames,
+        };
+        Instance = wgpu::CreateInstance(&instanceDescriptor);
 
-        WGPUInstanceExtras extras = {};
-        extras.chain.sType = (WGPUSType)WGPUSType_InstanceExtras;
-        extras.chain.next = nullptr;
-        if ((backend == WGPUInstanceBackend_Primary || backend == WGPUInstanceBackend_All) && os == "Windows")
+        // Surface
+        Surface = wgpu::Surface::Acquire(SDL_GetWGPUSurface(Instance.Get(), Window));
+
+        // Adapter
+        wgpu::RequestAdapterOptions adapterOptions = {};
+        std::string_view os = SDL_GetPlatform();
+        if (backend == wgpu::BackendType::Null || backend == wgpu::BackendType::Undefined)
         {
-            extras.backends = WGPUInstanceBackend_DX12;
+            if (os == "Windows")
+            {
+                adapterOptions.backendType = wgpu::BackendType::D3D12;
+            }
+            else if (os == "Linux" || os == "Android")
+            {
+                adapterOptions.backendType = wgpu::BackendType::Vulkan;
+            }
+            else
+            {
+                adapterOptions.backendType = wgpu::BackendType::Metal;
+            }
         }
         else
         {
-            extras.backends = backend;
+            adapterOptions.backendType = backend;
         }
+        auto adapterFuture = Instance.RequestAdapter(
+            &adapterOptions,
+            wgpu::CallbackMode::WaitAnyOnly,
+            [](wgpu::RequestAdapterStatus status,
+               wgpu::Adapter adapter,
+               const char* message,
+               RHI* userdata)
+            {
+                if (status == wgpu::RequestAdapterStatus::Success)
+                {
+                    userdata->Adapter = adapter;
+                }
+                else
+                {
+                    Logs::Error("Failed to get adapter: %s\n", message);
+                }
+            },
+            this
+        );
 
-
-        WGPUInstanceDescriptor desc = {};
-        desc.nextInChain = &extras.chain;
-
-        Instance = wgpuCreateInstance(&desc);
-        if (!Instance)
+        wgpu::FutureWaitInfo adapterWaitInfo = {.future = adapterFuture};
+        wgpu::WaitStatus adapterWaitStatus = Instance.WaitAny(1, &adapterWaitInfo, UINT64_MAX);
+        if (adapterWaitStatus != wgpu::WaitStatus::Success)
         {
-            Logs::Error("Failed to init wgpu instance");
-            Deinit();
+            Logs::Error("Failed to get adapter");
             return false;
         }
 
-        // Surface
-        Surface = SDL_GetWGPUSurface(Instance, Window);
-        if (!Surface)
-        {
-            Logs::RuntimeError("Failed to create wgpu surface");
-            Deinit();
-            return false;
-        }
-
-        // Adapter
-        if (!Adapter->Init(Instance, Surface))
-        {
-            Deinit();
-            return false;
-        }
-        WGPUAdapterInfo adapterInfo = {};
-
-        wgpuAdapterGetInfo(Adapter->Get(), &adapterInfo);
+        wgpu::AdapterInfo adapterInfo = {};
+        Adapter.GetInfo(&adapterInfo);
         Logs::Log("Adapter: %.*s", (int)adapterInfo.device.length, adapterInfo.device.data);
 
         // Device
-        if (!Device->Init(Instance, Adapter->Get()))
+        wgpu::FeatureName requiredFeatures[] = {
+            wgpu::FeatureName::Depth32FloatStencil8,
+        };
+        wgpu::DeviceDescriptor deviceDesc = {};
+        deviceDesc.requiredFeatures = requiredFeatures;
+        deviceDesc.requiredFeatureCount = sizeof(requiredFeatures) / sizeof(requiredFeatures[0]);
+
+        deviceDesc.SetUncapturedErrorCallback(
+            [](const wgpu::Device&, wgpu::ErrorType errorType, wgpu::StringView message)
+            {
+                Logs::Error("Uncaptured device error (%d): %.*s\n",
+                            (int)errorType, (int)message.length, message.data);
+            }
+        );
+        deviceDesc.SetDeviceLostCallback(
+            wgpu::CallbackMode::AllowSpontaneous,
+            [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView message)
+            {
+                Logs::Error("Device lost (reason %d): %.*s\n",
+                            (int)reason, (int)message.length, message.data);
+            }
+        );
+
+        auto deviceFuture = Adapter.RequestDevice(
+            &deviceDesc,
+            wgpu::CallbackMode::WaitAnyOnly,
+            [](wgpu::RequestDeviceStatus status,
+               wgpu::Device receivedDevice,
+               const char* message,
+               RHI* userdata)
+            {
+                if (status == wgpu::RequestDeviceStatus::Success)
+                {
+                    userdata->Device = receivedDevice;
+                }
+                else
+                {
+                    Logs::Error("Failed to get device: %s\n", message);
+                }
+            },
+            this
+        );
+
+        wgpu::FutureWaitInfo deviceWaitInfo = {.future = deviceFuture};
+        wgpu::WaitStatus deviceWaitStatus = Instance.WaitAny(1, &deviceWaitInfo, UINT64_MAX);
+        if (deviceWaitStatus != wgpu::WaitStatus::Success)
         {
-            Deinit();
+            Logs::Error("Failed to get device");
             return false;
         }
 
         // Queue
-        Queue = wgpuDeviceGetQueue(Device->Get());
-        if (!Queue)
-        {
-            Logs::Error("Failed to get queue");
-            Deinit();
-            return false;
-        }
+        Queue = Device.GetQueue();
 
         // Surface
-        WGPUSurfaceCapabilities capabilities = {};
+        wgpu::SurfaceCapabilities capabilities = {};
+        wgpu::ConvertibleStatus status = Surface.GetCapabilities(Adapter, &capabilities);
 
-        WGPUStatus status = wgpuSurfaceGetCapabilities(
-            Surface,
-            Adapter->Get(),
-            &capabilities
-        );
-
-        if (status != WGPUStatus_Success)
+        if (status.status != wgpu::Status::Success)
         {
             Logs::Error("Failed to get surface capabilities");
             return false;
@@ -169,51 +221,39 @@ public:
             Logs::Error("No surface formats available");
             return false;
         }
-        /*
+        ///*
                 for (size_t i = 0; i < capabilities.presentModeCount; i++)
                 {
                     Logs::Log("Present mode: %d", capabilities.presentModes[i]);
                 }
-        */
-        WGPUPresentMode presentMode = WGPUPresentMode_Immediate;
-        SurfaceExtras.chain.sType = (WGPUSType)WGPUSType_SurfaceConfigurationExtras;
-        SurfaceExtras.chain.next = nullptr;
-        SurfaceExtras.desiredMaximumFrameLatency = 2;
+        //*/
+        wgpu::PresentMode presentMode = wgpu::PresentMode::Fifo;
 
         int windowWidth = 1024;
         int windowHeight = 576;
         SDL_GetWindowSize(Window, &windowWidth, &windowHeight);
 
-        SurfaceConfig.nextInChain = (WGPUChainedStruct*)&SurfaceExtras;
-        SurfaceConfig.usage = WGPUTextureUsage_RenderAttachment;
+        SurfaceConfig.usage = wgpu::TextureUsage::RenderAttachment;
         SurfaceConfig.format = SurfaceFormat;
-        SurfaceConfig.device = Device->Get();
+        SurfaceConfig.device = Device;
         SurfaceConfig.width = windowWidth;
         SurfaceConfig.height = windowHeight;
         SurfaceConfig.presentMode = presentMode;
-        SurfaceConfig.alphaMode = WGPUCompositeAlphaMode_Auto;
+        SurfaceConfig.alphaMode = wgpu::CompositeAlphaMode::Auto;
 
-        wgpuSurfaceConfigure(
-            Surface,
-            &SurfaceConfig
-        );
+        Surface.Configure(&SurfaceConfig);
 
-        wgpuSurfaceCapabilitiesFreeMembers(capabilities);
+        //wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
-        GCamera = MakeShared<WGCamera>(Device->Get(), Queue, Window, GInput);
-        Multisample->Init(Device->Get(), SurfaceConfig);
-        DepthBuffer->Init(Device->Get(), SurfaceConfig);
+        GCamera = MakeShared<WGCamera>(Device, Queue, Window, GInput);
+        Multisample->Init(Device, SurfaceConfig);
+        DepthBuffer->Init(Device, SurfaceConfig);
 
         return true;
     }
 
     void Deinit()
     {
-        if (Queue) wgpuQueueRelease(Queue);
-        Device->Deinit();
-        Adapter->Deinit();
-        if (Surface) wgpuSurfaceRelease(Surface);
-        if (Instance) wgpuInstanceRelease(Instance);
         if (Window) SDL_DestroyWindow(Window);
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
@@ -227,8 +267,8 @@ public:
         if (Multisample->Enabled != Multisample->PreviousEnabled)
         {
             Multisample->PreviousEnabled = Multisample->Enabled;
-            Multisample->Init(Device->Get(), SurfaceConfig);
-            DepthBuffer->Init(Device->Get(), SurfaceConfig);
+            Multisample->Init(Device, SurfaceConfig);
+            DepthBuffer->Init(Device, SurfaceConfig);
             if (OnMsaaEnabledChange)
                 OnMsaaEnabledChange(Multisample);
         }
@@ -250,8 +290,8 @@ public:
                 SurfaceConfig.width = e.window.data1;
                 SurfaceConfig.height = e.window.data2;
                 ConfigureSurface();
-                Multisample->Init(Device->Get(), SurfaceConfig);
-                DepthBuffer->Init(Device->Get(), SurfaceConfig);
+                Multisample->Init(Device, SurfaceConfig);
+                DepthBuffer->Init(Device, SurfaceConfig);
             }
             break;
         default:
@@ -262,7 +302,7 @@ public:
 private:
     void ConfigureSurface()
     {
-        if (!Surface || !Device->Get())
+        if (!Surface.Get() || !Device.Get())
         {
             Logs::Error("Cannot configure surface: invalid surface or device");
             return;
@@ -274,63 +314,44 @@ private:
             return;
         }
 
-        wgpuSurfaceConfigure(
-            Surface,
-            &SurfaceConfig
-        );
+        Surface.Configure(&SurfaceConfig);
     }
 
     void Render()
     {
-        WGPUSurfaceTexture output = {};
-
-        wgpuSurfaceGetCurrentTexture(
-            Surface,
-            &output
-        );
+        wgpu::SurfaceTexture output = {};
+        Surface.GetCurrentTexture(&output);
 
         switch (output.status)
         {
-        case WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal:
-        case WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal:
+        case wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal:
+        case wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal:
             break;
-        case WGPUSurfaceGetCurrentTextureStatus_Timeout:
-        case WGPUSurfaceGetCurrentTextureStatus_Error:
+        case wgpu::SurfaceGetCurrentTextureStatus::Timeout:
+        case wgpu::SurfaceGetCurrentTextureStatus::Error:
             Logs::Log("Surface error");
             return;
-        case WGPUSurfaceGetCurrentTextureStatus_Outdated:
+        case wgpu::SurfaceGetCurrentTextureStatus::Outdated:
             Logs::Log("Surface outdated");
             ConfigureSurface();
             return;
-        case WGPUSurfaceGetCurrentTextureStatus_Lost:
+        case wgpu::SurfaceGetCurrentTextureStatus::Lost:
             Logs::RuntimeError("Device lost!");
         default:
             return;
         }
 
-        WGPUTextureView view = wgpuTextureCreateView(
-            output.texture,
-            nullptr
-        );
+        wgpu::TextureView view = output.texture.CreateView();
 
-        if (!view)
-        {
-            Logs::Error("Texture view is null");
-            return;
-        }
+        wgpu::CommandEncoderDescriptor encoderDesc = {};
+        wgpu::CommandEncoder encoder = Device.CreateCommandEncoder();
 
-        WGPUCommandEncoderDescriptor encoderDesc = {};
-        WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(
-            Device->Get(),
-            &encoderDesc
-        );
-
-        WGPURenderPassColorAttachment colorAttachment = {
+        wgpu::RenderPassColorAttachment colorAttachment = {
             .view = Multisample->Enabled ? Multisample->TextureView : view,
             .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
             .resolveTarget = Multisample->Enabled ? view : nullptr,
-            .loadOp = WGPULoadOp_Clear,
-            .storeOp = Multisample->Enabled ? WGPUStoreOp_Discard : WGPUStoreOp_Store,
+            .loadOp = wgpu::LoadOp::Clear,
+            .storeOp = Multisample->Enabled ? wgpu::StoreOp::Discard : wgpu::StoreOp::Store,
             .clearValue = {
                 .r = 0.1,
                 .g = 0.2,
@@ -339,16 +360,16 @@ private:
             }
         };
 
-        WGPURenderPassDepthStencilAttachment depthAtt = {
+        wgpu::RenderPassDepthStencilAttachment depthAtt = {
             .view = DepthBuffer->DepthTextureView,
-            .depthLoadOp = WGPULoadOp_Clear,
-            .depthStoreOp = WGPUStoreOp_Store,
+            .depthLoadOp = wgpu::LoadOp::Clear,
+            .depthStoreOp = wgpu::StoreOp::Store,
             .depthClearValue = 1.0f,
-            .stencilLoadOp = WGPULoadOp_Clear,
-            .stencilStoreOp = WGPUStoreOp_Discard,
+            .stencilLoadOp = wgpu::LoadOp::Clear,
+            .stencilStoreOp = wgpu::StoreOp::Discard,
             .stencilClearValue = 0
         };
-        WGPURenderPassDescriptor renderDesc = {
+        wgpu::RenderPassDescriptor renderDesc = {
             .colorAttachmentCount = 1,
             .colorAttachments = &colorAttachment,
             .depthStencilAttachment = &depthAtt,
@@ -356,22 +377,16 @@ private:
             .timestampWrites = nullptr,
         };
 
-        WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderDesc);
+        wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderDesc);
 
         // Draw call
         if (OnRender)
             OnRender(pass, Queue);
 
-        wgpuRenderPassEncoderEnd(pass);
+        pass.End();
 
-        auto cmdBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
-        wgpuQueueSubmit(Queue, 1, &cmdBuffer);
-        wgpuSurfacePresent(Surface);
-
-        wgpuTextureViewRelease(view);
-        wgpuRenderPassEncoderRelease(pass);
-        wgpuCommandEncoderRelease(encoder);
-        wgpuCommandBufferRelease(cmdBuffer);
-        wgpuTextureRelease(output.texture);
+        wgpu::CommandBuffer cmdBuffer = encoder.Finish();
+        Queue.Submit(1, &cmdBuffer);
+        Surface.Present();
     }
 };

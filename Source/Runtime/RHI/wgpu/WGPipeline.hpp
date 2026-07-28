@@ -4,30 +4,30 @@
 #include "Runtime/RHI/wgpu/WGVertexBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGShader.hpp"
 #include "Runtime/RHI/wgpu/WGTexture.hpp"
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 
 
 class WGPipeline : Object
 {
 private:
-    WGPUDevice Device = nullptr;
-    WGPUSurfaceConfiguration& SurfaceConfig;
+    wgpu::Device Device;
+    wgpu::SurfaceConfiguration& SurfaceConfig;
 
 public:
-    WGPUPrimitiveState PrimitiveState = {};
-    WGPUColorTargetState ColorTarget = {};
-    WGPUBlendState BlendState = {};
-    WGPUVertexBufferLayout VertexLayout = {};
-    WGPUFragmentState FragmentState = {};
-    WGPUDepthStencilState DepthStencil = {};
-    WGPUBindGroupLayout& CameraBindGroupLayout;
-    WGPUBindGroup& CameraBindGroup;
+    wgpu::PrimitiveState PrimitiveState = {};
+    wgpu::ColorTargetState ColorTarget = {};
+    wgpu::BlendState BlendState = {};
+    wgpu::VertexBufferLayout VertexLayout = {};
+    wgpu::FragmentState FragmentState = {};
+    wgpu::DepthStencilState DepthStencil = {};
+    wgpu::BindGroupLayout CameraBindGroupLayout;
+    wgpu::BindGroup CameraBindGroup;
     bool& MSAAEnabled;
-    WGPUPipelineLayout PipelineLayout = nullptr;
-    WGPURenderPipeline RenderPipeline = nullptr;
+    wgpu::PipelineLayout PipelineLayout = nullptr;
+    wgpu::RenderPipeline RenderPipeline = nullptr;
 
-    WGPipeline(WGPUDevice device, WGPUSurfaceConfiguration& surfaceConfig, WGPUBindGroupLayout& cameraBindGroupLayout,
-               WGPUBindGroup& cameraBindGroup, bool& msaaEnabled) : Device(device), SurfaceConfig(surfaceConfig),
+    WGPipeline(wgpu::Device device, wgpu::SurfaceConfiguration& surfaceConfig, wgpu::BindGroupLayout cameraBindGroupLayout,
+               wgpu::BindGroup cameraBindGroup, bool& msaaEnabled) : Device(device), SurfaceConfig(surfaceConfig),
                                                  CameraBindGroupLayout(cameraBindGroupLayout),
                                                  CameraBindGroup(cameraBindGroup),
                                                  MSAAEnabled(msaaEnabled)
@@ -37,14 +37,13 @@ public:
     ~WGPipeline() override
     {
         Deinit();
-        Device = nullptr;
     }
 
     void Init(SharedPtr<WGShader> shader, std::vector<SharedPtr<WGTexture>> textures = {})
     {
         Deinit();
 
-        std::vector<WGPUBindGroupLayout> pipelineBindGroupLayouts;
+        std::vector<wgpu::BindGroupLayout> pipelineBindGroupLayouts;
         pipelineBindGroupLayouts.reserve(textures.size() + 1);
 
         for (auto& texture : textures)
@@ -56,14 +55,14 @@ public:
         }
         pipelineBindGroupLayouts.push_back(CameraBindGroupLayout);
 
-        WGPUPipelineLayoutDescriptor layoutDesc = {
+        wgpu::PipelineLayoutDescriptor layoutDesc = {
             .nextInChain = nullptr,
             .bindGroupLayoutCount = pipelineBindGroupLayouts.size(),
             .bindGroupLayouts = pipelineBindGroupLayouts.empty() ? nullptr : pipelineBindGroupLayouts.data(),
             .immediateSize = 0
         };
 
-        PipelineLayout = wgpuDeviceCreatePipelineLayout(Device, &layoutDesc);
+        PipelineLayout = Device.CreatePipelineLayout(&layoutDesc);
 
         CreateBlendState();
         CreateColorTarget();
@@ -71,7 +70,7 @@ public:
         CreateDepthStencil();
         CreateFragmentState(shader);
 
-        WGPURenderPipelineDescriptor renderDesc = {
+        wgpu::RenderPipelineDescriptor renderDesc = {
             .layout = PipelineLayout,
             .vertex = CreateVertexState(shader),
             .primitive = PrimitiveState,
@@ -84,13 +83,13 @@ public:
             .fragment = &FragmentState,
         };
 
-        RenderPipeline = wgpuDeviceCreateRenderPipeline(Device, &renderDesc);
+        RenderPipeline = Device.CreateRenderPipeline(&renderDesc);
     }
 
     void Deinit()
     {
-        if (RenderPipeline) wgpuRenderPipelineRelease(RenderPipeline);
-        if (PipelineLayout) wgpuPipelineLayoutRelease(PipelineLayout);
+        RenderPipeline = nullptr;
+        PipelineLayout = nullptr;
     }
 
 private:
@@ -99,63 +98,54 @@ private:
         ColorTarget = {
             .format = SurfaceConfig.format,
             .blend = &BlendState,
-            .writeMask = WGPUColorWriteMask_All
+            .writeMask = wgpu::ColorWriteMask::All
         };
     }
 
-    WGPUVertexState CreateVertexState(SharedPtr<WGShader> shader)
+    wgpu::VertexState CreateVertexState(SharedPtr<WGShader> shader)
     {
-        auto layout = WGVertex::GetLayout();
-        WGPUVertexState vertexState = {
-            .module = shader->Get(),
-            .entryPoint = {
-                .data = shader->GetVertexEntry(),
-                .length = static_cast<uint32_t>(std::strlen(shader->GetVertexEntry()))
-            },
-            .bufferCount = 1,
-            .buffers = &layout
-        };
+        VertexLayout = WGVertex::GetLayout();
+
+        wgpu::VertexState vertexState = {};
+        vertexState.module = shader->Get(),
+        vertexState.entryPoint.data = shader->GetVertexEntry(),
+        vertexState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetVertexEntry())),
+        vertexState.bufferCount = 1,
+        vertexState.buffers = &VertexLayout;
+
         return vertexState;
     }
 
     void CreateFragmentState(SharedPtr<WGShader> shader)
     {
-        FragmentState = {
-            .module = shader->Get(),
-            .entryPoint = {
-                .data = shader->GetFragmentEntry(),
-                .length = static_cast<uint32_t>(std::strlen(shader->GetFragmentEntry()))
-            },
-            .targetCount = 1,
-            .targets = &ColorTarget
-        };
+        FragmentState = {};
+        FragmentState.module = shader->Get(),
+        FragmentState.entryPoint.data = shader->GetFragmentEntry(),
+        FragmentState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetFragmentEntry())),
+        FragmentState.targetCount = 1,
+        FragmentState.targets = &ColorTarget;
     }
 
     void CreateBlendState()
     {
         BlendState = {
             .color = {
-                .operation = WGPUBlendOperation_Add,
-                .srcFactor = WGPUBlendFactor_One,
-                .dstFactor = WGPUBlendFactor_Zero
+                .operation = wgpu::BlendOperation::Add,
+                .srcFactor = wgpu::BlendFactor::One,
+                .dstFactor = wgpu::BlendFactor::Zero
             },
             .alpha = {
-                .operation = WGPUBlendOperation_Add,
+                .operation = wgpu::BlendOperation::Add,
             }
         };
     }
 
     void CreatePrimitiveState()
     {
-        WGPUPrimitiveStateExtras primitiveExtra = {
-            .polygonMode = WGPUPolygonMode_Fill,
-            .conservative = false
-        };
         PrimitiveState = {
-            .nextInChain = (WGPUChainedStruct*)&primitiveExtra,
-            .topology = WGPUPrimitiveTopology_TriangleList,
-            .frontFace = WGPUFrontFace_CCW,
-            .cullMode = WGPUCullMode_Back,
+            .topology = wgpu::PrimitiveTopology::TriangleList,
+            .frontFace = wgpu::FrontFace::CCW,
+            .cullMode = wgpu::CullMode::Back,
             .unclippedDepth = false,
         };
     }
@@ -163,9 +153,9 @@ private:
     void CreateDepthStencil()
     {
         DepthStencil = {
-            .format = WGPUTextureFormat_Depth32FloatStencil8,
-            .depthWriteEnabled = WGPUOptionalBool_True,
-            .depthCompare = WGPUCompareFunction_Less
+            .format = wgpu::TextureFormat::Depth32FloatStencil8,
+            .depthWriteEnabled = wgpu::OptionalBool::True,
+            .depthCompare = wgpu::CompareFunction::Less
         };
     }
 };

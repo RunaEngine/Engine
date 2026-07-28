@@ -2,7 +2,7 @@
 
 #include "Engine/Core/Object.hpp"
 #include "Runtime/RHI/wgpu/WGMaterial.hpp"
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 
 
 class WGMesh : Object
@@ -18,49 +18,18 @@ public:
 
     ~WGMesh() override = default;
 
-    void Draw(WGPURenderPassEncoder pass)
+    void Draw(wgpu::RenderPassEncoder& pass)
     {
-        wgpuRenderPassEncoderSetPipeline(pass, Material->Pipeline->RenderPipeline);
+        pass.SetPipeline(Material->Pipeline->RenderPipeline);
         for (auto& texture : Material->Textures)
         {
-            wgpuRenderPassEncoderSetBindGroup(
-                pass,
-                0,
-                texture->TextureBindGroup,
-                0,
-                nullptr
-            );
+            pass.SetBindGroup(0, texture->TextureBindGroup);
         }
 
-        wgpuRenderPassEncoderSetBindGroup(
-            pass,
-            1,
-            Material->Pipeline->CameraBindGroup,
-            0,
-            nullptr
-        );
-        wgpuRenderPassEncoderSetVertexBuffer(
-            pass,
-            0,
-            VertexBuffer->VertexBuffer.Get(),
-            0,
-            VertexBuffer->VertexBuffer.GetSize()
-        );
-        wgpuRenderPassEncoderSetIndexBuffer(
-            pass,
-            VertexBuffer->IndexBuffer.Get(),
-            WGPUIndexFormat_Uint32,
-            0,
-            VertexBuffer->IndexBuffer.GetSize()
-        );
+        pass.SetBindGroup(1, Material->Pipeline->CameraBindGroup);
+        pass.SetVertexBuffer(0, VertexBuffer->VertexBuffer.Get(), 0, VertexBuffer->VertexBuffer.GetSize());
+        pass.SetIndexBuffer(VertexBuffer->IndexBuffer.Get(), wgpu::IndexFormat::Uint32, 0, VertexBuffer->IndexBuffer.GetSize());
         uint32_t indexCount = VertexBuffer->IndexBuffer.GetSize() / sizeof(uint32_t);
-        wgpuRenderPassEncoderDrawIndexed(
-            pass,
-            indexCount,
-            1,
-            0,
-            0,
-            0
-        );
+        pass.DrawIndexed(indexCount, 1, 0, 0, 0);
     }
 };

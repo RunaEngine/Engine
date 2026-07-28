@@ -13,7 +13,9 @@
       "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_DEFAULT_BINARY_CACHE": "$env{VCPKG_ROOT}/cache"
       }
     },
     {
@@ -23,7 +25,8 @@
       "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     },
     {
@@ -32,7 +35,8 @@
       "description": "Default build using Debug",
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     },
     {
@@ -41,7 +45,8 @@
       "description": "Default build using Debug",
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     }
   ]

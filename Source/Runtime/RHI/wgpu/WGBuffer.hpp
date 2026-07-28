@@ -1,21 +1,21 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
-#include <webgpu/wgpu.h>
+#include <dawn/webgpu_cpp.h>
 
 
 class WGBuffer : public Object
 {
 private:
-    WGPUDevice Device = nullptr;
-    WGPUQueue Queue = nullptr;
-    WGPUBuffer Buffer = nullptr;
+    wgpu::Device Device;
+    wgpu::Queue Queue;
+    wgpu::Buffer Buffer = nullptr;
     uint64_t Size = 0;
-    WGPUBufferUsage Usage = WGPUBufferUsage_None;
+    wgpu::BufferUsage Usage = wgpu::BufferUsage::None;
     bool Uploaded = false;
 
 public:
-    WGBuffer(WGPUDevice device, WGPUQueue queue) : Device(device), Queue(queue)
+    WGBuffer(wgpu::Device device, wgpu::Queue queue) : Device(device), Queue(queue)
     {
     }
 
@@ -24,23 +24,20 @@ public:
         Deinit();
     }
 
-    bool Init(uint64_t size, WGPUBufferUsage usage, bool mappedAtCreation = false)
+    bool Init(uint64_t size, wgpu::BufferUsage usage, bool mappedAtCreation = false)
     {
         Deinit();
 
         Usage = usage;
         Size = size;
 
-        WGPUBufferDescriptor desc = {
+        wgpu::BufferDescriptor desc = {
             .usage = usage,
             .size = size,
             .mappedAtCreation = mappedAtCreation
         };
 
-        Buffer = wgpuDeviceCreateBuffer(
-            Device,
-            &desc
-        );
+        Buffer = Device.CreateBuffer(&desc);
 
         return Buffer != nullptr;
     }
@@ -53,13 +50,7 @@ public:
         if (offset + size > Size)
             return false;
 
-        wgpuQueueWriteBuffer(
-            Queue,
-            Buffer,
-            offset,
-            data,
-            size
-        );
+        Queue.WriteBuffer(Buffer, offset, data, size);
 
         Uploaded = true;
 
@@ -69,40 +60,31 @@ public:
     void Destroy()
     {
         if (Buffer)
-            wgpuBufferDestroy(Buffer);
+            Buffer.Destroy();
 
         Uploaded = false;
     }
 
-    void* Map()
+    const void* Map()
     {
-        return wgpuBufferGetMappedRange(
-            Buffer,
-            0,
-            Size
-        );
+
+        return Buffer.GetConstMappedRange(0, Size);
     }
 
     void Unmap()
     {
-        wgpuBufferUnmap(Buffer);
+        Buffer.Unmap();
     }
 
     void Deinit()
     {
-        if (Buffer)
-        {
-            Destroy();
-            wgpuBufferRelease(Buffer);
-
-            Buffer = nullptr;
-        }
+        Buffer = nullptr;
 
         Size = 0;
-        Usage = WGPUBufferUsage_None;
+        Usage = wgpu::BufferUsage::None;
     }
 
-    WGPUBuffer Get() const
+    wgpu::Buffer Get() const
     {
         return Buffer;
     }
@@ -112,7 +94,7 @@ public:
         return Size;
     }
 
-    WGPUBufferUsage GetUsage() const
+    wgpu::BufferUsage GetUsage() const
     {
         return Usage;
     }
