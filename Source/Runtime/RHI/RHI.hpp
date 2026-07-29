@@ -10,6 +10,7 @@
 #include "Runtime/RHI/wgpu/WGMultisample.hpp"
 #include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
+#include "Runtime/RHI/wgpu/WGImgui.hpp"
 #include <sdl3webgpu.h>
 #include <set>
 #include <dawn/webgpu_cpp.h>
@@ -34,12 +35,15 @@ public:
     UniquePtr<WGDepthBuffer> DepthBuffer = nullptr;
     wgpu::Queue Queue;
 
-    //
+    UniquePtr<WGImgui> Imgui = nullptr;
+
+    // Important for pipeline event trigger
     bool PreviousMSAAEnabled = false;
     EAnisotropic PreviousAnisotropic = eDisabled;
 
     std::function<void(UniquePtr<WGMultisample>&)> OnMsaaEnabledChange;
     std::function<void()> OnAnisatropicChange;
+    std::function<void(ImGuiIO&)> OnImguiRender;
     std::function<void(wgpu::RenderPassEncoder&, wgpu::Queue&)> OnRender;
 
     RHI()
@@ -53,7 +57,7 @@ public:
         Deinit();
     }
 
-    bool Init(wgpu::BackendType backend = wgpu::BackendType::Null)
+    bool Init(wgpu::BackendType backend = wgpu::BackendType::Null, bool useImgui = true)
     {
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
@@ -147,7 +151,7 @@ public:
 
         wgpu::AdapterInfo adapterInfo = {};
         Adapter.GetInfo(&adapterInfo);
-        Logs::Log("Adapter: %.*s", (int)adapterInfo.device.length, adapterInfo.device.data);
+        Logs::Warning("Adapter: %.*s", (int)adapterInfo.device.length, adapterInfo.device.data);
 
         // Device
         wgpu::FeatureName requiredFeatures[] = {
@@ -245,24 +249,27 @@ public:
 
         Surface.Configure(&SurfaceConfig);
 
-        //wgpuSurfaceCapabilitiesFreeMembers(capabilities);
-
         GCamera = MakeShared<WGCamera>(Device, Queue, Window);
         Multisample->Init(Device, SurfaceConfig);
         DepthBuffer->Init(Device, SurfaceConfig);
+
+        Imgui = MakeUnique<WGImgui>();
+        Imgui->Init(Window, Device.Get(), (WGPUTextureFormat)SurfaceFormat);
 
         return true;
     }
 
     void Deinit()
     {
-        DepthBuffer->Deinit();
-        Multisample->Deinit();
+        if (Imgui) Imgui->Deinit();
+        if (DepthBuffer) DepthBuffer->Deinit();
+        if (Multisample) Multisample->Deinit();
         Device = nullptr;
         Adapter = nullptr;
         Instance = nullptr;
         Surface = nullptr;
         if (Window) SDL_DestroyWindow(Window);
+        Window = nullptr;
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
             SDL_Quit();
@@ -284,6 +291,8 @@ public:
             PreviousMSAAEnabled = GUserSettings->bMSAAEnabled;
             Multisample->Init(Device, SurfaceConfig);
             DepthBuffer->Init(Device, SurfaceConfig);
+            if (Imgui)
+                Imgui->Reinit(Window, Device.Get(), (WGPUTextureFormat)SurfaceFormat);
             if (OnMsaaEnabledChange)
                 OnMsaaEnabledChange(Multisample);
         }
@@ -293,7 +302,7 @@ public:
             if (OnAnisatropicChange)
                 OnAnisatropicChange();
         }
-        GEvent->Run();
+        GEvent->Run(Imgui->IsInitialized());
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
         Render();
@@ -423,6 +432,19 @@ private:
         // Draw call
         if (OnRender)
             OnRender(pass, Queue);
+
+        if (Imgui->IsInitialized())
+        {
+            ImGui_ImplWGPU_NewFrame();
+            ImGui_ImplSDL3_NewFrame();
+            ImGui::NewFrame();
+
+            if (OnImguiRender) OnImguiRender(ImGui::GetIO());
+
+            ImGui::Render();    
+
+            ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass.Get());
+        }
 
         pass.End();
 

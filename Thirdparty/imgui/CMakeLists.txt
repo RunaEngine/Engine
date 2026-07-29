@@ -25,8 +25,8 @@ set(IMGUI_SOURCES
 
         ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.h
         ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
-        #${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.h
-        #${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.h
+        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
         #${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.h
         #${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )

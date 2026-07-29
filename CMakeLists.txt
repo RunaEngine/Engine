@@ -77,7 +77,7 @@ target_link_libraries(Runa
         glm-header-only
         #slang
         #USER INTERFACE LIBRARY
-        #imgui
+        imgui
         #IMAGE LIBRARY
         stb
         #SDL3_image-shared

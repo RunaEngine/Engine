@@ -73,6 +73,12 @@ int main(int argc, char** argv)
     {
         mesh->Material->UpdatePipeline();
     };
+    rhi->OnImguiRender = [&](ImGuiIO& io)
+    {
+        ImGui::Begin("SDL3 + Dawn");
+        ImGui::Text("Rendered via WebGPU and SDL3!");
+        ImGui::End();
+    };
     rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)
     {
         mesh->Draw(pass);
