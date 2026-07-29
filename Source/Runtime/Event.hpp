@@ -40,3 +40,5 @@ public:
 
     std::function<void(SDL_Event&)> OnEvent;
 };
+
+inline SharedPtr<Event> GEvent = MakeShared<Event>();

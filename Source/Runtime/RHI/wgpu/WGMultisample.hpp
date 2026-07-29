@@ -6,8 +6,6 @@
 class WGMultisample : Object
 {
 public:
-    bool Enabled = true;
-    bool PreviousEnabled = Enabled;
     wgpu::Texture Texture = nullptr;
     wgpu::TextureView TextureView = nullptr;
 

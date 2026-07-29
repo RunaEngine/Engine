@@ -2,34 +2,38 @@
 
 #include "Engine/Core/Object.hpp"
 #include <algorithm>
+#include <set>
+
+class RHI;
 
 enum EWindowMode : uint8_t
 {
-    Fullscreen = 0,
-    Windowed = 1
+    eFullscreen = 0,
+    eWindowed = 1
 };
 
-enum EVSync : uint8_t
+enum EAnisotropic : uint8_t
 {
-    Immediate = 0,
-    Adaptative = 1,
-    TripleBuffering = 2,
-};
-
-enum EMSAASample : uint8_t
-{
-    Disabled = 1,
-    MSAA2x = 2,
-    MSAA4X = 4,
-    MSAA8X = 8,
-    MSAA16X = 16
+    eDisabled = 1,
+    e2X = 1,
+    e4X = 4,
+    e8X = 8,
+    e16X = 16,
 };
 
 class GameUserSettings : public Object
 {
+private:
+    uint16_t FramerateLimit = 0;
+    std::set<wgpu::PresentMode> SupportedPresentMode;
+
+    friend class RHI;
 public:
-    EVSync Vsync = Adaptative;
-    EMSAASample MSAASamples = Disabled;
+    wgpu::PresentMode VSync = wgpu::PresentMode::Fifo;
+
+    bool bMSAAEnabled = false;
+    EAnisotropic Anisotropic = eDisabled;
+    EWindowMode WindowMode = eWindowed;
 
     GameUserSettings() = default;
 
@@ -49,6 +53,10 @@ public:
         return FramerateLimit;
     }
 
-private:
-    uint16_t FramerateLimit = 0;
+    std::set<wgpu::PresentMode> GetSupportedPresentMode() const
+    {
+        return SupportedPresentMode;
+    }
 };
+
+inline SharedPtr<GameUserSettings> GUserSettings = MakeShared<GameUserSettings>();

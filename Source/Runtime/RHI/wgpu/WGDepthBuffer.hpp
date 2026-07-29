@@ -1,19 +1,17 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
+#include "Runtime/Settings.hpp"
 #include <dawn/webgpu_cpp.h>
 
 class WGDepthBuffer : Object
 {
 public:
-    bool& MSAAEnabled;
     wgpu::Texture DepthTexture = nullptr;
     wgpu::TextureView DepthTextureView = nullptr;
     wgpu::Sampler DepthTextureSampler = nullptr;
 
-    WGDepthBuffer(bool& msaaEnabled) : MSAAEnabled(msaaEnabled)
-    {
-    }
+    WGDepthBuffer() = default;
     ~WGDepthBuffer() override = default;
 
     void Init(wgpu::Device device, wgpu::SurfaceConfiguration& surfaceConfig)
@@ -32,7 +30,7 @@ public:
             .size = extend,
             .format = wgpu::TextureFormat::Depth32FloatStencil8,
             .mipLevelCount = 1,
-            .sampleCount = MSAAEnabled ? uint8_t(4) : uint8_t(1)
+            .sampleCount = GUserSettings->bMSAAEnabled ? uint8_t(4) : uint8_t(1)
         };
 
 

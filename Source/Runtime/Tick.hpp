@@ -38,3 +38,5 @@ private:
     uint64_t CurrentTickNS = 0;
     uint64_t DeltaTimeNS = 0;
 };
+
+inline SharedPtr<Tick> GTick = MakeShared<Tick>();

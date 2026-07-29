@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Object.hpp"
+#include "Runtime/Settings.hpp"
 #include "Runtime/RHI/wgpu/WGVertexBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGShader.hpp"
 #include "Runtime/RHI/wgpu/WGTexture.hpp"
@@ -22,15 +23,13 @@ public:
     wgpu::DepthStencilState DepthStencil = {};
     wgpu::BindGroupLayout CameraBindGroupLayout;
     wgpu::BindGroup CameraBindGroup;
-    bool& MSAAEnabled;
     wgpu::PipelineLayout PipelineLayout = nullptr;
     wgpu::RenderPipeline RenderPipeline = nullptr;
 
     WGPipeline(wgpu::Device device, wgpu::SurfaceConfiguration& surfaceConfig, wgpu::BindGroupLayout cameraBindGroupLayout,
-               wgpu::BindGroup cameraBindGroup, bool& msaaEnabled) : Device(device), SurfaceConfig(surfaceConfig),
+               wgpu::BindGroup cameraBindGroup) : Device(device), SurfaceConfig(surfaceConfig),
                                                  CameraBindGroupLayout(cameraBindGroupLayout),
-                                                 CameraBindGroup(cameraBindGroup),
-                                                 MSAAEnabled(msaaEnabled)
+                                                 CameraBindGroup(cameraBindGroup)
     {
     }
 
@@ -76,7 +75,7 @@ public:
             .primitive = PrimitiveState,
             .depthStencil = &DepthStencil,
             .multisample = {
-                .count = MSAAEnabled ? uint8_t(4) : uint8_t(1),
+                .count = GUserSettings->bMSAAEnabled ? uint8_t(4) : uint8_t(1),
                 .mask = (uint32_t)~0,
                 .alphaToCoverageEnabled = false
             },

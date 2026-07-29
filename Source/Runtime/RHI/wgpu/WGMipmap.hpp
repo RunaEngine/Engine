@@ -3,6 +3,7 @@
 #include "Engine/Core/Object.hpp"
 #include "Runtime/RHI/wgpu/WGShader.hpp"
 #include "Runtime/RHI/Utils.hpp"
+#include "Runtime/Settings.hpp"
 #include <dawn/webgpu_cpp.h>
 
 class WGMipmap : Object
@@ -10,21 +11,18 @@ class WGMipmap : Object
 private:
     wgpu::Device Device;
     wgpu::Queue Queue;
-    wgpu::SurfaceConfiguration& SurfaceConfig;
 
 public:
     wgpu::ColorTargetState ColorTarget = {};
     wgpu::FragmentState FragmentState = {};
     wgpu::PrimitiveState PrimitiveState = {};
-    bool& MSAAEnabled;
     wgpu::PipelineLayout MipmapLayout = nullptr;
     wgpu::RenderPipeline Mipmap = nullptr;
     wgpu::Sampler Sampler = nullptr;
     wgpu::ComputePipeline ComputeMipmap = nullptr;
     wgpu::BindGroupLayout MipmapTextureLayout = nullptr;
 
-    WGMipmap(wgpu::Device device, wgpu::Queue queue, wgpu::SurfaceConfiguration& surfaceConfig, bool& msaaEnabled) : Device(device), Queue(queue), SurfaceConfig(surfaceConfig),
-                                                 MSAAEnabled(msaaEnabled)
+    WGMipmap(wgpu::Device device, wgpu::Queue queue) : Device(device), Queue(queue)
     {
     }
 
@@ -70,7 +68,7 @@ public:
             .vertex = CreateVertexState(shader),
             .primitive = PrimitiveState,
             .multisample = {
-                .count = MSAAEnabled ? uint8_t(4) : uint8_t(1),
+                .count = 1,
                 .mask = (uint32_t)~0,
                 .alphaToCoverageEnabled = false
             },

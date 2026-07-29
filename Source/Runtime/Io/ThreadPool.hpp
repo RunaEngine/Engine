@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/Object.hpp"
 #include <BS_thread_pool.hpp>
 
-inline BS::thread_pool GThreadPool;
+inline SharedPtr<BS::thread_pool> GThreadPool = MakeShared<BS::thread_pool>();

@@ -89,3 +89,5 @@ public:
         return axis;
     }
 };
+
+inline SharedPtr<Input> GInput = MakeShared<Input>();

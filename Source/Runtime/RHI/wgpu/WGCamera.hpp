@@ -16,7 +16,6 @@ class WGCamera : public Object
     WGBuffer CameraBuffer;
 
     SDL_Window* Window = nullptr;
-    SharedPtr<Input> GInput = nullptr;
 
     glm::mat4 ViewMatrix = glm::identity<glm::mat4>();
     glm::mat4 ProjMatrix = glm::identity<glm::mat4>();
@@ -41,8 +40,7 @@ public:
     float Speed = 4.0f;
     float Sensitivity = 120.0f;
 
-    WGCamera(wgpu::Device device, wgpu::Queue queue, SDL_Window* window, SharedPtr<Input> input) : Window(window),
-        GInput(input), CameraBuffer(device, queue)
+    WGCamera(wgpu::Device device, wgpu::Queue queue, SDL_Window* window) : Window(window), CameraBuffer(device, queue)
     {
         CameraBuffer.Init(sizeof(glm::mat4), wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst);
 

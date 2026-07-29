@@ -9,10 +9,10 @@ class WGBuffer : public Object
 private:
     wgpu::Device Device;
     wgpu::Queue Queue;
+
     wgpu::Buffer Buffer = nullptr;
     uint64_t Size = 0;
     wgpu::BufferUsage Usage = wgpu::BufferUsage::None;
-    bool Uploaded = false;
 
 public:
     WGBuffer(wgpu::Device device, wgpu::Queue queue) : Device(device), Queue(queue)
@@ -50,30 +50,10 @@ public:
         if (offset + size > Size)
             return false;
 
+
         Queue.WriteBuffer(Buffer, offset, data, size);
 
-        Uploaded = true;
-
         return true;
-    }
-
-    void Destroy()
-    {
-        if (Buffer)
-            Buffer.Destroy();
-
-        Uploaded = false;
-    }
-
-    const void* Map()
-    {
-
-        return Buffer.GetConstMappedRange(0, Size);
-    }
-
-    void Unmap()
-    {
-        Buffer.Unmap();
     }
 
     void Deinit()
@@ -103,9 +83,25 @@ public:
     {
         return Buffer != nullptr;
     }
-
-    bool IsUploaded() const
-    {
-        return Uploaded;
-    }
 };
+
+/*
+    void Destroy()
+    {
+        if (Buffer)
+            Buffer.Destroy();
+
+        Uploaded = false;
+    }
+
+    const void* Map()
+    {
+
+        return Buffer.GetConstMappedRange(0, Size);
+    }
+
+    void Unmap()
+    {
+        Buffer.Unmap();
+    }
+*/

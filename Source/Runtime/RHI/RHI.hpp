@@ -11,20 +11,17 @@
 #include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
 #include <sdl3webgpu.h>
+#include <set>
 #include <dawn/webgpu_cpp.h>
 #include <SDL3/SDL.h>
 
+class GameUserSettings;
 
 class RHI : public Object
 {
-private:
-
 public:
     // Globals
     SharedPtr<WGCamera> GCamera = nullptr;
-    SharedPtr<Event> GEvent = MakeShared<Event>();
-    SharedPtr<Input> GInput = MakeShared<Input>();
-    SharedPtr<Tick> GTick = MakeShared<Tick>();
 
     SDL_Window* Window = nullptr;
     wgpu::Surface Surface;
@@ -37,13 +34,18 @@ public:
     UniquePtr<WGDepthBuffer> DepthBuffer = nullptr;
     wgpu::Queue Queue;
 
+    //
+    bool PreviousMSAAEnabled = false;
+    EAnisotropic PreviousAnisotropic = eDisabled;
+
     std::function<void(UniquePtr<WGMultisample>&)> OnMsaaEnabledChange;
+    std::function<void()> OnAnisatropicChange;
     std::function<void(wgpu::RenderPassEncoder&, wgpu::Queue&)> OnRender;
 
     RHI()
     {
         Multisample = MakeUnique<WGMultisample>();
-        DepthBuffer = MakeUnique<WGDepthBuffer>(Multisample->Enabled);
+        DepthBuffer = MakeUnique<WGDepthBuffer>();
     }
 
     ~RHI()
@@ -221,13 +223,13 @@ public:
             Logs::Error("No surface formats available");
             return false;
         }
-        ///*
-                for (size_t i = 0; i < capabilities.presentModeCount; i++)
-                {
-                    Logs::Log("Present mode: %d", capabilities.presentModes[i]);
-                }
-        //*/
-        wgpu::PresentMode presentMode = wgpu::PresentMode::Fifo;
+
+        for (size_t i = 0; i < capabilities.presentModeCount; i++)
+        {
+            GUserSettings->SupportedPresentMode.insert(capabilities.presentModes[i]);
+        }
+
+        wgpu::PresentMode presentMode = GUserSettings->SupportedPresentMode.size() > 0 ? *GUserSettings->SupportedPresentMode.begin() : wgpu::PresentMode::Immediate;
 
         int windowWidth = 1024;
         int windowHeight = 576;
@@ -245,7 +247,7 @@ public:
 
         //wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
-        GCamera = MakeShared<WGCamera>(Device, Queue, Window, GInput);
+        GCamera = MakeShared<WGCamera>(Device, Queue, Window);
         Multisample->Init(Device, SurfaceConfig);
         DepthBuffer->Init(Device, SurfaceConfig);
 
@@ -254,6 +256,12 @@ public:
 
     void Deinit()
     {
+        DepthBuffer->Deinit();
+        Multisample->Deinit();
+        Device = nullptr;
+        Adapter = nullptr;
+        Instance = nullptr;
+        Surface = nullptr;
         if (Window) SDL_DestroyWindow(Window);
         if (SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)
         {
@@ -264,18 +272,37 @@ public:
     void Pool()
     {
         GTick->UpdateCurrentTick();
-        if (Multisample->Enabled != Multisample->PreviousEnabled)
+
+        uint64_t frameTime = 0;
+        if (GUserSettings->VSync == wgpu::PresentMode::Immediate && GUserSettings->GetFramerateLimit() > 0)
         {
-            Multisample->PreviousEnabled = Multisample->Enabled;
+            frameTime = 1000000000 / GUserSettings->GetFramerateLimit();
+        }
+
+        if (GUserSettings->bMSAAEnabled != PreviousMSAAEnabled)
+        {
+            PreviousMSAAEnabled = GUserSettings->bMSAAEnabled;
             Multisample->Init(Device, SurfaceConfig);
             DepthBuffer->Init(Device, SurfaceConfig);
             if (OnMsaaEnabledChange)
                 OnMsaaEnabledChange(Multisample);
         }
+        if (GUserSettings->Anisotropic != PreviousAnisotropic)
+        {
+            PreviousAnisotropic = GUserSettings->Anisotropic;
+            if (OnAnisatropicChange)
+                OnAnisatropicChange();
+        }
         GEvent->Run();
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
         Render();
+
+        if (frameTime > 0 && frameTime > GTick->ElapsedNS())
+        {
+            SDL_DelayPrecise(frameTime - GTick->ElapsedNS());
+        }
+
         GTick->UpdateDeltaTime();
     }
 
@@ -341,17 +368,31 @@ private:
             return;
         }
 
+        if (GUserSettings->VSync != SurfaceConfig.presentMode)
+        {
+            if (GUserSettings->SupportedPresentMode.find(GUserSettings->VSync) != GUserSettings->SupportedPresentMode.end())
+            {
+                SurfaceConfig.presentMode = GUserSettings->VSync;
+            }
+            else
+            {
+                Logs::Error("Unsupported present mode: %d", (int)GUserSettings->VSync);
+                GUserSettings->VSync = SurfaceConfig.presentMode;
+            }
+            ConfigureSurface();
+            return;
+        }
+
         wgpu::TextureView view = output.texture.CreateView();
 
-        wgpu::CommandEncoderDescriptor encoderDesc = {};
         wgpu::CommandEncoder encoder = Device.CreateCommandEncoder();
 
         wgpu::RenderPassColorAttachment colorAttachment = {
-            .view = Multisample->Enabled ? Multisample->TextureView : view,
+            .view = GUserSettings->bMSAAEnabled ? Multisample->TextureView : view,
             .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-            .resolveTarget = Multisample->Enabled ? view : nullptr,
+            .resolveTarget = GUserSettings->bMSAAEnabled ? view : nullptr,
             .loadOp = wgpu::LoadOp::Clear,
-            .storeOp = Multisample->Enabled ? wgpu::StoreOp::Discard : wgpu::StoreOp::Store,
+            .storeOp = GUserSettings->bMSAAEnabled ? wgpu::StoreOp::Discard : wgpu::StoreOp::Store,
             .clearValue = {
                 .r = 0.1,
                 .g = 0.2,
