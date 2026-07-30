@@ -98,7 +98,6 @@ public:
 
         // Surface
         Surface = WGPUtils::GetWGPUSurfaceFromSDL3(Instance, Window);
-        Logs::Error("Surface ptr: %p", (void*)Surface.Get());
 
         // Adapter
         wgpu::RequestAdapterOptions adapterOptions = {};

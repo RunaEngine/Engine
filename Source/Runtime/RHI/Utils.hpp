@@ -142,7 +142,6 @@ namespace WGPUtils {
                 }
 
                 wgpu::SurfaceSourceWaylandSurface waylandSource = {};
-                waylandSource.sType = wgpu::SType::SurfaceSourceWaylandSurface;
                 waylandSource.display = waylandDisplay;
                 waylandSource.surface = waylandSurface;
 

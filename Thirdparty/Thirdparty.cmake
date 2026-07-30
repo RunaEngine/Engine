@@ -3,7 +3,7 @@ set(THIRDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR})
 #VCPKG
 find_package(SDL3 CONFIG REQUIRED)
 find_package(Dawn CONFIG REQUIRED)
-find_package(OpenZL CONFIG REQUIRED)
+find_package(zstd CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 
 # Dependencies

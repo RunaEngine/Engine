@@ -53,7 +53,7 @@ target_link_libraries(Runa
         #OBJ LIBRARY
         cgltf
         #COMPRESSION
-        OpenZL::openzl
+        zstd::libzstd
         #UTILS
         bsthreadpool
         tomlplusplus::tomlplusplus
