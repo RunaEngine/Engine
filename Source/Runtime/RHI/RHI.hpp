@@ -6,15 +6,15 @@
 #include "Runtime/Input.hpp"
 #include "Runtime/Tick.hpp"
 #include "Runtime/Utils/Logs.hpp"
+#include "Runtime/RHI/Utils.hpp"
 #include "Runtime/RHI/wgpu/WGCamera.hpp"
 #include "Runtime/RHI/wgpu/WGMultisample.hpp"
 #include "Runtime/RHI/wgpu/WGDepthBuffer.hpp"
 #include "Runtime/RHI/wgpu/WGPipeline.hpp"
 #include "Runtime/RHI/wgpu/WGImgui.hpp"
-#include <sdl3webgpu.h>
-#include <set>
 #include <dawn/webgpu_cpp.h>
 #include <SDL3/SDL.h>
+#include <set>
 
 class GameUserSettings;
 
@@ -97,7 +97,8 @@ public:
         Instance = wgpu::CreateInstance(&instanceDescriptor);
 
         // Surface
-        Surface = wgpu::Surface::Acquire(SDL_GetWGPUSurface(Instance.Get(), Window));
+        Surface = WGPUtils::GetWGPUSurfaceFromSDL3(Instance, Window);
+        Logs::Error("Surface ptr: %p", (void*)Surface.Get());
 
         // Adapter
         wgpu::RequestAdapterOptions adapterOptions = {};
@@ -121,12 +122,12 @@ public:
         {
             adapterOptions.backendType = backend;
         }
-        auto adapterFuture = Instance.RequestAdapter(
+        wgpu::Future adapterFuture = Instance.RequestAdapter(
             &adapterOptions,
             wgpu::CallbackMode::WaitAnyOnly,
             [](wgpu::RequestAdapterStatus status,
                wgpu::Adapter adapter,
-               const char* message,
+               wgpu::StringView message,
                RHI* userdata)
             {
                 if (status == wgpu::RequestAdapterStatus::Success)
@@ -135,7 +136,7 @@ public:
                 }
                 else
                 {
-                    Logs::Error("Failed to get adapter: %s\n", message);
+                    Logs::Error("Failed to get adapter: %.*s\n", (int)message.length, message.data);
                 }
             },
             this
@@ -177,12 +178,12 @@ public:
             }
         );
 
-        auto deviceFuture = Adapter.RequestDevice(
+        wgpu::Future deviceFuture = Adapter.RequestDevice(
             &deviceDesc,
             wgpu::CallbackMode::WaitAnyOnly,
             [](wgpu::RequestDeviceStatus status,
                wgpu::Device receivedDevice,
-               const char* message,
+               wgpu::StringView message,
                RHI* userdata)
             {
                 if (status == wgpu::RequestDeviceStatus::Success)
@@ -191,11 +192,12 @@ public:
                 }
                 else
                 {
-                    Logs::Error("Failed to get device: %s\n", message);
+                    Logs::Error("Failed to get device: %.*s\n", (int)message.length, message.data);
                 }
             },
             this
         );
+        
 
         wgpu::FutureWaitInfo deviceWaitInfo = {.future = deviceFuture};
         wgpu::WaitStatus deviceWaitStatus = Instance.WaitAny(1, &deviceWaitInfo, UINT64_MAX);

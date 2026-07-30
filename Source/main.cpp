@@ -1,10 +1,6 @@
-#pragma once
-
-#include "Engine/Engine.hpp"
 #include "Runtime/RHI/RHI.hpp"
-#include "Runtime/RHI/wgpu/WGMesh.hpp"
 #include "Runtime/RHI/wgpu/WGMaterial.hpp"
-#include "Runtime/RHI/wgpu/WGVertexBuffer.hpp"
+#include "Runtime/RHI/wgpu/WGMesh.hpp"
 
 int main(int argc, char** argv)
 {
@@ -25,11 +21,11 @@ int main(int argc, char** argv)
     auto currentDir = GetBaseDir();
 
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(/*wgpu::BackendType::Vulkan*/))
+    if (!rhi->Init(wgpu::BackendType::Vulkan))
         return -1;
     GUserSettings->bMSAAEnabled = true;
     GUserSettings->Anisotropic = e16X;
-    GUserSettings->VSync = wgpu::PresentMode::Fifo;
+    GUserSettings->VSync = wgpu::PresentMode::Mailbox;
 
     auto shader = MakeShared<WGShader>(rhi->Device);
     if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
@@ -48,7 +44,7 @@ int main(int argc, char** argv)
     auto mesh = MakeShared<WGMesh>(vertexBuffer, material);
     //mesh->Init(material, vertexBuffer);
 
-    rhi->GCamera->Position = glm::vec3(0.0f, -10.0f, 0.0f);
+    rhi->GCamera->Position = glm::vec3(0.0f, 5.0f, 0.0f);
 
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
@@ -76,7 +72,7 @@ int main(int argc, char** argv)
     rhi->OnImguiRender = [&](ImGuiIO& io)
     {
         ImGui::Begin("SDL3 + Dawn");
-        ImGui::Text("Rendered via WebGPU and SDL3!");
+        ImGui::Text("Rendered via WebGPU and SDL3! %.2f fps", io.Framerate);
         ImGui::End();
     };
     rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)

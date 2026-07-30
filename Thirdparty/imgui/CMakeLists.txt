@@ -66,7 +66,7 @@ add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC ${IMGUI_SOURCE_DIR} ${IMGUI_SOURCE_DIR}/backends)
 target_link_libraries(imgui
         PUBLIC
-        SDL3::SDL3-shared
+        SDL3::SDL3
         dawn::webgpu_dawn
         #glad
         #vulkan

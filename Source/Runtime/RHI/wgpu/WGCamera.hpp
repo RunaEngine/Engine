@@ -31,7 +31,7 @@ public:
 
     glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 Rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 Orientantion = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 Orientantion = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));
 
     float Fovdeg = 60.f;
     float NearPlane = 0.1f;
@@ -83,7 +83,7 @@ public:
         ViewMatrix = glm::lookAt(Position, Position + Orientantion, Up);
         ProjMatrix = glm::perspective(glm::radians(Fovdeg), static_cast<float>(Width) / h, NearPlane, FarPlane);
 
-        ProjMatrix[1][1] *= -1;
+        //ProjMatrix[1][1] *= -1;
 
         glm::mat4 viewProj = ProjMatrix * ViewMatrix;
         CameraBuffer.Upload(
@@ -98,10 +98,14 @@ public:
     void Inputs(SDL_Event& event)
     {
         glm::vec2 vec = GInput->InputVector(SDL_SCANCODE_D, SDL_SCANCODE_A, SDL_SCANCODE_W, SDL_SCANCODE_S);
-        Rotation = glm::normalize(glm::cross(Orientantion, Up)) * vec.x + glm::normalize(Orientantion) * vec.y;
 
-        float y_axis = GInput->InputAxis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
-        Rotation.y = -y_axis;
+        glm::vec3 forward = glm::normalize(Orientantion);
+        glm::vec3 right = glm::normalize(glm::cross(forward, Up));
+
+        Rotation = right * vec.x + forward * vec.y;
+
+        float verticalAxis = GInput->InputAxis(SDL_SCANCODE_SPACE, SDL_SCANCODE_LCTRL);
+        Rotation += Up * verticalAxis;
         Speed = GInput->KeyPressed(SDL_SCANCODE_LSHIFT) ? 8.0f : 4.0f;
 
         if (GInput->MouseButtonPressed(SDL_BUTTON_RIGHT))
@@ -118,7 +122,7 @@ public:
                 float rotX = Sensitivity * (float)yrel / Height;
                 float rotY = Sensitivity * (float)xrel / Width;
 
-                glm::vec3 newOrientation = glm::rotate(Orientantion, glm::radians(rotX),
+                glm::vec3 newOrientation = glm::rotate(Orientantion, glm::radians(-rotX),
                                                        glm::normalize(glm::cross(Orientantion, Up)));
 
                 if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))

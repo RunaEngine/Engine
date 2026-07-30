@@ -26,32 +26,7 @@ set(ENGINE_PATH_VERSION ${CMAKE_PROJECT_VERSION_PATCH})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/Source/Config.hpp @ONLY)
 
 file(GLOB_RECURSE ENGINE_SOURCES Source/*.hpp Source/*.cpp)
-#[[
-list(REMOVE_ITEM ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Main.cpp")
 
-add_library(Runtime STATIC ${ENGINE_SOURCES})
-target_include_directories(Runtime
-        PUBLIC
-        Source
-)
-target_link_libraries(Runtime
-        PUBLIC
-        #GRAPHICS LIBRARY
-        vulkan
-        SDL3-static
-        glad
-        glm
-        #USER INTERFACE LIBRARY
-        imgui
-        #IMAGE LIBRARY
-        SDL3_image-static
-        #OBJ LIBRARY
-        assimp
-)
-set_target_properties(Runtime PROPERTIES FOLDER "/Source" LINKER_LANGUAGE CXX)
-
-list(APPEND ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Main.cpp")
-]]
 add_executable(Runa)
 target_include_directories(Runa
         PUBLIC
@@ -68,25 +43,20 @@ target_sources(Runa
 target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
-        #vulkan
-        #vma
         dawn::webgpu_dawn
         SDL3::SDL3
-        sdlwgpu
-        #glad
         glm-header-only
-        #slang
         #USER INTERFACE LIBRARY
         imgui
         #IMAGE LIBRARY
         stb
-        #SDL3_image-shared
         #OBJ LIBRARY
         cgltf
         #COMPRESSION
-        zlibstatic
+        OpenZL::openzl
         #UTILS
         bsthreadpool
+        tomlplusplus::tomlplusplus
 )
 
 #set_target_properties(Runa PROPERTIES FOLDER "Source")
@@ -117,8 +87,6 @@ endfunction()
 
 copy_target_shared_dlls(Runa
         dawn
-        miniz
-        #wgpu_native
 )
 
 #include(Content/Content.cmake)

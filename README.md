@@ -20,6 +20,9 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
 
 - [CMake 3.28 or above](https://cmake.org/download/)
 
+- [vcpkg](https://github.com/microsoft/vcpkg)
+  - Add `VCPKG_ROOT=/path/to/vcpkg` to enviroment variables
+
 - Windows only
   - Build With Visual Studio 2026
     - [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/)
@@ -36,11 +39,12 @@ Runa is a set of tools planned to be an open-source, real-time, cross-platform 2
     - autoconf 
     - automake 
     - libtool
-    - Perl
-    - Zlib
+    - perl
+    - zlib
   
   - Python packages
-    - Jinja2 ``` pip install Jinja2 ```
+    - jinja2 ``` pip install Jinja2 ```
+    - passlib ``` pip install passlib ```
   
 ## Setup Repository
 
@@ -57,7 +61,7 @@ git clone https://github.com/Cesio137/Runa.git
 #### Any OS
 
 * Setup Project.
-  * Create a `build` folder and open terminal inside.
+  * Create a `Build` folder and open terminal inside.
   * Commands to generate project
     * ```bash
       cmake .. --preset=debug
