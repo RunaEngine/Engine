@@ -14,8 +14,7 @@
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_DEFAULT_BINARY_CACHE": "$env{VCPKG_ROOT}/cache"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     },
     {
@@ -23,10 +22,11 @@
       "displayName": "msvc-release",
       "description": "Visual Studio build using Release",
       "generator": "Visual Studio 18 2026",
-      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Debug",
+      "binaryDir": "${sourceDir}/Build/${hostSystemName}/Release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_CONFIG": "Release"
       }
     },
     {
@@ -46,7 +46,8 @@
       "binaryDir": "${sourceDir}/Build/${hostSystemName}/Release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_CONFIG": "Release"
       }
     }
   ]

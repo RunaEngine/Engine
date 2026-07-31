@@ -1,35 +1,36 @@
 {
   "name": "runa",
   "version-string": "0.0.1",
+  "builtin-baseline": "6d811e820d5dd72ce2cc8a35596a33e67572d83d",
   "dependencies": [
     {
       "name": "dawn",
-      "features": ["d3d12", "vulkan"],
+      "features": [ "d3d12", "vulkan" ],
       "platform": "windows"
     },
     {
       "name": "dawn",
-      "features": ["vulkan", "wayland"],
+      "features": [ "vulkan", "wayland" ],
       "platform": "linux"
     },
     {
       "name": "dawn",
-      "features": ["vulkan"],
+      "features": [ "vulkan" ],
       "platform": "android"
     },
     {
       "name": "dawn",
-      "features": ["metal"],
+      "features": [ "metal" ],
       "platform": "osx | ios"
     },
     {
       "name": "sdl3",
-      "features": ["vulkan"],
+      "features": [ "vulkan" ],
       "platform": "!linux"
     },
     {
       "name": "sdl3",
-      "features": ["wayland", "vulkan"],
+      "features": [ "wayland", "vulkan" ],
       "platform": "linux"
     },
     {

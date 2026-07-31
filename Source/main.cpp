@@ -21,11 +21,11 @@ int main(int argc, char** argv)
     auto currentDir = GetBaseDir();
 
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(/*wgpu::BackendType::Vulkan*/))
+    if (!rhi->Init(/*wgpu::BackendType::Vulkan, true*/))
         return -1;
     GUserSettings->bMSAAEnabled = true;
     GUserSettings->Anisotropic = e16X;
-    GUserSettings->VSync = wgpu::PresentMode::Mailbox;
+    GUserSettings->VSync = wgpu::PresentMode::Immediate;
 
     auto shader = MakeShared<WGShader>(rhi->Device);
     if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     rhi->OnImguiRender = [&](ImGuiIO& io)
     {
         ImGui::Begin("SDL3 + Dawn");
-        ImGui::Text("Rendered via WebGPU and SDL3! %.2f fps", io.Framerate);
+        ImGui::Text("Rendered via WebGPU and SDL3!\nFPS: %.2f", io.Framerate);
         ImGui::End();
     };
     rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)

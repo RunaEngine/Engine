@@ -255,7 +255,10 @@ public:
         DepthBuffer->Init(Device, SurfaceConfig);
 
         Imgui = MakeUnique<WGImgui>();
-        Imgui->Init(Window, Device.Get(), (WGPUTextureFormat)SurfaceFormat);
+        if (useImgui)
+        {
+            Imgui->Init(Window, Device.Get(), (WGPUTextureFormat)SurfaceFormat);
+        }
 
         return true;
     }
@@ -292,7 +295,7 @@ public:
             PreviousMSAAEnabled = GUserSettings->bMSAAEnabled;
             Multisample->Init(Device, SurfaceConfig);
             DepthBuffer->Init(Device, SurfaceConfig);
-            if (Imgui)
+            if (Imgui->IsInitialized())
                 Imgui->Reinit(Window, Device.Get(), (WGPUTextureFormat)SurfaceFormat);
             if (OnMsaaEnabledChange)
                 OnMsaaEnabledChange(Multisample);
