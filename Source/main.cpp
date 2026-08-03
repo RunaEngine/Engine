@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     auto currentDir = GetBaseDir();
 
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(/*wgpu::BackendType::Vulkan, true*/))
+    if (!rhi->Init(/*wgpu::BackendType::D3D12, true*/))
         return -1;
     GUserSettings->bMSAAEnabled = true;
     GUserSettings->Anisotropic = e16X;
