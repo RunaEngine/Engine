@@ -1,7 +1,7 @@
 FetchContent_Declare(
         ocornutImgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG v1.92.9-docking
+        GIT_TAG v1.92.9b-docking
 )
 
 FetchContent_MakeAvailable(ocornutImgui)

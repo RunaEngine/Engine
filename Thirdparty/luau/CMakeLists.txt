@@ -1,7 +1,7 @@
 FetchContent_Declare(
         luaulang
         GIT_REPOSITORY https://github.com/luau-lang/luau.git
-        GIT_TAG 0.731
+        GIT_TAG 0.732
 )
 
 set(LUAU_BUILD_CLI OFF CACHE INTERNAL "")
