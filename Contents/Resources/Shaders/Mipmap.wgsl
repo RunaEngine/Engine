@@ -1,30 +1,31 @@
-struct VertexOutput {
-    @builtin(position) clip_position: vec4<f32>,
-    @location(0) uv: vec2<f32>,
-};
-
 @group(0)
 @binding(0)
-var tex: texture_2d<f32>;
+var src: texture_storage_2d<rgba8unorm, read>;
 @group(0)
 @binding(1)
-var tex_sampler: sampler;
+var dst: texture_storage_2d<rgba8unorm, write>;
 
-@vertex
-fn vs_main(
-    @builtin(vertex_index) in_vertex_index: u32,
-) -> VertexOutput {
-    var out: VertexOutput;
-    // Create fullscreen triangle
-    let x = f32((in_vertex_index << 1u) & 2u);
-    let y = f32(in_vertex_index & 2u);
-    out.clip_position = vec4<f32>(x * 2.0 - 1.0, y * 2.0 - 1.0, 0.0, 1.0);
-    out.uv = vec2<f32>(x, 1.0 - y);
-    return out;
-}
+@compute
+@workgroup_size(16, 16, 1)
+fn compute_mipmap(
+    @builtin(global_invocation_id) gid: vec3<u32>,
+) {
+    let dstPos = gid.xy;
+    let srcPos = gid.xy * 2;
 
-@fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let sample = textureSample(tex, tex_sampler, in.uv);
-    return sample;
+    let dim = textureDimensions(src);
+
+    if (dstPos.x >= dim.x || dstPos.y >= dim.y) {
+        return;
+    }
+
+    let t00 = textureLoad(src, srcPos);
+    let t01 = textureLoad(src, srcPos + vec2(0, 1));
+    let t10 = textureLoad(src, srcPos + vec2(1, 0));
+    let t11 = textureLoad(src, srcPos + vec2(1, 1));
+
+    // A simple linear average of 4 adjacent pixels
+    let t = (t00 + t01 + t10 + t11) * 0.25;
+
+    textureStore(dst, dstPos, t);
 }

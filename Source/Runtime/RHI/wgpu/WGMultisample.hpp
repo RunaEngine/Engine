@@ -23,6 +23,7 @@ public:
         };
 
         wgpu::TextureDescriptor msaaDesc = {
+            .label = WGPUtils::StrToWgpuStringView("MSAATexture"),
             .usage = wgpu::TextureUsage::RenderAttachment,
             .dimension = wgpu::TextureDimension::e2D,
             .size = extend,

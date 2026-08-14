@@ -52,6 +52,7 @@ public:
         cameraLayoutEntry.buffer.minBindingSize = sizeof(glm::mat4);
 
         wgpu::BindGroupLayoutDescriptor cameraLayoutDesc = {};
+        cameraLayoutDesc.label = WGPUtils::StrToWgpuStringView("CameraBindGroupLayout");
         cameraLayoutDesc.entryCount = 1;
         cameraLayoutDesc.entries = &cameraLayoutEntry;
 

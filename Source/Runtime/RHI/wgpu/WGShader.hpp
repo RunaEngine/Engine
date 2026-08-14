@@ -8,8 +8,9 @@ class WGShader : Object
 {
 private:
     wgpu::Device Device;
-    std::string_view VertexEntry = "vs_main";
-    std::string_view FragmentEntry = "fs_main";
+    inline static std::string ComputeEntry = "compute_mipmap";
+    inline static std::string VertexEntry = "vs_main";
+    inline static std::string FragmentEntry = "fs_main";
 
 public:
     wgpu::ShaderModule Shader = nullptr;
@@ -33,13 +34,12 @@ public:
         }
         wgpu::ShaderSourceWGSL shaderSource = {};
         shaderSource.sType = wgpu::SType::ShaderSourceWGSL;
-        shaderSource.code.data = wgsl.data();
-        shaderSource.code.length = wgsl.size();
+        shaderSource.code = WGPUtils::StrToWgpuStringView(wgsl);
 
         wgpu::ShaderModuleDescriptor shaderDesc = {};
+        shaderDesc.label = WGPUtils::StrToWgpuStringView(filename);
         shaderDesc.nextInChain = (wgpu::ChainedStruct*)&shaderSource;
-        shaderDesc.label.data = filename.data();
-        shaderDesc.label.length = filename.size();
+		shaderDesc.label = WGPUtils::StrToWgpuStringView(filename);
 
         Shader = Device.CreateShaderModule(&shaderDesc);
 
@@ -58,13 +58,18 @@ public:
         return Shader != nullptr;
     }
 
-    const char* GetVertexEntry() const
+    const std::string& GetComputeEntry() const
     {
-        return VertexEntry.data();
+        return ComputeEntry;
     }
 
-    const char* GetFragmentEntry() const
+    const std::string& GetVertexEntry() const
     {
-        return FragmentEntry.data();
+        return VertexEntry;
+    }
+
+    const std::string& GetFragmentEntry() const
+    {
+        return FragmentEntry;
     }
 };

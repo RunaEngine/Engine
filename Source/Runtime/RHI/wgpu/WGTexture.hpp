@@ -63,6 +63,7 @@ public:
         };
 
         wgpu::TextureDescriptor textureDesc = {
+            .label = WGPUtils::StrToWgpuStringView(filepath.filename().string()),
             .usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst | wgpu::TextureUsage::CopySrc,
             .dimension = wgpu::TextureDimension::e2D,
             .size = extend,
@@ -87,6 +88,7 @@ public:
 
 
         wgpu::TextureViewDescriptor viewDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureView"),
             .format = wgpu::TextureFormat::RGBA8Unorm,
             .dimension = wgpu::TextureViewDimension::e2D,
             .baseMipLevel = 0,
@@ -97,6 +99,7 @@ public:
         TextureView = Texture.CreateView(&viewDesc);
 
         wgpu::SamplerDescriptor samplerDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureSampler"),
             .addressModeU = addressMode,
             .addressModeV = addressMode,
             .addressModeW = addressMode,
@@ -129,6 +132,7 @@ public:
         };
         bindGroupLayoutEntries[1] = bindGroupSamplerEntry;
         wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = {
+            .label = WGPUtils::StrToWgpuStringView((filepath.filename().string() + "_bind_group_layout")),
             .entryCount = static_cast<uint32_t>(bindGroupLayoutEntries.size()),
             .entries = bindGroupLayoutEntries.data(),
         };
@@ -146,6 +150,7 @@ public:
         };
         bindGroupEntries[1] = bindGroupSamplerView;
         wgpu::BindGroupDescriptor bindGroupDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureBindGroup"),
             .layout = TextureBindGroupLayout,
             .entryCount = static_cast<uint32_t>(bindGroupEntries.size()),
             .entries = bindGroupEntries.data()
@@ -174,6 +179,7 @@ public:
     void UpdateSampler()
     {
         wgpu::SamplerDescriptor samplerDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureSampler"),
             .addressModeU = AddressMode,
             .addressModeV = AddressMode,
             .addressModeW = AddressMode,
@@ -206,6 +212,7 @@ public:
         };
         bindGroupLayoutEntries[1] = bindGroupSamplerEntry;
         wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureBindGroupLayout"),
             .entryCount = static_cast<uint32_t>(bindGroupLayoutEntries.size()),
             .entries = bindGroupLayoutEntries.data(),
         };
@@ -223,6 +230,7 @@ public:
         };
         bindGroupEntries[1] = bindGroupSamplerView;
         wgpu::BindGroupDescriptor bindGroupDesc = {
+            .label = WGPUtils::StrToWgpuStringView("TextureBindGroup"),
             .layout = TextureBindGroupLayout,
             .entryCount = static_cast<uint32_t>(bindGroupEntries.size()),
             .entries = bindGroupEntries.data()

@@ -32,6 +32,7 @@ public:
         Size = size;
 
         wgpu::BufferDescriptor desc = {
+            .label = WGPUtils::StrToWgpuStringView("WGBuffer"),
             .usage = usage,
             .size = size,
             .mappedAtCreation = mappedAtCreation

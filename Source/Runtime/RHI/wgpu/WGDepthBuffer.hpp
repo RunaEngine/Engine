@@ -37,6 +37,7 @@ public:
         DepthTexture = device.CreateTexture(&depthDesc);
 
         wgpu::TextureViewDescriptor depthViewDesc = {
+            .label = WGPUtils::StrToWgpuStringView("DepthTextureView"),
             .format = wgpu::TextureFormat::Depth32FloatStencil8,
             .dimension = wgpu::TextureViewDimension::e2D,
             .baseMipLevel = 0,

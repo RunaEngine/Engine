@@ -56,9 +56,10 @@ public:
 
         wgpu::PipelineLayoutDescriptor layoutDesc = {
             .nextInChain = nullptr,
+            .label = WGPUtils::StrToWgpuStringView("PipelineLayout"),
             .bindGroupLayoutCount = pipelineBindGroupLayouts.size(),
             .bindGroupLayouts = pipelineBindGroupLayouts.empty() ? nullptr : pipelineBindGroupLayouts.data(),
-            .immediateSize = 0
+            .immediateSize = 0,
         };
 
         PipelineLayout = Device.CreatePipelineLayout(&layoutDesc);
@@ -107,8 +108,7 @@ private:
 
         wgpu::VertexState vertexState = {};
         vertexState.module = shader->Get(),
-        vertexState.entryPoint.data = shader->GetVertexEntry(),
-        vertexState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetVertexEntry())),
+        vertexState.entryPoint = WGPUtils::StrToWgpuStringView(shader->GetVertexEntry()),
         vertexState.bufferCount = 1,
         vertexState.buffers = &VertexLayout;
 
@@ -119,8 +119,7 @@ private:
     {
         FragmentState = {};
         FragmentState.module = shader->Get(),
-        FragmentState.entryPoint.data = shader->GetFragmentEntry(),
-        FragmentState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetFragmentEntry())),
+        FragmentState.entryPoint = WGPUtils::StrToWgpuStringView(shader->GetFragmentEntry()),
         FragmentState.targetCount = 1,
         FragmentState.targets = &ColorTarget;
     }

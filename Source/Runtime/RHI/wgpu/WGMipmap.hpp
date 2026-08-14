@@ -13,11 +13,7 @@ private:
     wgpu::Queue Queue;
 
 public:
-    wgpu::ColorTargetState ColorTarget = {};
-    wgpu::FragmentState FragmentState = {};
-    wgpu::PrimitiveState PrimitiveState = {};
     wgpu::PipelineLayout MipmapLayout = nullptr;
-    wgpu::RenderPipeline Mipmap = nullptr;
     wgpu::Sampler Sampler = nullptr;
     wgpu::ComputePipeline ComputeMipmap = nullptr;
     wgpu::BindGroupLayout MipmapTextureLayout = nullptr;
@@ -37,17 +33,20 @@ public:
 
         wgpu::BindGroupLayoutEntry bindGroupLayoutEntries[2] = {};
         bindGroupLayoutEntries[0].binding = 0;
-        bindGroupLayoutEntries[0].visibility = wgpu::ShaderStage::Fragment;
-        bindGroupLayoutEntries[0].texture.sampleType = wgpu::TextureSampleType::Float;
-        bindGroupLayoutEntries[0].texture.viewDimension = wgpu::TextureViewDimension::e2D;
-        bindGroupLayoutEntries[0].texture.multisampled = false;
+        bindGroupLayoutEntries[0].visibility = wgpu::ShaderStage::Compute;
+		bindGroupLayoutEntries[0].storageTexture.access = wgpu::StorageTextureAccess::ReadOnly;
+		bindGroupLayoutEntries[0].storageTexture.format = wgpu::TextureFormat::RGBA8Unorm;
+		bindGroupLayoutEntries[0].storageTexture.viewDimension = wgpu::TextureViewDimension::e2D;
 
         bindGroupLayoutEntries[1].binding = 1;
-        bindGroupLayoutEntries[1].visibility = wgpu::ShaderStage::Fragment;
-        bindGroupLayoutEntries[1].sampler.type = wgpu::SamplerBindingType::Filtering;
+        bindGroupLayoutEntries[1].visibility = wgpu::ShaderStage::Compute;
+        bindGroupLayoutEntries[1].storageTexture.access = wgpu::StorageTextureAccess::WriteOnly;
+        bindGroupLayoutEntries[1].storageTexture.format = wgpu::TextureFormat::RGBA8Unorm;
+        bindGroupLayoutEntries[1].storageTexture.viewDimension = wgpu::TextureViewDimension::e2D;
 
         wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = {
-            .entryCount = 2,
+			.label = WGPUtils::StrToWgpuStringView("MipmapTextureLayout"),
+            .entryCount = sizeof(bindGroupLayoutEntries) / sizeof(wgpu::BindGroupLayoutEntry),
             .entries = bindGroupLayoutEntries,
         };
         MipmapTextureLayout = Device.CreateBindGroupLayout(&bindGroupLayoutDesc);
@@ -58,24 +57,16 @@ public:
         };
 
         MipmapLayout = Device.CreatePipelineLayout(&layoutDesc);
-
-        CreateColorTarget();
-        CreatePrimitiveState();
-        CreateFragmentState(shader);
-
-        wgpu::RenderPipelineDescriptor renderDesc = {
+        wgpu::ComputePipelineDescriptor computeDesc = {
+			.label = WGPUtils::StrToWgpuStringView("ComputeMipmap"),
             .layout = MipmapLayout,
-            .vertex = CreateVertexState(shader),
-            .primitive = PrimitiveState,
-            .multisample = {
-                .count = 1,
-                .mask = (uint32_t)~0,
-                .alphaToCoverageEnabled = false
-            },
-            .fragment = &FragmentState
+			.compute = {
+				.module = shader->Get(),
+				.entryPoint = WGPUtils::StrToWgpuStringView(shader->GetComputeEntry()),
+			},
         };
 
-        Mipmap = Device.CreateRenderPipeline(&renderDesc);
+        ComputeMipmap = Device.CreateComputePipeline(&computeDesc);
 
         wgpu::SamplerDescriptor SamplerDesc = {};
         SamplerDesc.minFilter = wgpu::FilterMode::Linear;
@@ -88,14 +79,14 @@ public:
 
     void Deinit()
     {
-        Mipmap = nullptr;
+        ComputeMipmap = nullptr;
         MipmapLayout = nullptr;
         MipmapTextureLayout = nullptr;
     }
 
     void GenerateMipmaps(SharedPtr<WGTexture> texture)
     {
-        if (texture->Texture.GetFormat() != wgpu::TextureFormat::RGBA8Unorm)
+        if (texture->Texture.GetFormat() != wgpu::TextureFormat::RGBA8Unorm && texture->Texture.GetFormat() != wgpu::TextureFormat::RGBA8UnormSrgb)
         {
             Logs::Error("Texture format not supported for mipmap generation");
             return;
@@ -110,7 +101,7 @@ public:
 
         wgpu::TextureView texView;
         wgpu::Texture tempTexture;
-        if (texture->Texture.GetUsage() & wgpu::TextureUsage::RenderAttachment)
+        if (texture->Texture.GetUsage() & wgpu::TextureUsage::StorageBinding)
         {
             tempTexture = texture->Texture;
 
@@ -124,7 +115,8 @@ public:
         else
         {
             wgpu::TextureDescriptor texDescriptor = {
-                .usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst | wgpu::TextureUsage::CopySrc,
+				.label = WGPUtils::StrToWgpuStringView("TempTextureForMipmap"),
+                .usage = wgpu::TextureUsage::StorageBinding | wgpu::TextureUsage::CopyDst | wgpu::TextureUsage::CopySrc,
                 .dimension = texture->Texture.GetDimension(),
                 .size = texture->GetExtent(),
                 .format = WGPUtils::RemoveSrgbSuffix(texture->Texture.GetFormat()),
@@ -154,126 +146,68 @@ public:
             tempTexture = temp;
         }
 
-        for (uint32_t mip = 1; mip < texture->GetMipLevelCount(); mip++)
-        {
-            wgpu::TextureViewDescriptor dstViewDesc = {
-                .format = WGPUtils::RemoveSrgbSuffix(texture->Texture.GetFormat()),
-                .baseMipLevel = mip,
-                .mipLevelCount = 1,
-            };
-            wgpu::TextureView dstView = tempTexture.CreateView(&dstViewDesc);
+		wgpu::Extent3D extent = texture->GetExtent();
+        uint32_t dispatchX = (extent.width + 15) / 16;
+        uint32_t dispatchY = (extent.height + 15) / 16;
 
-            wgpu::BindGroupEntry entries[2] = {
-                {
-                    .binding = 0,
-                    .textureView = texView,
-                },
-                {
-                    .binding = 1,
-                    .sampler = Sampler,
-                },
-            };
+        auto pass = encoder.BeginComputePass();
+        pass.SetPipeline(ComputeMipmap);
 
-            wgpu::BindGroupDescriptor bindGroupDesc = {
-                .layout = Mipmap.GetBindGroupLayout(0),
-                .entryCount = 2,
-                .entries = entries,
-            };
-            wgpu::BindGroup textureBindGroup = Device.CreateBindGroup(&bindGroupDesc);
+		for (uint32_t mip = 1; mip < texture->GetMipLevelCount(); mip++)
+		{
+			wgpu::TextureViewDescriptor dstViewDesc = {
+				.format = WGPUtils::RemoveSrgbSuffix(texture->Texture.GetFormat()),
+				.baseMipLevel = mip,
+				.mipLevelCount = 1,
+			};
+			wgpu::TextureView dstView = tempTexture.CreateView(&dstViewDesc);
+			wgpu::BindGroupEntry entries[2] = {
+				{
+					.binding = 0,
+					.textureView = texView,
+				},
+				{
+					.binding = 1,
+					.textureView = dstView,
+				},
+			};
+			wgpu::BindGroupDescriptor bindGroupDesc = {
+				.layout = MipmapTextureLayout,
+				.entryCount = 2,
+				.entries = entries,
+			};
+			wgpu::BindGroup textureBindGroup = Device.CreateBindGroup(&bindGroupDesc);
+			pass.SetBindGroup(0, textureBindGroup);
+			pass.DispatchWorkgroups(dispatchX, dispatchY, 1);
+			texView = dstView;
+		}
 
-            wgpu::RenderPassColorAttachment colorAttachment = {
-                .view = dstView,
-                .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-                .resolveTarget = nullptr,
-                .loadOp = wgpu::LoadOp::Clear,
-                .storeOp = wgpu::StoreOp::Store,
-            };
-
-            wgpu::RenderPassDescriptor passDesc = {
-                .colorAttachmentCount = 1,
-                .colorAttachments = &colorAttachment,
-                .depthStencilAttachment = nullptr,
-                .occlusionQuerySet = nullptr,
-                .timestampWrites = nullptr,
-            };
-
-            wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
-            pass.SetPipeline(Mipmap);
-            pass.SetBindGroup(0, textureBindGroup);
-            pass.Draw(3);
-            pass.End();
-
-            texView = dstView;
-        }
+        pass.End();
 
         if (tempTexture)
         {
-            wgpu::Extent3D size = texture->GetExtent();
-
-            for (uint32_t mipLevel = 0; mipLevel < texture->GetMipLevelCount(); mipLevel++)
-            {
-                wgpu::TexelCopyTextureInfo source = {
-                    .texture = tempTexture,
-                    .mipLevel = mipLevel,
-                    .origin = {0, 0, 0},
-                    .aspect = wgpu::TextureAspect::All,
-                };
-
-                wgpu::TexelCopyTextureInfo destination = {
-                    .texture = texture->Texture,
-                    .mipLevel = mipLevel,
-                    .origin = {0, 0, 0},
-                    .aspect = wgpu::TextureAspect::All,
-                };
-
-                encoder.CopyTextureToTexture(&source, &destination, &size);
-
-                size.width /= 2;
-                size.height /= 2;
-            }
+			wgpu::Extent3D size = texture->GetExtent();
+			for (uint32_t mipLevel = 0; mipLevel < texture->GetMipLevelCount(); mipLevel++)
+			{
+				wgpu::TexelCopyTextureInfo source = {
+					.texture = tempTexture,
+					.mipLevel = mipLevel,
+					.origin = {0, 0, 0},
+					.aspect = wgpu::TextureAspect::All,
+				};
+				wgpu::TexelCopyTextureInfo destination = {
+					.texture = texture->Texture,
+					.mipLevel = mipLevel,
+					.origin = {0, 0, 0},
+					.aspect = wgpu::TextureAspect::All,
+				};
+				encoder.CopyTextureToTexture(&source, &destination, &size);
+				size.width /= 2;
+				size.height /= 2;
+			}
         }
 
         wgpu::CommandBuffer cmdBuffer = encoder.Finish();
         Queue.Submit(1, &cmdBuffer);
-    }
-
-private:
-    void CreateColorTarget()
-    {
-        ColorTarget = {
-            .format = wgpu::TextureFormat::RGBA8Unorm,
-        };
-    }
-
-    wgpu::VertexState CreateVertexState(SharedPtr<WGShader> shader)
-    {
-        wgpu::VertexState vertexState = {};
-        vertexState.module = shader->Get();
-        vertexState.entryPoint.data = shader->GetVertexEntry();
-        vertexState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetVertexEntry()));
-        vertexState.bufferCount = 0;
-        vertexState.buffers = nullptr;
-
-        return vertexState;
-    }
-
-    void CreateFragmentState(SharedPtr<WGShader> shader)
-    {
-        FragmentState = {};
-        FragmentState.module = shader->Get(),
-        FragmentState.entryPoint.data = shader->GetFragmentEntry(),
-        FragmentState.entryPoint.length = static_cast<uint32_t>(std::strlen(shader->GetFragmentEntry())),
-        FragmentState.targetCount = 1,
-        FragmentState.targets = &ColorTarget;
-    }
-
-    void CreatePrimitiveState()
-    {
-        PrimitiveState = {
-            .topology = wgpu::PrimitiveTopology::TriangleList,
-            .frontFace = wgpu::FrontFace::CCW,
-            .cullMode = wgpu::CullMode::Back,
-            .unclippedDepth = false,
-        };
     }
 };
