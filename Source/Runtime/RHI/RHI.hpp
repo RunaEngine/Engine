@@ -149,6 +149,8 @@ public:
             return false;
         }
 
+		GUserSettings->Adapter = Adapter;
+
         wgpu::AdapterInfo adapterInfo = {};
         Adapter.GetInfo(&adapterInfo);
         Logs::Warning("Adapter: %.*s", (int)adapterInfo.device.length, adapterInfo.device.data);
@@ -205,6 +207,8 @@ public:
             Logs::Error("Failed to get device");
             return false;
         }
+
+        GUserSettings->Device = Device;
 
         // Queue
         Queue = Device.GetQueue();

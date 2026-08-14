@@ -44,6 +44,9 @@ target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
         dawn::webgpu_dawn
+        dxgi 
+        d3d12
+        vulkan
         SDL3::SDL3
         glm-header-only
         #USER INTERFACE LIBRARY

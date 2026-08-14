@@ -1,8 +1,8 @@
 #pragma once
 
 /* Build Data */
-constexpr const bool ENGINE_BUILD_DEBUG = false;
-constexpr const bool ENGINE_BUILD_RELEASE = true;
+constexpr const bool ENGINE_BUILD_DEBUG = true;
+constexpr const bool ENGINE_BUILD_RELEASE = false;
 
 /* Engine Data */
 constexpr const char* ENGINE_NAME = "Runa";

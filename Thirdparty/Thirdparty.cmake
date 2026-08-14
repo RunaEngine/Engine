@@ -13,6 +13,7 @@ include(ExternalProject)
 set(FETCHCONTENT_QUIET OFF)
 
 #GRAPHICS LIBRARY
+add_subdirectory(${THIRDPARTY_DIR}/vulkan)
 add_subdirectory(${THIRDPARTY_DIR}/glm)
 
 #USER INTERFACE LIBRARY

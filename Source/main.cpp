@@ -1,10 +1,11 @@
 #include "Runtime/RHI/RHI.hpp"
 #include "Runtime/RHI/wgpu/WGMaterial.hpp"
 #include "Runtime/RHI/wgpu/WGMesh.hpp"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
-    const std::vector<WGVertex> vertices = 
+    const std::vector<WGVertex> vertices =
     {
         WGVertex {.Position = {-100.0f, 0.0f, 100.0f }, .TexCoord = {0.0f, 100.0f} },
         WGVertex {.Position = { 100.0f, 0.0f, 100.0f }, .TexCoord = {100.0f, 100.0f} },
@@ -21,11 +22,11 @@ int main(int argc, char** argv)
     auto currentDir = GetBaseDir();
 
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(/*wgpu::BackendType::D3D12, true*/))
+    if (!rhi->Init(wgpu::BackendType::D3D12/*, true*/))
         return -1;
     GUserSettings->bMSAAEnabled = true;
     GUserSettings->Anisotropic = e16X;
-    GUserSettings->VSync = wgpu::PresentMode::Immediate;
+    GUserSettings->VSync = wgpu::PresentMode::Fifo;
 
     auto shader = MakeShared<WGShader>(rhi->Device);
     if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
@@ -48,37 +49,39 @@ int main(int argc, char** argv)
 
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
-    {
-        rhi->UpdateSurface(e);
-        switch (e.type)
         {
-        case SDL_EVENT_QUIT:
-            shouldClose = true;
-            return;
-        default:
-            break;
-        }
-        GInput->UpdateEvent(e);
-        rhi->GCamera->Inputs(e);
-    };
+            rhi->UpdateSurface(e);
+            switch (e.type)
+            {
+            case SDL_EVENT_QUIT:
+                shouldClose = true;
+                return;
+            default:
+                break;
+            }
+            GInput->UpdateEvent(e);
+            rhi->GCamera->Inputs(e);
+        };
     rhi->OnMsaaEnabledChange = [&](UniquePtr<WGMultisample>& multisample)
-    {
-        mesh->Material->UpdatePipeline();
-    };
+        {
+            mesh->Material->UpdatePipeline();
+        };
     rhi->OnAnisatropicChange = [&]()
-    {
-        mesh->Material->UpdatePipeline();
-    };
+        {
+            mesh->Material->UpdatePipeline();
+        };
     rhi->OnImguiRender = [&](ImGuiIO& io)
-    {
-        ImGui::Begin("SDL3 + Dawn");
-        ImGui::Text("Rendered via WebGPU and SDL3!\nFPS: %.2f", io.Framerate);
-        ImGui::End();
-    };
+        {
+            ImGui::Begin("SDL3 + Dawn");
+            ImGui::Text("Rendered via WebGPU and SDL3!\nFPS: %.2f", io.Framerate);
+            WGPUtils::VRAMInfo vramInfo = GUserSettings->GetAdapterVRamInfo();
+            ImGui::Text("Max/Budget/Usage: %llu MB / %llu MB / %llu MB", vramInfo.VideoRam / (1024 * 1024), vramInfo.Budget / (1024 * 1024), vramInfo.Usage / (1024 * 1024));
+            ImGui::End();
+        };
     rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)
-    {
-        mesh->Draw(pass);
-    };
+        {
+            mesh->Draw(pass);
+        };
     while (!shouldClose)
     {
         rhi->Pool();
