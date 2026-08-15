@@ -41,10 +41,15 @@ struct WGVertex
 class WGVertexBuffer : Object
 {
 public:
-    WGBuffer VertexBuffer;
-    WGBuffer IndexBuffer;
+    WGBuffer Buffer;
 
-    WGVertexBuffer(wgpu::Device device, wgpu::Queue queue) : VertexBuffer(device, queue), IndexBuffer(device, queue)
+    uint64_t VertexOffset = 0;
+    uint64_t VertexSize = 0;
+    uint64_t IndexOffset = 0;
+    uint64_t IndexSize = 0;
+    uint32_t IndexCount = 0;
+
+    WGVertexBuffer(wgpu::Device device, wgpu::Queue queue) : Buffer(device, queue)
     {
     }
 
@@ -55,21 +60,29 @@ public:
 
     void Init(const std::vector<WGVertex>& vertices, const std::vector<uint32_t>& indices)
     {
-        VertexBuffer.Init(sizeof(WGVertex) * vertices.size(), wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst);
-        IndexBuffer.Init(sizeof(uint32_t) * indices.size(), wgpu::BufferUsage::Index | wgpu::BufferUsage::CopyDst);
-        if (!vertices.empty())
+        if (vertices.empty() || indices.empty())
         {
-            VertexBuffer.Upload(vertices.data(), sizeof(WGVertex) * vertices.size(), 0);
+            return;
         }
-        if (!indices.empty())
-        {
-            IndexBuffer.Upload(indices.data(), sizeof(uint32_t) * indices.size(), 0);
-        }
+        VertexSize = sizeof(WGVertex) * vertices.size();
+        IndexSize = sizeof(uint32_t) * indices.size();
+        IndexCount = static_cast<uint32_t>(indices.size());
+
+        VertexOffset = 0;
+        IndexOffset = VertexSize;
+
+        uint64_t bufferSize = VertexSize + IndexSize;
+        wgpu::BufferUsage usage = wgpu::BufferUsage::Vertex | wgpu::BufferUsage::Index | wgpu::BufferUsage::CopyDst;
+
+        Buffer.Init(bufferSize, usage);
+        Buffer.Upload(vertices.data(), VertexSize, VertexOffset);
+        Buffer.Upload(indices.data(), IndexSize, IndexOffset);
     }
 
     void Deinit()
     {
-        VertexBuffer.Deinit();
-        IndexBuffer.Deinit();
+		Buffer.Deinit();
+        //VertexBuffer.Deinit();
+        //IndexBuffer.Deinit();
     }
 };

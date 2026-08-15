@@ -44,10 +44,10 @@ target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
         dawn::webgpu_dawn
-        dxgi 
-        d3d12
-        vulkan
         SDL3::SDL3
+        $<$<PLATFORM_ID:Windows>:dxgi>
+        $<$<PLATFORM_ID:Windows>:d3d12>
+        $<$<OR:$<PLATFORM_ID:Windows>,$<PLATFORM_ID:Linux>>:vulkan>
         glm-header-only
         #USER INTERFACE LIBRARY
         imgui

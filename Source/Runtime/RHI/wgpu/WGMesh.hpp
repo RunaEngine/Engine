@@ -27,9 +27,10 @@ public:
         }
 
         pass.SetBindGroup(1, Material->Pipeline->CameraBindGroup);
-        pass.SetVertexBuffer(0, VertexBuffer->VertexBuffer.Get(), 0, VertexBuffer->VertexBuffer.GetSize());
-        pass.SetIndexBuffer(VertexBuffer->IndexBuffer.Get(), wgpu::IndexFormat::Uint32, 0, VertexBuffer->IndexBuffer.GetSize());
-        uint32_t indexCount = VertexBuffer->IndexBuffer.GetSize() / sizeof(uint32_t);
+        pass.SetVertexBuffer(0, VertexBuffer->Buffer.Get(), VertexBuffer->VertexOffset, VertexBuffer->VertexSize);
+        pass.SetIndexBuffer(VertexBuffer->Buffer.Get(), wgpu::IndexFormat::Uint32, VertexBuffer->IndexOffset, VertexBuffer->IndexSize);
+        //uint32_t indexCount = VertexBuffer->IndexBuffer.GetSize() / sizeof(uint32_t);
+        uint32_t indexCount = VertexBuffer->IndexCount;
         pass.DrawIndexed(indexCount, 1, 0, 0, 0);
     }
 };

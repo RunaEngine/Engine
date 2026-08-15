@@ -17,6 +17,7 @@ public:
 
     WGShader(wgpu::Device device) : Device(device)
     {
+
     }
 
     ~WGShader() override
@@ -27,11 +28,13 @@ public:
     bool Init(const std::filesystem::path& filepath)
     {
         auto filename = filepath.filename().string();
+
         std::string wgsl;
         if (!ReadTextFile(filepath, wgsl))
         {
             return false;
         }
+
         wgpu::ShaderSourceWGSL shaderSource = {};
         shaderSource.sType = wgpu::SType::ShaderSourceWGSL;
         shaderSource.code = WGPUtils::StrToWgpuStringView(wgsl);

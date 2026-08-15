@@ -85,24 +85,3 @@ public:
         return Buffer != nullptr;
     }
 };
-
-/*
-    void Destroy()
-    {
-        if (Buffer)
-            Buffer.Destroy();
-
-        Uploaded = false;
-    }
-
-    const void* Map()
-    {
-
-        return Buffer.GetConstMappedRange(0, Size);
-    }
-
-    void Unmap()
-    {
-        Buffer.Unmap();
-    }
-*/
