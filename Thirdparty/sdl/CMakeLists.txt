@@ -1,7 +1,7 @@
 FetchContent_Declare(
         libsdl3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG release-3.4.12
+        GIT_TAG release-3.4.14
 )
 
 set(SDL_TEST_LIBRARY OFF CACHE INTERNAL "")

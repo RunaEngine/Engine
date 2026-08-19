@@ -1,87 +1,50 @@
 #include "Runtime/RHI/RHI.hpp"
-#include "Runtime/RHI/wgpu/WGMaterial.hpp"
-#include "Runtime/RHI/wgpu/WGMesh.hpp"
 #include <iostream>
+
+#include "Runtime/RHI/NRI/NRIShader.hpp"
+#include "Runtime/RHI/NRI/NRIVertex.hpp"
 
 int main(int argc, char** argv)
 {
-    const std::vector<WGVertex> vertices =
+    const std::vector<NRIVertex> vertices =
     {
-        WGVertex {.Position = {-100.0f, 0.0f, 100.0f }, .TexCoord = {0.0f, 100.0f} },
-        WGVertex {.Position = { 100.0f, 0.0f, 100.0f }, .TexCoord = {100.0f, 100.0f} },
-        WGVertex {.Position = {-100.0f, 0.0f, -100.0f }, .TexCoord = {0.0f, 0.0f} },
-        WGVertex {.Position = { 100.0f, 0.0f, -100.0f }, .TexCoord = {100.0f, 0.0f} },
+        NRIVertex {.Position = {-100.0f, 0.0f, 100.0f }, .TexCoord = {0.0f, 100.0f} },
+        NRIVertex {.Position = { 100.0f, 0.0f, 100.0f }, .TexCoord = {100.0f, 100.0f} },
+        NRIVertex {.Position = {-100.0f, 0.0f, -100.0f }, .TexCoord = {0.0f, 0.0f} },
+        NRIVertex {.Position = { 100.0f, 0.0f, -100.0f }, .TexCoord = {100.0f, 0.0f} },
     };
-
     const std::vector<uint32_t> indices =
     {
         0, 1, 2,
         2, 1, 3,
     };
 
-    auto currentDir = GetBaseDir();
-
     auto rhi = MakeUnique<RHI>();
-    if (!rhi->Init(wgpu::BackendType::D3D12/*, true*/))
-        return -1;
-    GUserSettings->bMSAAEnabled = true;
-    GUserSettings->Anisotropic = e16X;
-    GUserSettings->VSync = wgpu::PresentMode::Fifo;
-
-    auto shader = MakeShared<WGShader>(rhi->Device);
-    if (!shader->Init(currentDir.string() + "Resources/Shaders/Default.wgsl"))
+    GUserSettings->VSyncMode = VSYNCTRIPLEBUFFERED;
+    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, false))
         return -1;
 
-    auto texture = MakeShared<WGTexture>(rhi->Device, rhi->Queue);
-    if (!texture->Init(currentDir.string() + "Resources/Textures/UVCheck.png", wgpu::AddressMode::Repeat, wgpu::FilterMode::Linear, true))
+    NRIVertexBuffer vertexBuffer(rhi->ICore, rhi->Device.Get());
+    if (!vertexBuffer.Init(vertices, indices))
         return -1;
 
-    auto material = MakeShared<WGMaterial>(rhi->Device, rhi->Queue, rhi->SurfaceConfig, shader);
-    material->Init(rhi->GCamera->CameraBindGroupLayout, rhi->GCamera->CameraBindGroup, { texture });
-
-    auto vertexBuffer = MakeShared<WGVertexBuffer>(rhi->Device, rhi->Queue);
-    vertexBuffer->Init(vertices, indices);
-
-    auto mesh = MakeShared<WGMesh>(vertexBuffer, material);
-    //mesh->Init(material, vertexBuffer);
-
-    rhi->GCamera->Position = glm::vec3(0.0f, 5.0f, 0.0f);
+    NRIShader shader(rhi->ICore, rhi->Device.Get());
+    shader.Init(GetBaseDir().string() + "Resources/Shaders/Default.vs.hlsl");
 
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
+    {
+        rhi->UpdateSurface(e);
+        switch (e.type)
         {
-            rhi->UpdateSurface(e);
-            switch (e.type)
-            {
-            case SDL_EVENT_QUIT:
-                shouldClose = true;
-                return;
-            default:
-                break;
-            }
-            GInput->UpdateEvent(e);
-            rhi->GCamera->Inputs(e);
-        };
-    rhi->OnMsaaEnabledChange = [&](UniquePtr<WGMultisample>& multisample)
-        {
-            mesh->Material->UpdatePipeline();
-        };
-    rhi->OnAnisatropicChange = [&]()
-        {
-            mesh->Material->UpdatePipeline();
-        };
-    rhi->OnImguiRender = [&](ImGuiIO& io)
-        {
-            ImGui::Begin("SDL3 + Dawn");
-            ImGui::Text("Rendered via WebGPU and SDL3!\nFPS: %.2f", io.Framerate);
-            WGPUtils::VRAMInfo vramInfo = GUserSettings->GetAdapterVRamInfo();
-            ImGui::Text("Max/Budget/Usage: %llu MB / %llu MB / %llu MB", vramInfo.VideoRam / (1024 * 1024), vramInfo.Budget / (1024 * 1024), vramInfo.Usage / (1024 * 1024));
-            ImGui::End();
-        };
-    rhi->OnRender = [&](wgpu::RenderPassEncoder& pass, wgpu::Queue& queue)
-        {
-            mesh->Draw(pass);
-        };
+        case SDL_EVENT_QUIT:
+            shouldClose = true;
+            return;
+        default:
+            break;
+        }
+        rhi->UpdateSurface(e);
+    };
     while (!shouldClose)
     {
         rhi->Pool();

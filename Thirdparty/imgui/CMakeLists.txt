@@ -22,26 +22,15 @@ set(IMGUI_SOURCES
         ${IMGUI_SOURCE_DIR}/imgui_draw.cpp
         ${IMGUI_SOURCE_DIR}/imgui_tables.cpp
         ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
-
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.h
-        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
-        #${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.h
-        #${IMGUI_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
-#[[
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     list(APPEND IMGUI_SOURCES
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.h
-            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_win32.cpp
             ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
             ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
     )
     if (MSVC)
         list(APPEND IMGUI_SOURCES
-                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.h
-                ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx11.cpp
                 ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.h
                 ${IMGUI_SOURCE_DIR}/backends/imgui_impl_dx12.cpp
         )
@@ -49,8 +38,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif ()
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     list(APPEND IMGUI_SOURCES
-            #${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
-            #${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            ${IMGUI_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
     )
 endif ()
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -61,20 +50,13 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             ${IMGUI_SOURCE_DIR}/backends/imgui_impl_metal.cpp
     )
 endif ()
-]]
+
 add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC ${IMGUI_SOURCE_DIR} ${IMGUI_SOURCE_DIR}/backends)
 target_link_libraries(imgui
         PUBLIC
         SDL3::SDL3
-        dawn::webgpu_dawn
-        #glad
-        #vulkan
-)
-
-target_compile_definitions(imgui
-        PUBLIC
-        IMGUI_IMPL_WEBGPU_BACKEND_DAWN
+        $<$<OR:$<PLATFORM_ID:Windows>,$<PLATFORM_ID:Linux>,$<PLATFORM_ID:Android>>:vulkan>
 )
 
 set_target_properties(imgui PROPERTIES FOLDER "Thirdparty" LINKER_LANGUAGE CXX)

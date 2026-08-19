@@ -43,11 +43,9 @@ target_sources(Runa
 target_link_libraries(Runa
         PUBLIC
         #GRAPHICS LIBRARY
-        dawn::webgpu_dawn
-        SDL3::SDL3
-        $<$<PLATFORM_ID:Windows>:dxgi>
-        $<$<PLATFORM_ID:Windows>:d3d12>
-        $<$<OR:$<PLATFORM_ID:Windows>,$<PLATFORM_ID:Linux>>:vulkan>
+        SDL3-static
+        NRI
+        slang
         glm-header-only
         #USER INTERFACE LIBRARY
         imgui
@@ -63,7 +61,7 @@ target_link_libraries(Runa
 )
 
 #set_target_properties(Runa PROPERTIES FOLDER "Source")
-
+#[[
 function(copy_target_shared_dlls target)
         foreach(lib IN LISTS ARGN)
                 if(${lib} STREQUAL "dawn")
@@ -91,7 +89,7 @@ endfunction()
 copy_target_shared_dlls(Runa
         dawn
 )
-
+]]
 #include(Content/Content.cmake)
 copy_resources_to_target(Runa)
 

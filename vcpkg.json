@@ -4,40 +4,6 @@
   "builtin-baseline": "9e593bb18ea69cc5095e012465dcd675a822ed0d",
   "dependencies": [
     {
-      "name": "dawn",
-      "features": [ "d3d12", "vulkan" ],
-      "platform": "windows"
-    },
-    {
-      "name": "dawn",
-      "features": [ "vulkan", "wayland" ],
-      "platform": "linux"
-    },
-    {
-      "name": "dawn",
-      "features": [ "vulkan" ],
-      "platform": "android"
-    },
-    {
-      "name": "dawn",
-      "features": [ "metal" ],
-      "platform": "osx | ios"
-    },
-    {
-      "name": "sdl3",
-      "features": [ "vulkan" ],
-      "platform": "!linux"
-    },
-    {
-      "name": "sdl3",
-      "features": [ "wayland", "vulkan" ],
-      "platform": "linux"
-    },
-    {
-      "name": "sdl3",
-      "platform": "osx | ios"
-    },
-    {
       "name": "zstd"
     },
     {

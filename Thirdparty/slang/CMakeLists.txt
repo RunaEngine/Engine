@@ -1,7 +1,7 @@
 FetchContent_Declare(
         slang
         GIT_REPOSITORY https://github.com/shader-slang/slang.git
-        GIT_TAG v2026.13.1
+        GIT_TAG v2026.14.1
 )
 
 set(SLANG_ENABLE_REPLAYER OFF CACHE BOOL "")
@@ -9,7 +9,7 @@ set(SLANG_ENABLE_SPIRV_TOOLS_MIMALLOC OFF CACHE BOOL "")
 set(SLANG_ENABLE_SLANG_RHI OFF CACHE BOOL "")
 set(SLANG_ENABLE_TESTS OFF CACHE BOOL "")
 set(SLANG_OVERRIDE_GLM_PATH OFF CACHE BOOL "")
-set(SLANG_ENABLE_DXIL OFF CACHE BOOL "")
+set(SLANG_ENABLE_DXIL ON CACHE BOOL "")
 set(SLANG_ENABLE_SLANGRT OFF CACHE BOOL "")
 set(SLANG_ENABLE_SPLIT_DEBUG_INFO OFF CACHE BOOL "")
 set(SLANG_STANDARD_MODULE_DEVELOP_BUILD OFF CACHE BOOL "")
@@ -38,12 +38,6 @@ set_target_properties(slang-dispatcher PROPERTIES FOLDER "Thirdparty/slang")
 set_target_properties(slang-proxy PROPERTIES FOLDER "Thirdparty/slang")
 #set_target_properties(slang-common-objects PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangc PROPERTIES FOLDER "/Thirdparty/slang")
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-        set_target_properties(minigzip PROPERTIES FOLDER "Thirdparty/slang")
-        set_target_properties(static_minigzip PROPERTIES FOLDER "Thirdparty/slang")
-        set_target_properties(zlib_example PROPERTIES FOLDER "Thirdparty/slang")
-        set_target_properties(zlib_static_example PROPERTIES FOLDER "Thirdparty/slang")
-endif ()
 #set_target_properties(slang-glslang PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangd PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangi PROPERTIES FOLDER "/Thirdparty/slang")
