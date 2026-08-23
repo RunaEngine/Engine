@@ -1,5 +1,4 @@
 // Copyright 2015-2026 The Khronos Group Inc.
-//
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 
@@ -37,7 +36,7 @@
 #  endif
 #endif
 
-VULKAN_HPP_STATIC_ASSERT( VK_HEADER_VERSION == 350, "Wrong VK_HEADER_VERSION!" );
+VULKAN_HPP_STATIC_ASSERT( VK_HEADER_VERSION == 357, "Wrong VK_HEADER_VERSION!" );
 
 VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 {
@@ -1106,6 +1105,8 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkCmdBeginConditionalRenderingEXT )
     DECLARE_IS_DISPATCHED( vkCmdBeginCustomResolveEXT )
     DECLARE_IS_DISPATCHED( vkCmdBeginDebugUtilsLabelEXT )
+    DECLARE_IS_DISPATCHED( vkCmdBeginGpaSampleAMD )
+    DECLARE_IS_DISPATCHED( vkCmdBeginGpaSessionAMD )
     DECLARE_IS_DISPATCHED( vkCmdBeginPerTileExecutionQCOM )
     DECLARE_IS_DISPATCHED( vkCmdBeginQuery )
     DECLARE_IS_DISPATCHED( vkCmdBeginQueryIndexedEXT )
@@ -1165,6 +1166,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkCmdCopyBufferToImage )
     DECLARE_IS_DISPATCHED( vkCmdCopyBufferToImage2 )
     DECLARE_IS_DISPATCHED( vkCmdCopyBufferToImage2KHR )
+    DECLARE_IS_DISPATCHED( vkCmdCopyGpaSessionResultsAMD )
     DECLARE_IS_DISPATCHED( vkCmdCopyImage )
     DECLARE_IS_DISPATCHED( vkCmdCopyImage2 )
     DECLARE_IS_DISPATCHED( vkCmdCopyImage2KHR )
@@ -1236,6 +1238,8 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkCmdEncodeVideoKHR )
     DECLARE_IS_DISPATCHED( vkCmdEndConditionalRenderingEXT )
     DECLARE_IS_DISPATCHED( vkCmdEndDebugUtilsLabelEXT )
+    DECLARE_IS_DISPATCHED( vkCmdEndGpaSampleAMD )
+    DECLARE_IS_DISPATCHED( vkCmdEndGpaSessionAMD )
     DECLARE_IS_DISPATCHED( vkCmdEndPerTileExecutionQCOM )
     DECLARE_IS_DISPATCHED( vkCmdEndQuery )
     DECLARE_IS_DISPATCHED( vkCmdEndQueryIndexedEXT )
@@ -1459,6 +1463,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkCreateExternalComputeQueueNV )
     DECLARE_IS_DISPATCHED( vkCreateFence )
     DECLARE_IS_DISPATCHED( vkCreateFramebuffer )
+    DECLARE_IS_DISPATCHED( vkCreateGpaSessionAMD )
     DECLARE_IS_DISPATCHED( vkCreateGraphicsPipelines )
     DECLARE_IS_DISPATCHED( vkCreateHeadlessSurfaceEXT )
     DECLARE_IS_DISPATCHED( vkCreateIOSSurfaceMVK )
@@ -1535,6 +1540,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkDestroyExternalComputeQueueNV )
     DECLARE_IS_DISPATCHED( vkDestroyFence )
     DECLARE_IS_DISPATCHED( vkDestroyFramebuffer )
+    DECLARE_IS_DISPATCHED( vkDestroyGpaSessionAMD )
     DECLARE_IS_DISPATCHED( vkDestroyImage )
     DECLARE_IS_DISPATCHED( vkDestroyImageView )
     DECLARE_IS_DISPATCHED( vkDestroyIndirectCommandsLayoutEXT )
@@ -1667,6 +1673,9 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkGetFramebufferTilePropertiesQCOM )
     DECLARE_IS_DISPATCHED( vkGetGeneratedCommandsMemoryRequirementsEXT )
     DECLARE_IS_DISPATCHED( vkGetGeneratedCommandsMemoryRequirementsNV )
+    DECLARE_IS_DISPATCHED( vkGetGpaDeviceClockInfoAMD )
+    DECLARE_IS_DISPATCHED( vkGetGpaSessionResultsAMD )
+    DECLARE_IS_DISPATCHED( vkGetGpaSessionStatusAMD )
     DECLARE_IS_DISPATCHED( vkGetImageDrmFormatModifierPropertiesEXT )
     DECLARE_IS_DISPATCHED( vkGetImageMemoryRequirements )
     DECLARE_IS_DISPATCHED( vkGetImageMemoryRequirements2 )
@@ -1685,6 +1694,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkGetImageViewHandleNVX )
     DECLARE_IS_DISPATCHED( vkGetImageViewOpaqueCaptureDescriptorDataEXT )
     DECLARE_IS_DISPATCHED( vkGetInstanceProcAddr )
+    DECLARE_IS_DISPATCHED( vkGetLatencyTimingsLegacyNV )
     DECLARE_IS_DISPATCHED( vkGetLatencyTimingsNV )
     DECLARE_IS_DISPATCHED( vkGetMemoryAndroidHardwareBufferANDROID )
     DECLARE_IS_DISPATCHED( vkGetMemoryFdKHR )
@@ -1816,6 +1826,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkGetShaderInstrumentationValuesARM )
     DECLARE_IS_DISPATCHED( vkGetShaderModuleCreateInfoIdentifierEXT )
     DECLARE_IS_DISPATCHED( vkGetShaderModuleIdentifierEXT )
+    DECLARE_IS_DISPATCHED( vkGetSleepStatusLegacyNV )
     DECLARE_IS_DISPATCHED( vkGetSwapchainCounterEXT )
     DECLARE_IS_DISPATCHED( vkGetSwapchainGrallocUsage2ANDROID )
     DECLARE_IS_DISPATCHED( vkGetSwapchainGrallocUsageANDROID )
@@ -1841,6 +1852,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkImportSemaphoreZirconHandleFUCHSIA )
     DECLARE_IS_DISPATCHED( vkInitializePerformanceApiINTEL )
     DECLARE_IS_DISPATCHED( vkInvalidateMappedMemoryRanges )
+    DECLARE_IS_DISPATCHED( vkLatencySleepLegacyNV )
     DECLARE_IS_DISPATCHED( vkLatencySleepNV )
     DECLARE_IS_DISPATCHED( vkMapMemory )
     DECLARE_IS_DISPATCHED( vkMapMemory2 )
@@ -1851,6 +1863,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkQueueBindSparse )
     DECLARE_IS_DISPATCHED( vkQueueEndDebugUtilsLabelEXT )
     DECLARE_IS_DISPATCHED( vkQueueInsertDebugUtilsLabelEXT )
+    DECLARE_IS_DISPATCHED( vkQueueNotifyOutOfBandLegacyNV )
     DECLARE_IS_DISPATCHED( vkQueueNotifyOutOfBandNV )
     DECLARE_IS_DISPATCHED( vkQueuePresentKHR )
     DECLARE_IS_DISPATCHED( vkQueueSetPerfHintQCOM )
@@ -1876,6 +1889,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkResetDescriptorPool )
     DECLARE_IS_DISPATCHED( vkResetEvent )
     DECLARE_IS_DISPATCHED( vkResetFences )
+    DECLARE_IS_DISPATCHED( vkResetGpaSessionAMD )
     DECLARE_IS_DISPATCHED( vkResetQueryPool )
     DECLARE_IS_DISPATCHED( vkResetQueryPoolEXT )
     DECLARE_IS_DISPATCHED( vkSetBufferCollectionBufferConstraintsFUCHSIA )
@@ -1884,13 +1898,17 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     DECLARE_IS_DISPATCHED( vkSetDebugUtilsObjectTagEXT )
     DECLARE_IS_DISPATCHED( vkSetDeviceMemoryPriorityEXT )
     DECLARE_IS_DISPATCHED( vkSetEvent )
+    DECLARE_IS_DISPATCHED( vkSetGpaDeviceClockModeAMD )
     DECLARE_IS_DISPATCHED( vkSetHdrMetadataEXT )
+    DECLARE_IS_DISPATCHED( vkSetLatencyMarkerLegacyNV )
     DECLARE_IS_DISPATCHED( vkSetLatencyMarkerNV )
+    DECLARE_IS_DISPATCHED( vkSetLatencySleepModeLegacyNV )
     DECLARE_IS_DISPATCHED( vkSetLatencySleepModeNV )
     DECLARE_IS_DISPATCHED( vkSetLocalDimmingAMD )
     DECLARE_IS_DISPATCHED( vkSetPrivateData )
     DECLARE_IS_DISPATCHED( vkSetPrivateDataEXT )
     DECLARE_IS_DISPATCHED( vkSetSwapchainPresentTimingQueueSizeEXT )
+    DECLARE_IS_DISPATCHED( vkShutdownLatencyDeviceLegacyNV )
     DECLARE_IS_DISPATCHED( vkSignalSemaphore )
     DECLARE_IS_DISPATCHED( vkSignalSemaphoreKHR )
     DECLARE_IS_DISPATCHED( vkSubmitDebugUtilsMessageEXT )
@@ -4801,6 +4819,76 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
       }
 #    endif /*VK_USE_PLATFORM_ANDROID_KHR*/
 
+      //=== VK_AMD_gpa_interface ===
+
+      VULKAN_HPP_INLINE VkResult vkCreateGpaSessionAMD( VkDevice                          device,
+                                                        VkGpaSessionCreateInfoAMD const * pCreateInfo,
+                                                        VkAllocationCallbacks const *     pAllocator,
+                                                        VkGpaSessionAMD *                 pGpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCreateGpaSessionAMD( device, pCreateInfo, pAllocator, pGpaSession );
+      }
+
+      VULKAN_HPP_INLINE void
+        vkDestroyGpaSessionAMD( VkDevice device, VkGpaSessionAMD gpaSession, VkAllocationCallbacks const * pAllocator ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkDestroyGpaSessionAMD( device, gpaSession, pAllocator );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkSetGpaDeviceClockModeAMD( VkDevice device, VkGpaDeviceClockModeInfoAMD * pInfo ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkSetGpaDeviceClockModeAMD( device, pInfo );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkGetGpaDeviceClockInfoAMD( VkDevice device, VkGpaDeviceGetClockInfoAMD * pInfo ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkGetGpaDeviceClockInfoAMD( device, pInfo );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkCmdBeginGpaSessionAMD( VkCommandBuffer commandBuffer, VkGpaSessionAMD gpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCmdBeginGpaSessionAMD( commandBuffer, gpaSession );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkCmdEndGpaSessionAMD( VkCommandBuffer commandBuffer, VkGpaSessionAMD gpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCmdEndGpaSessionAMD( commandBuffer, gpaSession );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkCmdBeginGpaSampleAMD( VkCommandBuffer                 commandBuffer,
+                                                         VkGpaSessionAMD                 gpaSession,
+                                                         VkGpaSampleBeginInfoAMD const * pGpaSampleBeginInfo,
+                                                         uint32_t *                      pSampleID ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCmdBeginGpaSampleAMD( commandBuffer, gpaSession, pGpaSampleBeginInfo, pSampleID );
+      }
+
+      VULKAN_HPP_INLINE void vkCmdEndGpaSampleAMD( VkCommandBuffer commandBuffer, VkGpaSessionAMD gpaSession, uint32_t sampleID ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCmdEndGpaSampleAMD( commandBuffer, gpaSession, sampleID );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkGetGpaSessionStatusAMD( VkDevice device, VkGpaSessionAMD gpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkGetGpaSessionStatusAMD( device, gpaSession );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkGetGpaSessionResultsAMD(
+        VkDevice device, VkGpaSessionAMD gpaSession, uint32_t sampleID, size_t * pSizeInBytes, void * pData ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkGetGpaSessionResultsAMD( device, gpaSession, sampleID, pSizeInBytes, pData );
+      }
+
+      VULKAN_HPP_INLINE VkResult vkResetGpaSessionAMD( VkDevice device, VkGpaSessionAMD gpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkResetGpaSessionAMD( device, gpaSession );
+      }
+
+      VULKAN_HPP_INLINE void vkCmdCopyGpaSessionResultsAMD( VkCommandBuffer commandBuffer, VkGpaSessionAMD gpaSession ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkCmdCopyGpaSessionResultsAMD( commandBuffer, gpaSession );
+      }
+
 #    if defined( VK_ENABLE_BETA_EXTENSIONS )
       //=== VK_AMDX_shader_enqueue ===
 
@@ -6178,6 +6266,46 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
                                                            VkPerTileEndInfoQCOM const * pPerTileEndInfo ) const VULKAN_HPP_NOEXCEPT
       {
         return ::vkCmdEndPerTileExecutionQCOM( commandBuffer, pPerTileEndInfo );
+      }
+
+      //=== VK_NV_low_latency ===
+
+      VULKAN_HPP_INLINE void vkSetLatencySleepModeLegacyNV( VkDevice device,
+                                                            VkBool32 lowLatencyMode,
+                                                            VkBool32 lowLatencyBoost,
+                                                            uint32_t minimumIntervalUs ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkSetLatencySleepModeLegacyNV( device, lowLatencyMode, lowLatencyBoost, minimumIntervalUs );
+      }
+
+      VULKAN_HPP_INLINE void vkLatencySleepLegacyNV( VkDevice device, VkSemaphore signalSemaphore, uint64_t value ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkLatencySleepLegacyNV( device, signalSemaphore, value );
+      }
+
+      VULKAN_HPP_INLINE void vkSetLatencyMarkerLegacyNV( VkDevice device, uint64_t frameID, uint32_t marker ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkSetLatencyMarkerLegacyNV( device, frameID, marker );
+      }
+
+      VULKAN_HPP_INLINE void vkGetLatencyTimingsLegacyNV( VkDevice device, void * pTimings ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkGetLatencyTimingsLegacyNV( device, pTimings );
+      }
+
+      VULKAN_HPP_INLINE void vkQueueNotifyOutOfBandLegacyNV( VkQueue queue, uint32_t queueType ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkQueueNotifyOutOfBandLegacyNV( queue, queueType );
+      }
+
+      VULKAN_HPP_INLINE void vkGetSleepStatusLegacyNV( VkDevice device, VkBool32 * pLowLatencyMode ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkGetSleepStatusLegacyNV( device, pLowLatencyMode );
+      }
+
+      VULKAN_HPP_INLINE void vkShutdownLatencyDeviceLegacyNV( VkDevice device ) const VULKAN_HPP_NOEXCEPT
+      {
+        return ::vkShutdownLatencyDeviceLegacyNV( device );
       }
 
 #    if defined( VK_USE_PLATFORM_METAL_EXT )
@@ -9176,6 +9304,9 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   //=== VK_KHR_video_decode_vp9 ===
   VULKAN_HPP_CONSTEXPR_INLINE uint32_t MaxVideoVp9ReferencesPerFrameKHR = VK_MAX_VIDEO_VP9_REFERENCES_PER_FRAME_KHR;
 
+  //=== VK_ARM_tensor_controls ===
+  VULKAN_HPP_CONSTEXPR_INLINE uint32_t MaxTensorCreateInfoRollingBackingWrapCountARM = VK_MAX_TENSOR_CREATE_INFO_ROLLING_BACKING_WRAP_COUNT_ARM;
+
   //=== VK_NV_partitioned_acceleration_structure ===
   VULKAN_HPP_CONSTEXPR_INLINE uint32_t PartitionedAccelerationStructurePartitionIndexGlobalNV = VK_PARTITIONED_ACCELERATION_STRUCTURE_PARTITION_INDEX_GLOBAL_NV;
 
@@ -9761,6 +9892,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_DEPRECATED( "The VK_AMD_gpu_shader_int16 extension has been deprecated by VK_KHR_shader_float16_int8." )
   VULKAN_HPP_CONSTEXPR_INLINE auto AMDGpuShaderInt16ExtensionName = VK_AMD_GPU_SHADER_INT16_EXTENSION_NAME;
 
+  //=== VK_AMD_gpa_interface ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto AMDGpaInterfaceSpecVersion   = VK_AMD_GPA_INTERFACE_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto AMDGpaInterfaceExtensionName = VK_AMD_GPA_INTERFACE_EXTENSION_NAME;
+
 #if defined( VK_ENABLE_BETA_EXTENSIONS )
   //=== VK_AMDX_shader_enqueue ===
   VULKAN_HPP_CONSTEXPR_INLINE auto AMDXShaderEnqueueSpecVersion   = VK_AMDX_SHADER_ENQUEUE_SPEC_VERSION;
@@ -9906,6 +10041,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   //=== VK_QCOM_cooperative_matrix_conversion ===
   VULKAN_HPP_CONSTEXPR_INLINE auto QCOMCooperativeMatrixConversionSpecVersion   = VK_QCOM_COOPERATIVE_MATRIX_CONVERSION_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto QCOMCooperativeMatrixConversionExtensionName = VK_QCOM_COOPERATIVE_MATRIX_CONVERSION_EXTENSION_NAME;
+
+  //=== VK_QCOM_elapsed_timer_query ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMElapsedTimerQuerySpecVersion   = VK_QCOM_ELAPSED_TIMER_QUERY_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMElapsedTimerQueryExtensionName = VK_QCOM_ELAPSED_TIMER_QUERY_EXTENSION_NAME;
 
   //=== VK_EXT_global_priority ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTGlobalPrioritySpecVersion   = VK_EXT_GLOBAL_PRIORITY_SPEC_VERSION;
@@ -10343,6 +10482,18 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto QCOMQueuePerfHintSpecVersion   = VK_QCOM_QUEUE_PERF_HINT_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto QCOMQueuePerfHintExtensionName = VK_QCOM_QUEUE_PERF_HINT_EXTENSION_NAME;
 
+  //=== VK_QCOM_image_processing3 ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMImageProcessing3SpecVersion   = VK_QCOM_IMAGE_PROCESSING_3_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMImageProcessing3ExtensionName = VK_QCOM_IMAGE_PROCESSING_3_EXTENSION_NAME;
+
+  //=== VK_QCOM_shader_multiple_wait_queues ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMShaderMultipleWaitQueuesSpecVersion   = VK_QCOM_SHADER_MULTIPLE_WAIT_QUEUES_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto QCOMShaderMultipleWaitQueuesExtensionName = VK_QCOM_SHADER_MULTIPLE_WAIT_QUEUES_EXTENSION_NAME;
+
+  //=== VK_EXT_shader_split_barrier ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderSplitBarrierSpecVersion   = VK_EXT_SHADER_SPLIT_BARRIER_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderSplitBarrierExtensionName = VK_EXT_SHADER_SPLIT_BARRIER_EXTENSION_NAME;
+
 #if defined( VK_ENABLE_BETA_EXTENSIONS )
   //=== VK_NV_cuda_kernel_launch ===
   VULKAN_HPP_CONSTEXPR_INLINE auto NVCudaKernelLaunchSpecVersion   = VK_NV_CUDA_KERNEL_LAUNCH_SPEC_VERSION;
@@ -10354,7 +10505,9 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto QCOMTileShadingExtensionName = VK_QCOM_TILE_SHADING_EXTENSION_NAME;
 
   //=== VK_NV_low_latency ===
-  VULKAN_HPP_CONSTEXPR_INLINE auto NVLowLatencySpecVersion   = VK_NV_LOW_LATENCY_SPEC_VERSION;
+  VULKAN_HPP_DEPRECATED( "The VK_NV_low_latency extension has been deprecated by VK_NV_low_latency2." )
+  VULKAN_HPP_CONSTEXPR_INLINE auto NVLowLatencySpecVersion = VK_NV_LOW_LATENCY_SPEC_VERSION;
+  VULKAN_HPP_DEPRECATED( "The VK_NV_low_latency extension has been deprecated by VK_NV_low_latency2." )
   VULKAN_HPP_CONSTEXPR_INLINE auto NVLowLatencyExtensionName = VK_NV_LOW_LATENCY_EXTENSION_NAME;
 
 #if defined( VK_USE_PLATFORM_METAL_EXT )
@@ -11019,6 +11172,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderReplicatedCompositesSpecVersion   = VK_EXT_SHADER_REPLICATED_COMPOSITES_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderReplicatedCompositesExtensionName = VK_EXT_SHADER_REPLICATED_COMPOSITES_EXTENSION_NAME;
 
+  //=== VK_ARM_tensor_controls ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto ARMTensorControlsSpecVersion   = VK_ARM_TENSOR_CONTROLS_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto ARMTensorControlsExtensionName = VK_ARM_TENSOR_CONTROLS_EXTENSION_NAME;
+
   //=== VK_EXT_shader_float8 ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderFloat8SpecVersion   = VK_EXT_SHADER_FLOAT8_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderFloat8ExtensionName = VK_EXT_SHADER_FLOAT8_EXTENSION_NAME;
@@ -11093,6 +11250,14 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto ARMPipelineOpacityMicromapSpecVersion   = VK_ARM_PIPELINE_OPACITY_MICROMAP_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto ARMPipelineOpacityMicromapExtensionName = VK_ARM_PIPELINE_OPACITY_MICROMAP_EXTENSION_NAME;
 
+  //=== VK_KHR_video_encode_feedback2 ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHRVideoEncodeFeedback2SpecVersion   = VK_KHR_VIDEO_ENCODE_FEEDBACK_2_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHRVideoEncodeFeedback2ExtensionName = VK_KHR_VIDEO_ENCODE_FEEDBACK_2_EXTENSION_NAME;
+
+  //=== VK_IMG_filter_linear_2d ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto IMGFilterLinear2DSpecVersion   = VK_IMG_FILTER_LINEAR_2D_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto IMGFilterLinear2DExtensionName = VK_IMG_FILTER_LINEAR_2D_EXTENSION_NAME;
+
 #if defined( VK_USE_PLATFORM_METAL_EXT )
   //=== VK_EXT_external_memory_metal ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTExternalMemoryMetalSpecVersion   = VK_EXT_EXTERNAL_MEMORY_METAL_SPEC_VERSION;
@@ -11131,6 +11296,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto NVPresentMeteringSpecVersion   = VK_NV_PRESENT_METERING_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto NVPresentMeteringExtensionName = VK_NV_PRESENT_METERING_EXTENSION_NAME;
 
+  //=== VK_EXT_multisampled_render_to_swapchain ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTMultisampledRenderToSwapchainSpecVersion   = VK_EXT_MULTISAMPLED_RENDER_TO_SWAPCHAIN_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTMultisampledRenderToSwapchainExtensionName = VK_EXT_MULTISAMPLED_RENDER_TO_SWAPCHAIN_EXTENSION_NAME;
+
   //=== VK_EXT_fragment_density_map_offset ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTFragmentDensityMapOffsetSpecVersion   = VK_EXT_FRAGMENT_DENSITY_MAP_OFFSET_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTFragmentDensityMapOffsetExtensionName = VK_EXT_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME;
@@ -11142,6 +11311,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   //=== VK_KHR_present_mode_fifo_latest_ready ===
   VULKAN_HPP_CONSTEXPR_INLINE auto KHRPresentModeFifoLatestReadySpecVersion   = VK_KHR_PRESENT_MODE_FIFO_LATEST_READY_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto KHRPresentModeFifoLatestReadyExtensionName = VK_KHR_PRESENT_MODE_FIFO_LATEST_READY_EXTENSION_NAME;
+
+  //=== VK_KHR_opacity_micromap ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHROpacityMicromapSpecVersion   = VK_KHR_OPACITY_MICROMAP_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHROpacityMicromapExtensionName = VK_KHR_OPACITY_MICROMAP_EXTENSION_NAME;
 
   //=== VK_EXT_shader_64bit_indexing ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTShader64BitIndexingSpecVersion   = VK_EXT_SHADER_64BIT_INDEXING_SPEC_VERSION;
@@ -11193,6 +11366,14 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   VULKAN_HPP_CONSTEXPR_INLINE auto SECUbmSurfaceExtensionName = VK_SEC_UBM_SURFACE_EXTENSION_NAME;
 #endif /*VK_USE_PLATFORM_UBM_SEC*/
 
+  //=== VK_KHR_extended_flags ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHRExtendedFlagsSpecVersion   = VK_KHR_EXTENDED_FLAGS_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto KHRExtendedFlagsExtensionName = VK_KHR_EXTENDED_FLAGS_EXTENSION_NAME;
+
+  //=== VK_EXT_shader_ocp_microscaling_types ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderOcpMicroscalingTypesSpecVersion   = VK_EXT_SHADER_OCP_MICROSCALING_TYPES_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto EXTShaderOcpMicroscalingTypesExtensionName = VK_EXT_SHADER_OCP_MICROSCALING_TYPES_EXTENSION_NAME;
+
   //=== VK_VALVE_shader_mixed_float_dot_product ===
   VULKAN_HPP_CONSTEXPR_INLINE auto VALVEShaderMixedFloatDotProductSpecVersion   = VK_VALVE_SHADER_MIXED_FLOAT_DOT_PRODUCT_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto VALVEShaderMixedFloatDotProductExtensionName = VK_VALVE_SHADER_MIXED_FLOAT_DOT_PRODUCT_EXTENSION_NAME;
@@ -11208,6 +11389,10 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   //=== VK_EXT_primitive_restart_index ===
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTPrimitiveRestartIndexSpecVersion   = VK_EXT_PRIMITIVE_RESTART_INDEX_SPEC_VERSION;
   VULKAN_HPP_CONSTEXPR_INLINE auto EXTPrimitiveRestartIndexExtensionName = VK_EXT_PRIMITIVE_RESTART_INDEX_EXTENSION_NAME;
+
+  //=== VK_NV_cooperative_matrix_decode_vector ===
+  VULKAN_HPP_CONSTEXPR_INLINE auto NVCooperativeMatrixDecodeVectorSpecVersion   = VK_NV_COOPERATIVE_MATRIX_DECODE_VECTOR_SPEC_VERSION;
+  VULKAN_HPP_CONSTEXPR_INLINE auto NVCooperativeMatrixDecodeVectorExtensionName = VK_NV_COOPERATIVE_MATRIX_DECODE_VECTOR_EXTENSION_NAME;
 
 }  // namespace VULKAN_HPP_NAMESPACE
 
@@ -11390,7 +11575,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<VKPhysicalDeviceFeatures2, DeviceCreateInfo>
+  struct StructExtends<PhysicalDeviceFeatures2, DeviceCreateInfo>
   {
     enum
     {
@@ -11408,7 +11593,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceProtectedMemoryFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceProtectedMemoryFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11543,7 +11728,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevice16BitStorageFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevice16BitStorageFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11561,7 +11746,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVariablePointersFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVariablePointersFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11606,7 +11791,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSamplerYcbcrConversionFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSamplerYcbcrConversionFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11687,7 +11872,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceMultiviewFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMultiviewFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11714,7 +11899,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderDrawParametersFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderDrawParametersFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11742,7 +11927,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVulkan11Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVulkan11Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11769,7 +11954,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVulkan12Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVulkan12Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11823,7 +12008,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVulkanMemoryModelFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVulkanMemoryModelFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11841,7 +12026,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceHostQueryResetFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceHostQueryResetFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11859,7 +12044,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceTimelineSemaphoreFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTimelineSemaphoreFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11922,7 +12107,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceBufferDeviceAddressFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceBufferDeviceAddressFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11958,7 +12143,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevice8BitStorageFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevice8BitStorageFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11976,7 +12161,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderAtomicInt64Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderAtomicInt64Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -11994,7 +12179,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderFloat16Int8Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderFloat16Int8Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12030,7 +12215,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorIndexingFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorIndexingFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12075,7 +12260,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceScalarBlockLayoutFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceScalarBlockLayoutFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12111,7 +12296,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceUniformBufferStandardLayoutFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceUniformBufferStandardLayoutFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12129,7 +12314,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderSubgroupExtendedTypesFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderSubgroupExtendedTypesFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12183,7 +12368,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceImagelessFramebufferFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImagelessFramebufferFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12219,7 +12404,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSeparateDepthStencilLayoutsFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSeparateDepthStencilLayoutsFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12256,7 +12441,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_VERSION_1_3 ===
   template <>
-  struct StructExtends<PhysicalDeviceVulkan13Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVulkan13Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12283,7 +12468,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePrivateDataFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePrivateDataFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12319,7 +12504,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSynchronization2Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSynchronization2Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12337,7 +12522,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceTextureCompressionASTCHDRFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTextureCompressionASTCHDRFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12364,7 +12549,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance4Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance4Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12445,7 +12630,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderTerminateInvocationFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderTerminateInvocationFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12463,7 +12648,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderDemoteToHelperInvocationFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderDemoteToHelperInvocationFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12481,7 +12666,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePipelineCreationCacheControlFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineCreationCacheControlFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12499,7 +12684,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceZeroInitializeWorkgroupMemoryFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceZeroInitializeWorkgroupMemoryFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12517,7 +12702,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceImageRobustnessFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageRobustnessFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12535,7 +12720,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSubgroupSizeControlFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSubgroupSizeControlFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12580,7 +12765,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceInlineUniformBlockFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceInlineUniformBlockFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12625,7 +12810,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderIntegerDotProductFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderIntegerDotProductFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12670,7 +12855,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDynamicRenderingFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDynamicRenderingFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12698,7 +12883,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_VERSION_1_4 ===
   template <>
-  struct StructExtends<PhysicalDeviceVulkan14Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVulkan14Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12734,7 +12919,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceGlobalPriorityQueryFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceGlobalPriorityQueryFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12761,7 +12946,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceIndexTypeUint8Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceIndexTypeUint8Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12779,7 +12964,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance5Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance5Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12842,7 +13027,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance6Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance6Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12887,7 +13072,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceHostImageCopyFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceHostImageCopyFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12932,7 +13117,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderSubgroupRotateFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderSubgroupRotateFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12950,7 +13135,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderFloatControls2Features, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderFloatControls2Features, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -12968,7 +13153,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderExpectAssumeFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderExpectAssumeFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13031,7 +13216,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePipelineProtectedAccessFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineProtectedAccessFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13049,7 +13234,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePipelineRobustnessFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineRobustnessFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13112,7 +13297,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceLineRasterizationFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceLineRasterizationFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13166,7 +13351,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVertexAttributeDivisorFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVertexAttributeDivisorFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13184,7 +13369,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDynamicRenderingLocalReadFeatures, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDynamicRenderingLocalReadFeatures, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13426,7 +13611,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_transform_feedback ===
   template <>
-  struct StructExtends<PhysicalDeviceTransformFeedbackFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTransformFeedbackFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13819,7 +14004,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_corner_sampled_image ===
   template <>
-  struct StructExtends<PhysicalDeviceCornerSampledImageFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCornerSampledImageFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -13918,7 +14103,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceASTCDecodeFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceASTCDecodeFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14010,7 +14195,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_conditional_rendering ===
   template <>
-  struct StructExtends<PhysicalDeviceConditionalRenderingFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceConditionalRenderingFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14163,7 +14348,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_depth_clip_enable ===
   template <>
-  struct StructExtends<PhysicalDeviceDepthClipEnableFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDepthClipEnableFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14191,7 +14376,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_IMG_relaxed_line_rasterization ===
   template <>
-  struct StructExtends<PhysicalDeviceRelaxedLineRasterizationFeaturesIMG, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRelaxedLineRasterizationFeaturesIMG, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14232,7 +14417,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_performance_query ===
   template <>
-  struct StructExtends<PhysicalDevicePerformanceQueryFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePerformanceQueryFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14406,6 +14591,43 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 #  endif /*VK_USE_PLATFORM_ANDROID_KHR*/
 
+  //=== VK_AMD_gpa_interface ===
+  template <>
+  struct StructExtends<PhysicalDeviceGpaFeaturesAMD, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceGpaFeaturesAMD, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceGpaPropertiesAMD, PhysicalDeviceProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceGpaProperties2AMD, PhysicalDeviceProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
 #  if defined( VK_ENABLE_BETA_EXTENSIONS )
   //=== VK_AMDX_shader_enqueue ===
   template <>
@@ -14483,7 +14705,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorHeapFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorHeapFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14575,7 +14797,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_bfloat16 ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderBfloat16FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderBfloat16FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14640,7 +14862,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_blend_operation_advanced ===
   template <>
-  struct StructExtends<PhysicalDeviceBlendOperationAdvancedFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceBlendOperationAdvancedFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14696,7 +14918,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceAccelerationStructureFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAccelerationStructureFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14724,7 +14946,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_ray_tracing_pipeline ===
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingPipelineFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingPipelineFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14752,7 +14974,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_ray_query ===
   template <>
-  struct StructExtends<PhysicalDeviceRayQueryFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayQueryFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14790,7 +15012,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShaderSMBuiltinsFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderSMBuiltinsFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14913,7 +15135,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceShadingRateImageFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShadingRateImageFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -14969,7 +15191,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_representative_fragment_test ===
   template <>
-  struct StructExtends<PhysicalDeviceRepresentativeFragmentTestFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRepresentativeFragmentTestFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15016,7 +15238,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_cooperative_matrix_conversion ===
   template <>
-  struct StructExtends<PhysicalDeviceCooperativeMatrixConversionFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCooperativeMatrixConversionFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15026,6 +15248,25 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   template <>
   struct StructExtends<PhysicalDeviceCooperativeMatrixConversionFeaturesQCOM, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_QCOM_elapsed_timer_query ===
+  template <>
+  struct StructExtends<PhysicalDeviceElapsedTimerQueryFeaturesQCOM, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceElapsedTimerQueryFeaturesQCOM, DeviceCreateInfo>
   {
     enum
     {
@@ -15054,7 +15295,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_clock ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderClockFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderClockFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15208,7 +15449,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_mesh_shader ===
   template <>
-  struct StructExtends<PhysicalDeviceMeshShaderFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMeshShaderFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15236,7 +15477,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_shader_image_footprint ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderImageFootprintFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderImageFootprintFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15264,7 +15505,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceExclusiveScissorFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExclusiveScissorFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15302,7 +15543,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_present_timing ===
   template <>
-  struct StructExtends<PhysicalDevicePresentTimingFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentTimingFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15348,7 +15589,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_INTEL_shader_integer_functions2 ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderIntegerFunctions2FeaturesINTEL, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderIntegerFunctions2FeaturesINTEL, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15406,7 +15647,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_fragment_density_map ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentDensityMapFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentDensityMapFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15479,7 +15720,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceFragmentShadingRateFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentShadingRateFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15526,7 +15767,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_AMD_device_coherent_memory ===
   template <>
-  struct StructExtends<PhysicalDeviceCoherentMemoryFeaturesAMD, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCoherentMemoryFeaturesAMD, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15545,7 +15786,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_constant_data ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderConstantDataFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderConstantDataFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15564,7 +15805,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_abort ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderAbortFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderAbortFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15601,7 +15842,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_image_atomic_int64 ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderImageAtomicInt64FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderImageAtomicInt64FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15620,7 +15861,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_quad_control ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderQuadControlFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderQuadControlFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15649,7 +15890,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_memory_priority ===
   template <>
-  struct StructExtends<PhysicalDeviceMemoryPriorityFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMemoryPriorityFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15687,7 +15928,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_dedicated_allocation_image_aliasing ===
   template <>
-  struct StructExtends<PhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15706,7 +15947,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_buffer_device_address ===
   template <>
-  struct StructExtends<PhysicalDeviceBufferDeviceAddressFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceBufferDeviceAddressFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15760,9 +16001,45 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     };
   };
 
+  template <>
+  struct StructExtends<ValidationFeaturesEXT, PipelineShaderStageCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ValidationFeaturesEXT, GraphicsPipelineCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ValidationFeaturesEXT, ComputePipelineCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ValidationFeaturesEXT, RayTracingPipelineCreateInfoKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
   //=== VK_KHR_present_wait ===
   template <>
-  struct StructExtends<PhysicalDevicePresentWaitFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentWaitFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15781,7 +16058,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_cooperative_matrix ===
   template <>
-  struct StructExtends<PhysicalDeviceCooperativeMatrixFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCooperativeMatrixFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15809,7 +16086,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_coverage_reduction_mode ===
   template <>
-  struct StructExtends<PhysicalDeviceCoverageReductionModeFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCoverageReductionModeFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15837,7 +16114,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_fragment_shader_interlock ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentShaderInterlockFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentShaderInterlockFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15856,7 +16133,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_ycbcr_image_arrays ===
   template <>
-  struct StructExtends<PhysicalDeviceYcbcrImageArraysFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceYcbcrImageArraysFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15875,7 +16152,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_provoking_vertex ===
   template <>
-  struct StructExtends<PhysicalDeviceProvokingVertexFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceProvokingVertexFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15960,7 +16237,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_atomic_float ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderAtomicFloatFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderAtomicFloatFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15979,7 +16256,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_extended_dynamic_state ===
   template <>
-  struct StructExtends<PhysicalDeviceExtendedDynamicStateFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExtendedDynamicStateFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -15998,7 +16275,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_pipeline_executable_properties ===
   template <>
-  struct StructExtends<PhysicalDevicePipelineExecutablePropertiesFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineExecutablePropertiesFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16017,7 +16294,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_map_memory_placed ===
   template <>
-  struct StructExtends<PhysicalDeviceMapMemoryPlacedFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMapMemoryPlacedFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16054,7 +16331,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_atomic_float2 ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderAtomicFloat2FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderAtomicFloat2FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16082,7 +16359,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16110,7 +16387,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_inherited_viewport_scissor ===
   template <>
-  struct StructExtends<PhysicalDeviceInheritedViewportScissorFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceInheritedViewportScissorFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16138,7 +16415,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_texel_buffer_alignment ===
   template <>
-  struct StructExtends<PhysicalDeviceTexelBufferAlignmentFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTexelBufferAlignmentFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16176,7 +16453,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_depth_bias_control ===
   template <>
-  struct StructExtends<PhysicalDeviceDepthBiasControlFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDepthBiasControlFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16213,7 +16490,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_device_memory_report ===
   template <>
-  struct StructExtends<PhysicalDeviceDeviceMemoryReportFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDeviceMemoryReportFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16259,7 +16536,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceCustomBorderColorFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCustomBorderColorFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16278,7 +16555,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_texture_compression_astc_3d ===
   template <>
-  struct StructExtends<PhysicalDeviceTextureCompressionASTC3DFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTextureCompressionASTC3DFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16307,7 +16584,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_present_barrier ===
   template <>
-  struct StructExtends<PhysicalDevicePresentBarrierFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentBarrierFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16353,7 +16630,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePresentIdFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentIdFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16445,7 +16722,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_device_diagnostics_config ===
   template <>
-  struct StructExtends<PhysicalDeviceDiagnosticsConfigFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDiagnosticsConfigFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16473,7 +16750,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_queue_perf_hint ===
   template <>
-  struct StructExtends<PhysicalDeviceQueuePerfHintFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceQueuePerfHintFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16492,6 +16769,81 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   template <>
   struct StructExtends<PhysicalDeviceQueuePerfHintPropertiesQCOM, PhysicalDeviceProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_QCOM_image_processing3 ===
+  template <>
+  struct StructExtends<PhysicalDeviceImageProcessing3FeaturesQCOM, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceImageProcessing3FeaturesQCOM, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_QCOM_shader_multiple_wait_queues ===
+  template <>
+  struct StructExtends<PhysicalDeviceShaderMultipleWaitQueuesFeaturesQCOM, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceShaderMultipleWaitQueuesFeaturesQCOM, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceShaderMultipleWaitQueuesPropertiesQCOM, PhysicalDeviceProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_EXT_shader_split_barrier ===
+  template <>
+  struct StructExtends<PhysicalDeviceShaderSplitBarrierFeaturesEXT, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceShaderSplitBarrierFeaturesEXT, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceShaderSplitBarrierPropertiesEXT, PhysicalDeviceProperties2>
   {
     enum
     {
@@ -16531,7 +16883,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_tile_shading ===
   template <>
-  struct StructExtends<PhysicalDeviceTileShadingFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTileShadingFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16779,7 +17131,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorBufferFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorBufferFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16906,7 +17258,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDeviceAddressCommandsFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDeviceAddressCommandsFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16925,7 +17277,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_graphics_pipeline_library ===
   template <>
-  struct StructExtends<PhysicalDeviceGraphicsPipelineLibraryFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceGraphicsPipelineLibraryFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16962,7 +17314,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_AMD_shader_early_and_late_fragment_tests ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -16981,7 +17333,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_fragment_shader_barycentric ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentShaderBarycentricFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentShaderBarycentricFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17009,7 +17361,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_subgroup_uniform_control_flow ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17028,7 +17380,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_fragment_shading_rate_enums ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentShadingRateEnumsFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentShadingRateEnumsFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17083,7 +17435,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingMotionBlurFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingMotionBlurFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17102,7 +17454,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_mesh_shader ===
   template <>
-  struct StructExtends<PhysicalDeviceMeshShaderFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMeshShaderFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17130,7 +17482,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_ycbcr_2plane_444_formats ===
   template <>
-  struct StructExtends<PhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17149,7 +17501,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_fragment_density_map2 ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentDensityMap2FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentDensityMap2FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17205,7 +17557,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_workgroup_memory_explicit_layout ===
   template <>
-  struct StructExtends<PhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17224,7 +17576,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_image_compression_control ===
   template <>
-  struct StructExtends<PhysicalDeviceImageCompressionControlFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageCompressionControlFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17297,7 +17649,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_attachment_feedback_loop_layout ===
   template <>
-  struct StructExtends<PhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17316,7 +17668,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_4444_formats ===
   template <>
-  struct StructExtends<PhysicalDevice4444FormatsFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevice4444FormatsFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17335,7 +17687,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_device_fault ===
   template <>
-  struct StructExtends<PhysicalDeviceFaultFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFaultFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17354,7 +17706,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_rgba10x6_formats ===
   template <>
-  struct StructExtends<PhysicalDeviceRGBA10X6FormatsFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRGBA10X6FormatsFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17373,7 +17725,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_vertex_input_dynamic_state ===
   template <>
-  struct StructExtends<PhysicalDeviceVertexInputDynamicStateFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVertexInputDynamicStateFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17402,7 +17754,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_device_address_binding_report ===
   template <>
-  struct StructExtends<PhysicalDeviceAddressBindingReportFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAddressBindingReportFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17430,7 +17782,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_depth_clip_control ===
   template <>
-  struct StructExtends<PhysicalDeviceDepthClipControlFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDepthClipControlFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17458,7 +17810,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_primitive_topology_list_restart ===
   template <>
-  struct StructExtends<PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17528,7 +17880,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSubpassShadingFeaturesHUAWEI, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSubpassShadingFeaturesHUAWEI, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17556,7 +17908,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_HUAWEI_invocation_mask ===
   template <>
-  struct StructExtends<PhysicalDeviceInvocationMaskFeaturesHUAWEI, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceInvocationMaskFeaturesHUAWEI, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17575,7 +17927,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_external_memory_rdma ===
   template <>
-  struct StructExtends<PhysicalDeviceExternalMemoryRDMAFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExternalMemoryRDMAFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17594,7 +17946,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_pipeline_properties ===
   template <>
-  struct StructExtends<PhysicalDevicePipelinePropertiesFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelinePropertiesFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17613,7 +17965,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_frame_boundary ===
   template <>
-  struct StructExtends<PhysicalDeviceFrameBoundaryFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFrameBoundaryFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17668,7 +18020,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_multisampled_render_to_single_sampled ===
   template <>
-  struct StructExtends<PhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17714,7 +18066,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_extended_dynamic_state2 ===
   template <>
-  struct StructExtends<PhysicalDeviceExtendedDynamicState2FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExtendedDynamicState2FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17733,7 +18085,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_color_write_enable ===
   template <>
-  struct StructExtends<PhysicalDeviceColorWriteEnableFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceColorWriteEnableFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17761,7 +18113,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_primitives_generated_query ===
   template <>
-  struct StructExtends<PhysicalDevicePrimitivesGeneratedQueryFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePrimitivesGeneratedQueryFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17780,7 +18132,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_ray_tracing_maintenance1 ===
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingMaintenance1FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingMaintenance1FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17799,7 +18151,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_untyped_pointers ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderUntypedPointersFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderUntypedPointersFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17818,7 +18170,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_VALVE_video_encode_rgb_conversion ===
   template <>
-  struct StructExtends<PhysicalDeviceVideoEncodeRgbConversionFeaturesVALVE, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoEncodeRgbConversionFeaturesVALVE, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17864,7 +18216,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_image_view_min_lod ===
   template <>
-  struct StructExtends<PhysicalDeviceImageViewMinLodFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageViewMinLodFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17892,7 +18244,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_multi_draw ===
   template <>
-  struct StructExtends<PhysicalDeviceMultiDrawFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMultiDrawFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17920,7 +18272,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_image_2d_view_of_3d ===
   template <>
-  struct StructExtends<PhysicalDeviceImage2DViewOf3DFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImage2DViewOf3DFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17939,7 +18291,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_tile_image ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderTileImageFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderTileImageFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -17967,7 +18319,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_opacity_micromap ===
   template <>
-  struct StructExtends<PhysicalDeviceOpacityMicromapFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceOpacityMicromapFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18053,7 +18405,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_HUAWEI_cluster_culling_shader ===
   template <>
-  struct StructExtends<PhysicalDeviceClusterCullingShaderFeaturesHUAWEI, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceClusterCullingShaderFeaturesHUAWEI, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18090,7 +18442,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_border_color_swizzle ===
   template <>
-  struct StructExtends<PhysicalDeviceBorderColorSwizzleFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceBorderColorSwizzleFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18118,7 +18470,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_pageable_device_local_memory ===
   template <>
-  struct StructExtends<PhysicalDevicePageableDeviceLocalMemoryFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePageableDeviceLocalMemoryFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18165,7 +18517,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceSchedulingControlsFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSchedulingControlsFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18202,7 +18554,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_image_sliced_view_of_3d ===
   template <>
-  struct StructExtends<PhysicalDeviceImageSlicedViewOf3DFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageSlicedViewOf3DFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18230,7 +18582,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_VALVE_descriptor_set_host_mapping ===
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorSetHostMappingFeaturesVALVE, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorSetHostMappingFeaturesVALVE, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18249,7 +18601,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_non_seamless_cube_map ===
   template <>
-  struct StructExtends<PhysicalDeviceNonSeamlessCubeMapFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceNonSeamlessCubeMapFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18268,7 +18620,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_render_pass_striped ===
   template <>
-  struct StructExtends<PhysicalDeviceRenderPassStripedFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRenderPassStripedFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18323,7 +18675,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_copy_memory_indirect ===
   template <>
-  struct StructExtends<PhysicalDeviceCopyMemoryIndirectFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCopyMemoryIndirectFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18342,7 +18694,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_device_generated_commands_compute ===
   template <>
-  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18370,7 +18722,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_ray_tracing_linear_swept_spheres ===
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingLinearSweptSpheresFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingLinearSweptSpheresFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18407,7 +18759,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_linear_color_attachment ===
   template <>
-  struct StructExtends<PhysicalDeviceLinearColorAttachmentFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceLinearColorAttachmentFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18426,7 +18778,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_maximal_reconvergence ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderMaximalReconvergenceFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderMaximalReconvergenceFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18445,7 +18797,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_image_compression_control_swapchain ===
   template <>
-  struct StructExtends<PhysicalDeviceImageCompressionControlSwapchainFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageCompressionControlSwapchainFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18473,7 +18825,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceImageProcessingFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageProcessingFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18501,7 +18853,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_nested_command_buffer ===
   template <>
-  struct StructExtends<PhysicalDeviceNestedCommandBufferFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceNestedCommandBufferFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18641,7 +18993,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_extended_dynamic_state3 ===
   template <>
-  struct StructExtends<PhysicalDeviceExtendedDynamicState3FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExtendedDynamicState3FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18669,7 +19021,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_subpass_merge_feedback ===
   template <>
-  struct StructExtends<PhysicalDeviceSubpassMergeFeedbackFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSubpassMergeFeedbackFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18797,7 +19149,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceTensorFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTensorFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18833,7 +19185,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorBufferTensorFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorBufferTensorFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18906,7 +19258,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_module_identifier ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderModuleIdentifierFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderModuleIdentifierFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18943,7 +19295,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_rasterization_order_attachment_access ===
   template <>
-  struct StructExtends<PhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -18962,7 +19314,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_optical_flow ===
   template <>
-  struct StructExtends<PhysicalDeviceOpticalFlowFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceOpticalFlowFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19017,7 +19369,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_legacy_dithering ===
   template <>
-  struct StructExtends<PhysicalDeviceLegacyDitheringFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceLegacyDitheringFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19075,7 +19427,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_AMD_anti_lag ===
   template <>
-  struct StructExtends<PhysicalDeviceAntiLagFeaturesAMD, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAntiLagFeaturesAMD, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19142,7 +19494,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePresentId2FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentId2FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19170,7 +19522,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePresentWait2FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentWait2FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19189,7 +19541,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_ray_tracing_position_fetch ===
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingPositionFetchFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingPositionFetchFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19208,7 +19560,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_object ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderObjectFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderObjectFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19236,7 +19588,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_pipeline_binary ===
   template <>
-  struct StructExtends<PhysicalDevicePipelineBinaryFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineBinaryFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19300,7 +19652,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_tile_properties ===
   template <>
-  struct StructExtends<PhysicalDeviceTilePropertiesFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTilePropertiesFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19319,7 +19671,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_SEC_amigo_profiling ===
   template <>
-  struct StructExtends<PhysicalDeviceAmigoProfilingFeaturesSEC, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAmigoProfilingFeaturesSEC, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19375,7 +19727,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_swapchain_maintenance1 ===
   template <>
-  struct StructExtends<PhysicalDeviceSwapchainMaintenance1FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceSwapchainMaintenance1FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19430,7 +19782,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_multiview_per_view_viewports ===
   template <>
-  struct StructExtends<PhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19458,7 +19810,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingInvocationReorderFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingInvocationReorderFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19486,7 +19838,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceCooperativeVectorFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCooperativeVectorFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19505,7 +19857,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_extended_sparse_address_space ===
   template <>
-  struct StructExtends<PhysicalDeviceExtendedSparseAddressSpaceFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceExtendedSparseAddressSpaceFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19533,7 +19885,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_mutable_descriptor_type ===
   template <>
-  struct StructExtends<PhysicalDeviceMutableDescriptorTypeFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMutableDescriptorTypeFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19570,7 +19922,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_legacy_vertex_attributes ===
   template <>
-  struct StructExtends<PhysicalDeviceLegacyVertexAttributesFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceLegacyVertexAttributesFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19608,7 +19960,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_shader_core_builtins ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderCoreBuiltinsFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderCoreBuiltinsFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19636,7 +19988,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_pipeline_library_group_handles ===
   template <>
-  struct StructExtends<PhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19655,7 +20007,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_dynamic_rendering_unused_attachments ===
   template <>
-  struct StructExtends<PhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19674,7 +20026,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_internally_synchronized_queues ===
   template <>
-  struct StructExtends<PhysicalDeviceInternallySynchronizedQueuesFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceInternallySynchronizedQueuesFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19730,7 +20082,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_cooperative_matrix ===
   template <>
-  struct StructExtends<PhysicalDeviceCooperativeMatrixFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCooperativeMatrixFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19758,7 +20110,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_data_graph ===
   template <>
-  struct StructExtends<PhysicalDeviceDataGraphFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDataGraphFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19840,7 +20192,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_multiview_per_view_render_areas ===
   template <>
-  struct StructExtends<PhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19877,7 +20229,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_compute_shader_derivatives ===
   template <>
-  struct StructExtends<PhysicalDeviceComputeShaderDerivativesFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceComputeShaderDerivativesFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -19960,7 +20312,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_video_encode_av1 ===
   template <>
-  struct StructExtends<PhysicalDeviceVideoEncodeAV1FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoEncodeAV1FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20087,7 +20439,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_video_decode_vp9 ===
   template <>
-  struct StructExtends<PhysicalDeviceVideoDecodeVP9FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoDecodeVP9FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20142,7 +20494,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_video_maintenance1 ===
   template <>
-  struct StructExtends<PhysicalDeviceVideoMaintenance1FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoMaintenance1FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20179,7 +20531,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_per_stage_descriptor_set ===
   template <>
-  struct StructExtends<PhysicalDevicePerStageDescriptorSetFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePerStageDescriptorSetFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20198,7 +20550,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_image_processing2 ===
   template <>
-  struct StructExtends<PhysicalDeviceImageProcessing2FeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageProcessing2FeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20235,7 +20587,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_filter_cubic_weights ===
   template <>
-  struct StructExtends<PhysicalDeviceCubicWeightsFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCubicWeightsFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20272,7 +20624,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_ycbcr_degamma ===
   template <>
-  struct StructExtends<PhysicalDeviceYcbcrDegammaFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceYcbcrDegammaFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20300,7 +20652,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_filter_cubic_clamp ===
   template <>
-  struct StructExtends<PhysicalDeviceCubicClampFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCubicClampFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20319,7 +20671,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_attachment_feedback_loop_dynamic_state ===
   template <>
-  struct StructExtends<PhysicalDeviceAttachmentFeedbackLoopDynamicStateFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceAttachmentFeedbackLoopDynamicStateFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20338,7 +20690,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_unified_image_layouts ===
   template <>
-  struct StructExtends<PhysicalDeviceUnifiedImageLayoutsFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceUnifiedImageLayoutsFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20433,7 +20785,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_descriptor_pool_overallocation ===
   template <>
-  struct StructExtends<PhysicalDeviceDescriptorPoolOverallocationFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDescriptorPoolOverallocationFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20452,7 +20804,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_QCOM_tile_memory_heap ===
   template <>
-  struct StructExtends<PhysicalDeviceTileMemoryHeapFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceTileMemoryHeapFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20525,7 +20877,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_copy_memory_indirect ===
   template <>
-  struct StructExtends<PhysicalDeviceCopyMemoryIndirectFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCopyMemoryIndirectFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20553,7 +20905,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_memory_decompression ===
   template <>
-  struct StructExtends<PhysicalDeviceMemoryDecompressionFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMemoryDecompressionFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20636,7 +20988,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVideoEncodeIntraRefreshFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoEncodeIntraRefreshFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20691,7 +21043,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceVideoEncodeQuantizationMapFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoEncodeQuantizationMapFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20755,7 +21107,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_raw_access_chains ===
   template <>
-  struct StructExtends<PhysicalDeviceRawAccessChainsFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRawAccessChainsFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20793,7 +21145,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_relaxed_extended_instruction ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderRelaxedExtendedInstructionFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderRelaxedExtendedInstructionFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20812,7 +21164,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_command_buffer_inheritance ===
   template <>
-  struct StructExtends<PhysicalDeviceCommandBufferInheritanceFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCommandBufferInheritanceFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20831,7 +21183,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_maintenance7 ===
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance7FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance7FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20877,7 +21229,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_shader_atomic_float16_vector ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderAtomicFloat16VectorFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderAtomicFloat16VectorFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20896,7 +21248,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_replicated_composites ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderReplicatedCompositesFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderReplicatedCompositesFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20913,9 +21265,28 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     };
   };
 
+  //=== VK_ARM_tensor_controls ===
+  template <>
+  struct StructExtends<TensorRollingBackingCreateInfoARM, TensorCreateInfoARM>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<TensorExplicitTilingFormatPropertiesARM, FormatProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
   //=== VK_EXT_shader_float8 ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderFloat8FeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderFloat8FeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20934,7 +21305,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_ray_tracing_validation ===
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingValidationFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingValidationFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20953,7 +21324,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_cluster_acceleration_structure ===
   template <>
-  struct StructExtends<PhysicalDeviceClusterAccelerationStructureFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceClusterAccelerationStructureFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -20990,7 +21361,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_partitioned_acceleration_structure ===
   template <>
-  struct StructExtends<PhysicalDevicePartitionedAccelerationStructureFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePartitionedAccelerationStructureFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21036,7 +21407,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_device_generated_commands ===
   template <>
-  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDeviceGeneratedCommandsFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21100,7 +21471,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_device_fault ===
   template <>
-  struct StructExtends<PhysicalDeviceFaultFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFaultFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21164,7 +21535,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance8FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance8FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21183,7 +21554,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_MESA_image_alignment_control ===
   template <>
-  struct StructExtends<PhysicalDeviceImageAlignmentControlFeaturesMESA, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceImageAlignmentControlFeaturesMESA, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21220,7 +21591,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_shader_fma ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderFmaFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderFmaFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21275,7 +21646,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePushConstantBankFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePushConstantBankFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21312,7 +21683,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceRayTracingInvocationReorderFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRayTracingInvocationReorderFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21331,7 +21702,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_depth_clamp_control ===
   template <>
-  struct StructExtends<PhysicalDeviceDepthClampControlFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDepthClampControlFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21359,7 +21730,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_maintenance9 ===
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance9FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance9FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21396,7 +21767,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_video_maintenance2 ===
   template <>
-  struct StructExtends<PhysicalDeviceVideoMaintenance2FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVideoMaintenance2FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21442,7 +21813,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_HUAWEI_hdr_vivid ===
   template <>
-  struct StructExtends<PhysicalDeviceHdrVividFeaturesHUAWEI, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceHdrVividFeaturesHUAWEI, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21470,7 +21841,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_cooperative_matrix2 ===
   template <>
-  struct StructExtends<PhysicalDeviceCooperativeMatrix2FeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCooperativeMatrix2FeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21498,7 +21869,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_pipeline_opacity_micromap ===
   template <>
-  struct StructExtends<PhysicalDevicePipelineOpacityMicromapFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineOpacityMicromapFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21508,6 +21879,43 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   template <>
   struct StructExtends<PhysicalDevicePipelineOpacityMicromapFeaturesARM, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_KHR_video_encode_feedback2 ===
+  template <>
+  struct StructExtends<PhysicalDeviceVideoEncodeFeedback2FeaturesKHR, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceVideoEncodeFeedback2FeaturesKHR, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<VideoEncodeFeedback2CapabilitiesKHR, VideoCapabilitiesKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<QueryPoolVideoEncodePerPartitionFeedbackCreateInfoKHR, QueryPoolCreateInfo>
   {
     enum
     {
@@ -21529,7 +21937,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_depth_clamp_zero_one ===
   template <>
-  struct StructExtends<PhysicalDeviceDepthClampZeroOneFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDepthClampZeroOneFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21548,7 +21956,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_performance_counters_by_region ===
   template <>
-  struct StructExtends<PhysicalDevicePerformanceCountersByRegionFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePerformanceCountersByRegionFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21594,7 +22002,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_shader_instrumentation ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderInstrumentationFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderInstrumentationFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21622,7 +22030,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_vertex_attribute_robustness ===
   template <>
-  struct StructExtends<PhysicalDeviceVertexAttributeRobustnessFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceVertexAttributeRobustnessFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21641,7 +22049,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_format_pack ===
   template <>
-  struct StructExtends<PhysicalDeviceFormatPackFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFormatPackFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21660,7 +22068,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_VALVE_fragment_density_map_layered ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentDensityMapLayeredFeaturesVALVE, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentDensityMapLayeredFeaturesVALVE, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21697,7 +22105,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_robustness2 ===
   template <>
-  struct StructExtends<PhysicalDeviceRobustness2FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceRobustness2FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21734,7 +22142,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDevicePresentMeteringFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentMeteringFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21751,9 +22159,37 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     };
   };
 
+  //=== VK_EXT_multisampled_render_to_swapchain ===
+  template <>
+  struct StructExtends<PhysicalDeviceMultisampledRenderToSwapchainFeaturesEXT, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceMultisampledRenderToSwapchainFeaturesEXT, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<SwapchainFlagsSurfaceCapabilitiesEXT, SurfaceCapabilities2KHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
   //=== VK_EXT_fragment_density_map_offset ===
   template <>
-  struct StructExtends<PhysicalDeviceFragmentDensityMapOffsetFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceFragmentDensityMapOffsetFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21799,7 +22235,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_zero_initialize_device_memory ===
   template <>
-  struct StructExtends<PhysicalDeviceZeroInitializeDeviceMemoryFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceZeroInitializeDeviceMemoryFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21818,7 +22254,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_present_mode_fifo_latest_ready ===
   template <>
-  struct StructExtends<PhysicalDevicePresentModeFifoLatestReadyFeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePresentModeFifoLatestReadyFeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21835,9 +22271,65 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     };
   };
 
+  //=== VK_KHR_opacity_micromap ===
+  template <>
+  struct StructExtends<AccelerationStructureGeometryMicromapDataKHR, AccelerationStructureGeometryKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceOpacityMicromapFeaturesKHR, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceOpacityMicromapFeaturesKHR, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceOpacityMicromapPropertiesKHR, PhysicalDeviceProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<AccelerationStructureTrianglesOpacityMicromapKHR, AccelerationStructureGeometryTrianglesDataKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+#  if defined( VK_ENABLE_BETA_EXTENSIONS )
+  template <>
+  struct StructExtends<AccelerationStructureTrianglesOpacityMicromapKHR, AccelerationStructureDenseGeometryFormatTrianglesDataAMDX>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+#  endif /*VK_ENABLE_BETA_EXTENSIONS*/
+
   //=== VK_EXT_shader_64bit_indexing ===
   template <>
-  struct StructExtends<PhysicalDeviceShader64BitIndexingFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShader64BitIndexingFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21856,7 +22348,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_custom_resolve ===
   template <>
-  struct StructExtends<PhysicalDeviceCustomResolveFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceCustomResolveFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21911,7 +22403,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceDataGraphModelFeaturesQCOM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDataGraphModelFeaturesQCOM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21930,7 +22422,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_maintenance10 ===
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance10FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance10FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -21976,7 +22468,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_data_graph_optical_flow ===
   template <>
-  struct StructExtends<PhysicalDeviceDataGraphOpticalFlowFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDataGraphOpticalFlowFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22049,7 +22541,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_long_vector ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderLongVectorFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderLongVectorFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22077,7 +22569,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_SEC_pipeline_cache_incremental_mode ===
   template <>
-  struct StructExtends<PhysicalDevicePipelineCacheIncrementalModeFeaturesSEC, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePipelineCacheIncrementalModeFeaturesSEC, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22096,7 +22588,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_uniform_buffer_unsized_array ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderUniformBufferUnsizedArrayFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderUniformBufferUnsizedArrayFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22115,7 +22607,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_NV_compute_occupancy_priority ===
   template <>
-  struct StructExtends<PhysicalDeviceComputeOccupancyPriorityFeaturesNV, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceComputeOccupancyPriorityFeaturesNV, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22134,7 +22626,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_KHR_maintenance11 ===
   template <>
-  struct StructExtends<PhysicalDeviceMaintenance11FeaturesKHR, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceMaintenance11FeaturesKHR, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22162,7 +22654,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_shader_subgroup_partitioned ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderSubgroupPartitionedFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderSubgroupPartitionedFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22179,9 +22671,200 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
     };
   };
 
+  //=== VK_KHR_extended_flags ===
+  template <>
+  struct StructExtends<FormatProperties4KHR, FormatProperties2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, FramebufferAttachmentImageInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, ImageCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, PhysicalDeviceImageFormatInfo2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, PhysicalDeviceSparseImageFormatInfo2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, PhysicalDeviceVideoFormatInfoKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, SurfaceCapabilities2KHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, SwapchainCreateInfoKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageUsageFlags2CreateInfoKHR, VideoFormatPropertiesKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageCreateFlags2CreateInfoKHR, ImageCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageCreateFlags2CreateInfoKHR, PhysicalDeviceImageFormatInfo2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageCreateFlags2CreateInfoKHR, FramebufferAttachmentImageInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageCreateFlags2CreateInfoKHR, VideoFormatPropertiesKHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageViewUsage2CreateInfoKHR, ImageViewCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceExtendedFlagsFeaturesKHR, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceExtendedFlagsFeaturesKHR, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageStencilUsage2CreateInfoKHR, ImageCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<ImageStencilUsage2CreateInfoKHR, PhysicalDeviceImageFormatInfo2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<SharedPresentSurfaceCapabilities2KHR, SurfaceCapabilities2KHR>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_EXT_shader_ocp_microscaling_types ===
+  template <>
+  struct StructExtends<PhysicalDeviceShaderOCPMicroscalingTypesFeaturesEXT, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceShaderOCPMicroscalingTypesFeaturesEXT, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
   //=== VK_VALVE_shader_mixed_float_dot_product ===
   template <>
-  struct StructExtends<PhysicalDeviceShaderMixedFloatDotProductFeaturesVALVE, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceShaderMixedFloatDotProductFeaturesVALVE, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22209,7 +22892,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
   };
 
   template <>
-  struct StructExtends<PhysicalDeviceThrottleHintFeaturesSEC, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceThrottleHintFeaturesSEC, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22228,7 +22911,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_ARM_data_graph_neural_accelerator_statistics ===
   template <>
-  struct StructExtends<PhysicalDeviceDataGraphNeuralAcceleratorStatisticsFeaturesARM, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDeviceDataGraphNeuralAcceleratorStatisticsFeaturesARM, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22265,7 +22948,7 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   //=== VK_EXT_primitive_restart_index ===
   template <>
-  struct StructExtends<PhysicalDevicePrimitiveRestartIndexFeaturesEXT, VKPhysicalDeviceFeatures2>
+  struct StructExtends<PhysicalDevicePrimitiveRestartIndexFeaturesEXT, PhysicalDeviceFeatures2>
   {
     enum
     {
@@ -22275,6 +22958,25 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
 
   template <>
   struct StructExtends<PhysicalDevicePrimitiveRestartIndexFeaturesEXT, DeviceCreateInfo>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  //=== VK_NV_cooperative_matrix_decode_vector ===
+  template <>
+  struct StructExtends<PhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV, PhysicalDeviceFeatures2>
+  {
+    enum
+    {
+      value = true
+    };
+  };
+
+  template <>
+  struct StructExtends<PhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV, DeviceCreateInfo>
   {
     enum
     {
@@ -23003,6 +23705,20 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
       PFN_dummy vkGetMemoryAndroidHardwareBufferANDROID_placeholder     = 0;
 #endif /*VK_USE_PLATFORM_ANDROID_KHR*/
 
+      //=== VK_AMD_gpa_interface ===
+      PFN_vkCreateGpaSessionAMD         vkCreateGpaSessionAMD         = 0;
+      PFN_vkDestroyGpaSessionAMD        vkDestroyGpaSessionAMD        = 0;
+      PFN_vkSetGpaDeviceClockModeAMD    vkSetGpaDeviceClockModeAMD    = 0;
+      PFN_vkGetGpaDeviceClockInfoAMD    vkGetGpaDeviceClockInfoAMD    = 0;
+      PFN_vkCmdBeginGpaSessionAMD       vkCmdBeginGpaSessionAMD       = 0;
+      PFN_vkCmdEndGpaSessionAMD         vkCmdEndGpaSessionAMD         = 0;
+      PFN_vkCmdBeginGpaSampleAMD        vkCmdBeginGpaSampleAMD        = 0;
+      PFN_vkCmdEndGpaSampleAMD          vkCmdEndGpaSampleAMD          = 0;
+      PFN_vkGetGpaSessionStatusAMD      vkGetGpaSessionStatusAMD      = 0;
+      PFN_vkGetGpaSessionResultsAMD     vkGetGpaSessionResultsAMD     = 0;
+      PFN_vkResetGpaSessionAMD          vkResetGpaSessionAMD          = 0;
+      PFN_vkCmdCopyGpaSessionResultsAMD vkCmdCopyGpaSessionResultsAMD = 0;
+
 #if defined( VK_ENABLE_BETA_EXTENSIONS )
       //=== VK_AMDX_shader_enqueue ===
       PFN_vkCreateExecutionGraphPipelinesAMDX        vkCreateExecutionGraphPipelinesAMDX        = 0;
@@ -23317,6 +24033,15 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
       PFN_vkCmdDispatchTileQCOM          vkCmdDispatchTileQCOM          = 0;
       PFN_vkCmdBeginPerTileExecutionQCOM vkCmdBeginPerTileExecutionQCOM = 0;
       PFN_vkCmdEndPerTileExecutionQCOM   vkCmdEndPerTileExecutionQCOM   = 0;
+
+      //=== VK_NV_low_latency ===
+      PFN_vkSetLatencySleepModeLegacyNV   vkSetLatencySleepModeLegacyNV   = 0;
+      PFN_vkLatencySleepLegacyNV          vkLatencySleepLegacyNV          = 0;
+      PFN_vkSetLatencyMarkerLegacyNV      vkSetLatencyMarkerLegacyNV      = 0;
+      PFN_vkGetLatencyTimingsLegacyNV     vkGetLatencyTimingsLegacyNV     = 0;
+      PFN_vkQueueNotifyOutOfBandLegacyNV  vkQueueNotifyOutOfBandLegacyNV  = 0;
+      PFN_vkGetSleepStatusLegacyNV        vkGetSleepStatusLegacyNV        = 0;
+      PFN_vkShutdownLatencyDeviceLegacyNV vkShutdownLatencyDeviceLegacyNV = 0;
 
 #if defined( VK_USE_PLATFORM_METAL_EXT )
       //=== VK_EXT_metal_objects ===
@@ -23792,10 +24517,14 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
       }
 
       // This interface does not require a linked vulkan library.
-      DispatchLoaderDynamic( VkInstance                instance,
-                             PFN_vkGetInstanceProcAddr getInstanceProcAddr,
-                             VkDevice                  device            = {},
-                             PFN_vkGetDeviceProcAddr   getDeviceProcAddr = nullptr ) VULKAN_HPP_NOEXCEPT
+      DispatchLoaderDynamic( VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr ) VULKAN_HPP_NOEXCEPT
+      {
+        init( instance, getInstanceProcAddr );
+      }
+
+      // This interface does not require a linked vulkan library.
+      DispatchLoaderDynamic( VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkDevice device, PFN_vkGetDeviceProcAddr getDeviceProcAddr )
+        VULKAN_HPP_NOEXCEPT
       {
         init( instance, getInstanceProcAddr, device, getDeviceProcAddr );
       }
@@ -23835,18 +24564,21 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
       }
 
       // This interface does not require a linked vulkan library.
-      void init( VkInstance                instance,
-                 PFN_vkGetInstanceProcAddr getInstanceProcAddr,
-                 VkDevice                  device              = {},
-                 PFN_vkGetDeviceProcAddr /*getDeviceProcAddr*/ = nullptr ) VULKAN_HPP_NOEXCEPT
+      void init( VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr ) VULKAN_HPP_NOEXCEPT
       {
         VULKAN_HPP_ASSERT( instance && getInstanceProcAddr );
         vkGetInstanceProcAddr = getInstanceProcAddr;
         init( Instance( instance ) );
-        if ( device )
-        {
-          init( Device( device ) );
-        }
+      }
+
+      // This interface does not require a linked vulkan library.
+      void init( VkInstance instance, PFN_vkGetInstanceProcAddr getInstanceProcAddr, VkDevice device, PFN_vkGetDeviceProcAddr getDeviceProcAddr )
+        VULKAN_HPP_NOEXCEPT
+      {
+        init( instance, getInstanceProcAddr );
+        VULKAN_HPP_ASSERT( device && getDeviceProcAddr );
+        vkGetDeviceProcAddr = getDeviceProcAddr;
+        init( Device( device ) );
       }
 
       void init( Instance instanceCpp ) VULKAN_HPP_NOEXCEPT
@@ -24509,6 +25241,20 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
           PFN_vkGetMemoryAndroidHardwareBufferANDROID( vkGetInstanceProcAddr( instance, "vkGetMemoryAndroidHardwareBufferANDROID" ) );
 #endif /*VK_USE_PLATFORM_ANDROID_KHR*/
 
+        //=== VK_AMD_gpa_interface ===
+        vkCreateGpaSessionAMD         = PFN_vkCreateGpaSessionAMD( vkGetInstanceProcAddr( instance, "vkCreateGpaSessionAMD" ) );
+        vkDestroyGpaSessionAMD        = PFN_vkDestroyGpaSessionAMD( vkGetInstanceProcAddr( instance, "vkDestroyGpaSessionAMD" ) );
+        vkSetGpaDeviceClockModeAMD    = PFN_vkSetGpaDeviceClockModeAMD( vkGetInstanceProcAddr( instance, "vkSetGpaDeviceClockModeAMD" ) );
+        vkGetGpaDeviceClockInfoAMD    = PFN_vkGetGpaDeviceClockInfoAMD( vkGetInstanceProcAddr( instance, "vkGetGpaDeviceClockInfoAMD" ) );
+        vkCmdBeginGpaSessionAMD       = PFN_vkCmdBeginGpaSessionAMD( vkGetInstanceProcAddr( instance, "vkCmdBeginGpaSessionAMD" ) );
+        vkCmdEndGpaSessionAMD         = PFN_vkCmdEndGpaSessionAMD( vkGetInstanceProcAddr( instance, "vkCmdEndGpaSessionAMD" ) );
+        vkCmdBeginGpaSampleAMD        = PFN_vkCmdBeginGpaSampleAMD( vkGetInstanceProcAddr( instance, "vkCmdBeginGpaSampleAMD" ) );
+        vkCmdEndGpaSampleAMD          = PFN_vkCmdEndGpaSampleAMD( vkGetInstanceProcAddr( instance, "vkCmdEndGpaSampleAMD" ) );
+        vkGetGpaSessionStatusAMD      = PFN_vkGetGpaSessionStatusAMD( vkGetInstanceProcAddr( instance, "vkGetGpaSessionStatusAMD" ) );
+        vkGetGpaSessionResultsAMD     = PFN_vkGetGpaSessionResultsAMD( vkGetInstanceProcAddr( instance, "vkGetGpaSessionResultsAMD" ) );
+        vkResetGpaSessionAMD          = PFN_vkResetGpaSessionAMD( vkGetInstanceProcAddr( instance, "vkResetGpaSessionAMD" ) );
+        vkCmdCopyGpaSessionResultsAMD = PFN_vkCmdCopyGpaSessionResultsAMD( vkGetInstanceProcAddr( instance, "vkCmdCopyGpaSessionResultsAMD" ) );
+
 #if defined( VK_ENABLE_BETA_EXTENSIONS )
         //=== VK_AMDX_shader_enqueue ===
         vkCreateExecutionGraphPipelinesAMDX =
@@ -24952,6 +25698,15 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
         vkCmdDispatchTileQCOM          = PFN_vkCmdDispatchTileQCOM( vkGetInstanceProcAddr( instance, "vkCmdDispatchTileQCOM" ) );
         vkCmdBeginPerTileExecutionQCOM = PFN_vkCmdBeginPerTileExecutionQCOM( vkGetInstanceProcAddr( instance, "vkCmdBeginPerTileExecutionQCOM" ) );
         vkCmdEndPerTileExecutionQCOM   = PFN_vkCmdEndPerTileExecutionQCOM( vkGetInstanceProcAddr( instance, "vkCmdEndPerTileExecutionQCOM" ) );
+
+        //=== VK_NV_low_latency ===
+        vkSetLatencySleepModeLegacyNV   = PFN_vkSetLatencySleepModeLegacyNV( vkGetInstanceProcAddr( instance, "vkSetLatencySleepModeLegacyNV" ) );
+        vkLatencySleepLegacyNV          = PFN_vkLatencySleepLegacyNV( vkGetInstanceProcAddr( instance, "vkLatencySleepLegacyNV" ) );
+        vkSetLatencyMarkerLegacyNV      = PFN_vkSetLatencyMarkerLegacyNV( vkGetInstanceProcAddr( instance, "vkSetLatencyMarkerLegacyNV" ) );
+        vkGetLatencyTimingsLegacyNV     = PFN_vkGetLatencyTimingsLegacyNV( vkGetInstanceProcAddr( instance, "vkGetLatencyTimingsLegacyNV" ) );
+        vkQueueNotifyOutOfBandLegacyNV  = PFN_vkQueueNotifyOutOfBandLegacyNV( vkGetInstanceProcAddr( instance, "vkQueueNotifyOutOfBandLegacyNV" ) );
+        vkGetSleepStatusLegacyNV        = PFN_vkGetSleepStatusLegacyNV( vkGetInstanceProcAddr( instance, "vkGetSleepStatusLegacyNV" ) );
+        vkShutdownLatencyDeviceLegacyNV = PFN_vkShutdownLatencyDeviceLegacyNV( vkGetInstanceProcAddr( instance, "vkShutdownLatencyDeviceLegacyNV" ) );
 
 #if defined( VK_USE_PLATFORM_METAL_EXT )
         //=== VK_EXT_metal_objects ===
@@ -25519,7 +26274,6 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
         VkDevice device = static_cast<VkDevice>( deviceCpp );
 
         //=== VK_VERSION_1_0 ===
-        vkGetDeviceProcAddr                = PFN_vkGetDeviceProcAddr( vkGetDeviceProcAddr( device, "vkGetDeviceProcAddr" ) );
         vkDestroyDevice                    = PFN_vkDestroyDevice( vkGetDeviceProcAddr( device, "vkDestroyDevice" ) );
         vkGetDeviceQueue                   = PFN_vkGetDeviceQueue( vkGetDeviceProcAddr( device, "vkGetDeviceQueue" ) );
         vkQueueSubmit                      = PFN_vkQueueSubmit( vkGetDeviceProcAddr( device, "vkQueueSubmit" ) );
@@ -25955,6 +26709,20 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
           PFN_vkGetMemoryAndroidHardwareBufferANDROID( vkGetDeviceProcAddr( device, "vkGetMemoryAndroidHardwareBufferANDROID" ) );
 #endif /*VK_USE_PLATFORM_ANDROID_KHR*/
 
+        //=== VK_AMD_gpa_interface ===
+        vkCreateGpaSessionAMD         = PFN_vkCreateGpaSessionAMD( vkGetDeviceProcAddr( device, "vkCreateGpaSessionAMD" ) );
+        vkDestroyGpaSessionAMD        = PFN_vkDestroyGpaSessionAMD( vkGetDeviceProcAddr( device, "vkDestroyGpaSessionAMD" ) );
+        vkSetGpaDeviceClockModeAMD    = PFN_vkSetGpaDeviceClockModeAMD( vkGetDeviceProcAddr( device, "vkSetGpaDeviceClockModeAMD" ) );
+        vkGetGpaDeviceClockInfoAMD    = PFN_vkGetGpaDeviceClockInfoAMD( vkGetDeviceProcAddr( device, "vkGetGpaDeviceClockInfoAMD" ) );
+        vkCmdBeginGpaSessionAMD       = PFN_vkCmdBeginGpaSessionAMD( vkGetDeviceProcAddr( device, "vkCmdBeginGpaSessionAMD" ) );
+        vkCmdEndGpaSessionAMD         = PFN_vkCmdEndGpaSessionAMD( vkGetDeviceProcAddr( device, "vkCmdEndGpaSessionAMD" ) );
+        vkCmdBeginGpaSampleAMD        = PFN_vkCmdBeginGpaSampleAMD( vkGetDeviceProcAddr( device, "vkCmdBeginGpaSampleAMD" ) );
+        vkCmdEndGpaSampleAMD          = PFN_vkCmdEndGpaSampleAMD( vkGetDeviceProcAddr( device, "vkCmdEndGpaSampleAMD" ) );
+        vkGetGpaSessionStatusAMD      = PFN_vkGetGpaSessionStatusAMD( vkGetDeviceProcAddr( device, "vkGetGpaSessionStatusAMD" ) );
+        vkGetGpaSessionResultsAMD     = PFN_vkGetGpaSessionResultsAMD( vkGetDeviceProcAddr( device, "vkGetGpaSessionResultsAMD" ) );
+        vkResetGpaSessionAMD          = PFN_vkResetGpaSessionAMD( vkGetDeviceProcAddr( device, "vkResetGpaSessionAMD" ) );
+        vkCmdCopyGpaSessionResultsAMD = PFN_vkCmdCopyGpaSessionResultsAMD( vkGetDeviceProcAddr( device, "vkCmdCopyGpaSessionResultsAMD" ) );
+
 #if defined( VK_ENABLE_BETA_EXTENSIONS )
         //=== VK_AMDX_shader_enqueue ===
         vkCreateExecutionGraphPipelinesAMDX = PFN_vkCreateExecutionGraphPipelinesAMDX( vkGetDeviceProcAddr( device, "vkCreateExecutionGraphPipelinesAMDX" ) );
@@ -26345,6 +27113,15 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
         vkCmdDispatchTileQCOM          = PFN_vkCmdDispatchTileQCOM( vkGetDeviceProcAddr( device, "vkCmdDispatchTileQCOM" ) );
         vkCmdBeginPerTileExecutionQCOM = PFN_vkCmdBeginPerTileExecutionQCOM( vkGetDeviceProcAddr( device, "vkCmdBeginPerTileExecutionQCOM" ) );
         vkCmdEndPerTileExecutionQCOM   = PFN_vkCmdEndPerTileExecutionQCOM( vkGetDeviceProcAddr( device, "vkCmdEndPerTileExecutionQCOM" ) );
+
+        //=== VK_NV_low_latency ===
+        vkSetLatencySleepModeLegacyNV   = PFN_vkSetLatencySleepModeLegacyNV( vkGetDeviceProcAddr( device, "vkSetLatencySleepModeLegacyNV" ) );
+        vkLatencySleepLegacyNV          = PFN_vkLatencySleepLegacyNV( vkGetDeviceProcAddr( device, "vkLatencySleepLegacyNV" ) );
+        vkSetLatencyMarkerLegacyNV      = PFN_vkSetLatencyMarkerLegacyNV( vkGetDeviceProcAddr( device, "vkSetLatencyMarkerLegacyNV" ) );
+        vkGetLatencyTimingsLegacyNV     = PFN_vkGetLatencyTimingsLegacyNV( vkGetDeviceProcAddr( device, "vkGetLatencyTimingsLegacyNV" ) );
+        vkQueueNotifyOutOfBandLegacyNV  = PFN_vkQueueNotifyOutOfBandLegacyNV( vkGetDeviceProcAddr( device, "vkQueueNotifyOutOfBandLegacyNV" ) );
+        vkGetSleepStatusLegacyNV        = PFN_vkGetSleepStatusLegacyNV( vkGetDeviceProcAddr( device, "vkGetSleepStatusLegacyNV" ) );
+        vkShutdownLatencyDeviceLegacyNV = PFN_vkShutdownLatencyDeviceLegacyNV( vkGetDeviceProcAddr( device, "vkShutdownLatencyDeviceLegacyNV" ) );
 
 #if defined( VK_USE_PLATFORM_METAL_EXT )
         //=== VK_EXT_metal_objects ===
@@ -26850,7 +27627,6 @@ VULKAN_HPP_EXPORT namespace VULKAN_HPP_NAMESPACE
         init( instance, device, dl );
       }
     };
-
 #if defined( VULKAN_HPP_CXX_MODULE ) && !defined( VULKAN_HPP_DEFAULT_DISPATCHER_HANDLED ) && VULKAN_HPP_DISPATCH_LOADER_DYNAMIC == 1
     VULKAN_HPP_STORAGE_API DispatchLoaderDynamic defaultDispatchLoaderDynamic;
 #endif

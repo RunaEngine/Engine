@@ -9,10 +9,27 @@ class RHI;
 
 enum EVSyncMode : uint8_t
 {
-    VSYNCOFF = 0,
-    VSYNCON = 1,
-    VSYNCDOUBLEBUFFERED = 2,
-    VSYNCTRIPLEBUFFERED = 3
+    VSYNC_OFF = 0,
+    VSYNC_ON = 1,
+    VSYNC_DOUBLE_BUFFERED = 2,
+    VSYNC_TRIPLE_BUFFERED = 3
+};
+
+enum EMSAACount : uint8_t
+{
+	MSAA_DISABLED = 0,
+	MSAA_2X = 2,
+    MSAA_4X = 4,
+    MSAA_8X = 8
+};
+
+enum EAnisotropic : uint8_t
+{
+    ANISOTROPIC_DISABLED = 1,
+    ANISOTROPIC_2X = 2,
+    ANISOTROPIC_4X = 4,
+    ANISOTROPIC_8X = 8,
+    ANISOTROPIC_16X = 16,
 };
 
 class GameUserSettings : public Object
@@ -22,7 +39,9 @@ private:
 
     friend class RHI;
 public:
-    EVSyncMode VSyncMode = VSYNCOFF;
+    EVSyncMode VSyncMode = VSYNC_OFF;
+    EAnisotropic Anisotropic = ANISOTROPIC_DISABLED;
+	EMSAACount MSAACount = MSAA_DISABLED;
 
     GameUserSettings() = default;
 

@@ -22,10 +22,9 @@ private:
     uint64_t Size = 0;
 
 public:
-
     NRIBuffer(nri::CoreInterface& core, nri::Device* device)
         : ICore(core)
-        , Device(device)
+          , Device(device)
     {
     }
 
@@ -52,12 +51,11 @@ public:
         desc.size = size;
         desc.usage = usage;
 
-        nri::Result result =
-            ICore.CreateBuffer(
-                *Device,
-                desc,
-                Buffer
-            );
+        nri::Result result = ICore.CreateBuffer(
+            *Device,
+            desc,
+            Buffer
+        );
 
         if (result != nri::Result::SUCCESS)
         {
@@ -122,12 +120,11 @@ public:
             return false;
         }
 
-        void* dstMemory =
-            ICore.MapBuffer(
-                *Buffer,
-                offset,
-                size
-            );
+        void* dstMemory = ICore.MapBuffer(
+            *Buffer,
+            offset,
+            size
+        );
 
         if (!dstMemory)
         {
@@ -154,6 +151,16 @@ public:
         return true;
     }
 
+    void* Map(uint64_t offset, uint64_t size)
+    {
+        return ICore.MapBuffer(*Buffer, offset, size);
+    }
+
+    void Unmap()
+    {
+        ICore.UnmapBuffer(*Buffer);
+    }
+
     nri::Buffer* Get() const
     {
         return Buffer;
@@ -175,7 +182,6 @@ public:
     }
 
 private:
-
     bool Malloc(nri::MemoryLocation location)
     {
         nri::MemoryDesc memoryDesc = {};

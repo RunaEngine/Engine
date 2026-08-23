@@ -1,8 +1,11 @@
 #include "Runtime/RHI/RHI.hpp"
+#include "Runtime/RHI/NRI/NRIShader.hpp"
+#include "Runtime/RHI/NRI/NRIVertexBuffer.hpp"
+#include "Runtime/RHI/NRI/NRITexture.hpp"
+#include "Runtime/RHI/NRI/NRIMaterial.hpp"
 #include <iostream>
 
-#include "Runtime/RHI/NRI/NRIShader.hpp"
-#include "Runtime/RHI/NRI/NRIVertex.hpp"
+#include "Runtime/RHI/NRI/NRIMesh.hpp"
 
 int main(int argc, char** argv)
 {
@@ -20,16 +23,34 @@ int main(int argc, char** argv)
     };
 
     auto rhi = MakeUnique<RHI>();
-    GUserSettings->VSyncMode = VSYNCTRIPLEBUFFERED;
-    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, false))
+    GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
+    GUserSettings->Anisotropic = ANISOTROPIC_8X;
+    if (!rhi->Init(nri::GraphicsAPI::VK, false, false))
         return -1;
 
-    NRIVertexBuffer vertexBuffer(rhi->ICore, rhi->Device.Get());
-    if (!vertexBuffer.Init(vertices, indices))
+    SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
+    if (!vertexShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.vs.hlsl"))
         return -1;
 
-    NRIShader shader(rhi->ICore, rhi->Device.Get());
-    shader.Init(GetBaseDir().string() + "Resources/Shaders/Default.vs.hlsl");
+    SharedPtr<NRIShader> fragmentShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
+    if (!fragmentShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.fs.hlsl"))
+        return -1;
+
+    SharedPtr<NRITexture> texture = MakeShared<NRITexture>(rhi->ICore, rhi->IHelper, rhi->IStreamer, rhi->Streamer, rhi->Device.Get());
+	if (!texture->Init(GetBaseDir().string() + "Resources/Textures/UVCheck.png", nri::AddressMode::REPEAT, nri::Filter::LINEAR, true))
+        return -1;
+
+	SharedPtr<NRIMaterial> material = MakeShared<NRIMaterial>(rhi->ICore, rhi->Device.Get(), rhi->SwapChainFormat, rhi->DepthFormat, vertexShader, fragmentShader);
+    if (!material->Init(rhi->GCamera, { texture }))
+        return -1;
+
+    SharedPtr<NRIVertexBuffer> vertexBuffer = MakeShared<NRIVertexBuffer>(rhi->ICore, rhi->Device.Get());
+    if (!vertexBuffer->Init(vertices, indices))
+        return -1;
+
+    auto mesh = MakeShared<NRIMesh>(vertexBuffer, material);
+
+    rhi->GCamera->Position = glm::vec3(0.0f, 5.0f, 0.0f);
 
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
@@ -44,6 +65,26 @@ int main(int argc, char** argv)
             break;
         }
         rhi->UpdateSurface(e);
+        GInput->UpdateEvent(e);
+        rhi->GCamera->Inputs(e);
+    };
+    rhi->OnGraphicsSettingsChanged = [&]()
+    {
+        for (auto& texture : mesh->Material->Textures)
+        {
+            texture->UpdateSampler();
+        }
+    };
+    rhi->OnBarrier = [&](nri::CommandBuffer& cmdBuf)
+    {
+        for (auto& texture : mesh->Material->Textures)
+        {
+            texture->Barrier(cmdBuf);
+        }
+    };
+    rhi->OnRender = [&](nri::CommandBuffer& cmdBuf)
+    {
+        mesh->Draw(rhi->ICore, cmdBuf);
     };
     while (!shouldClose)
     {

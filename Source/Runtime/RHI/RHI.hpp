@@ -10,11 +10,12 @@
 #include <NRI.h>
 #include <string>
 #include <vector>
-#include <Extensions/NRIDeviceCreation.h>
 #include <Extensions/NRISwapChain.h>
 #include <Extensions/NRIHelper.h>
 #include <Extensions/NRIStreamer.h>
 #include <SDL3/SDL.h>
+
+#include "NRI/NRICamera.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -52,10 +53,13 @@ struct QueuedFrame
 class RHI : public Object
 {
 public:
+    SharedPtr<NRICamera> GCamera = nullptr;
+
     nri::CoreInterface ICore = {};
     nri::HelperInterface IHelper = {};
     nri::StreamerInterface IStreamer = {};
     nri::SwapChainInterface ISwapChain = {};
+	nri::Streamer* Streamer = nullptr;
     SDL_Window* Window = nullptr;
     NRIDevice Device;
 
@@ -69,7 +73,17 @@ public:
     std::vector<nri::Memory*> SwapChainDepthMemory;
 
     nri::SwapChainDesc SwapChainDesc = {};
+    nri::Format SwapChainFormat = nri::Format::UNKNOWN;
+    nri::Format DepthFormat = nri::Format::UNKNOWN;
     uint64_t FrameIndex = 0;
+
+    // Important for pipeline event trigger
+    EMSAACount PreviousMSAACount = MSAA_DISABLED;
+    EAnisotropic PreviousAnisotropic = ANISOTROPIC_DISABLED;
+
+    std::function<void(nri::CommandBuffer& commandBuffer)> OnBarrier;
+    std::function<void()> OnGraphicsSettingsChanged;
+    std::function<void(nri::CommandBuffer& commandBuffer)> OnRender;
 
     RHI() : Device(ICore)
     {
@@ -156,6 +170,19 @@ public:
             return false;
         }
 
+        // Streamer
+		nri::StreamerDesc streamerDesc = {};
+        streamerDesc.dynamicBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
+        streamerDesc.dynamicBufferDesc = {
+            0, 0,
+            nri::BufferUsageBits::VERTEX_BUFFER |
+            nri::BufferUsageBits::INDEX_BUFFER
+        };
+        streamerDesc.constantBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
+        streamerDesc.constantBufferSize = 1 * 1024 * 1024;
+        streamerDesc.queuedFrameNum = GetQueuedFrameNum();
+		IStreamer.CreateStreamer(*Device.Get(), streamerDesc, Streamer);
+
         // Queue
         result = ICore.GetQueue(*Device.Get(), nri::QueueType::GRAPHICS, 0, GraphicsQueue);
         if (result != nri::Result::SUCCESS)
@@ -204,6 +231,9 @@ public:
             }
         }
 
+        GCamera = MakeShared<NRICamera>(ICore, Device.Get(), Window);
+        GCamera->Init();
+
         return true;
     }
 
@@ -235,6 +265,12 @@ public:
             FrameFence = nullptr;
         }
 
+		if (Streamer)
+		{
+			IStreamer.DestroyStreamer(Streamer);
+			Streamer = nullptr;
+		}
+
         ISwapChain = {};
         IHelper = {};
         IStreamer = {};
@@ -255,13 +291,22 @@ public:
         GTick->UpdateCurrentTick();
 
         uint64_t frameTime = 0;
-        /*
-        if (GUserSettings->VSync == wgpu::PresentMode::Immediate && GUserSettings->GetFramerateLimit() > 0)
+        if (GUserSettings->VSyncMode == VSYNC_OFF && GUserSettings->GetFramerateLimit() > 0)
         {
             frameTime = 1000000000 / GUserSettings->GetFramerateLimit();
         }
-        */
+
+        if (GUserSettings->MSAACount != PreviousMSAACount || GUserSettings->Anisotropic!= PreviousAnisotropic)
+        {
+            ResizeSwapChain(SwapChainDesc.width, SwapChainDesc.height);
+            if (OnGraphicsSettingsChanged) OnGraphicsSettingsChanged();
+            PreviousMSAACount = GUserSettings->MSAACount;
+            PreviousAnisotropic = GUserSettings->Anisotropic;
+        }
+
         GEvent->Run();
+        GCamera->Tick(GTick->Delta());
+        GCamera->UpdateMatrix();
         Render();
 
         if (frameTime > 0 && frameTime > GTick->ElapsedNS())
@@ -291,7 +336,7 @@ public:
 private:
     uint32_t GetQueuedFrameNum() const
     {
-        return (GUserSettings->VSyncMode == VSYNCTRIPLEBUFFERED) ? 3 : 2;
+        return (GUserSettings->VSyncMode == VSYNC_TRIPLE_BUFFERED) ? 3 : 2;
     }
 
     void PopulateSwapChainWindow(nri::SwapChainDesc& desc)
@@ -321,10 +366,10 @@ private:
         desc.width = (uint16_t)outWidth;
         desc.height = (uint16_t)outHeight;
 
-        desc.flags = (GUserSettings->VSyncMode == VSYNCON ? nri::SwapChainBits::VSYNC : nri::SwapChainBits::NONE) |
+        desc.flags = (GUserSettings->VSyncMode == VSYNC_ON ? nri::SwapChainBits::VSYNC : nri::SwapChainBits::NONE) |
             nri::SwapChainBits::ALLOW_TEARING;
-        desc.textureNum = GUserSettings->VSyncMode == VSYNCTRIPLEBUFFERED ? 3 : 2;
-        desc.queuedFrameNum = GUserSettings->VSyncMode == VSYNCTRIPLEBUFFERED ? 3 : 2;
+        desc.textureNum = GUserSettings->VSyncMode == VSYNC_TRIPLE_BUFFERED ? 3 : 2;
+        desc.queuedFrameNum = GUserSettings->VSyncMode == VSYNC_TRIPLE_BUFFERED ? 3 : 2;
     }
 
     bool CreateSwapChainAndResources()
@@ -339,14 +384,14 @@ private:
         uint32_t swapChainTextureNum = 0;
         nri::Texture* const* swapChainTextures = ISwapChain.GetSwapChainTextures(*SwapChain, swapChainTextureNum);
 
-        nri::Format swapChainFormat = ICore.GetTextureDesc(*swapChainTextures[0]).format;
-        nri::Format depthFormat = nri::Format::D32_SFLOAT_S8_UINT;
+        SwapChainFormat = ICore.GetTextureDesc(*swapChainTextures[0]).format;
+        DepthFormat = nri::Format::D32_SFLOAT_S8_UINT;
 
         SwapChainTextures.reserve(swapChainTextureNum);
         for (uint32_t i = 0; i < swapChainTextureNum; i++)
         {
             nri::TextureViewDesc textureViewDesc = {
-                swapChainTextures[i], nri::TextureView::COLOR_ATTACHMENT, swapChainFormat
+                swapChainTextures[i], nri::TextureView::COLOR_ATTACHMENT, SwapChainFormat
             };
 
             nri::Descriptor* colorAttachment = nullptr;
@@ -377,7 +422,7 @@ private:
             nri::TextureDesc depthTextureDesc = {};
             depthTextureDesc.type = nri::TextureType::TEXTURE_2D;
             depthTextureDesc.usage = nri::TextureUsageBits::DEPTH_STENCIL_ATTACHMENT;
-            depthTextureDesc.format = depthFormat;
+            depthTextureDesc.format = DepthFormat;
             depthTextureDesc.width = SwapChainDesc.width;
             depthTextureDesc.height = SwapChainDesc.height;
             depthTextureDesc.mipNum = 1;
@@ -413,7 +458,7 @@ private:
             nri::TextureViewDesc depthViewDesc = {};
             depthViewDesc.texture = depthTexture;
             depthViewDesc.type = nri::TextureView::DEPTH_STENCIL_ATTACHMENT;
-            depthViewDesc.format = depthFormat;
+            depthViewDesc.format = DepthFormat;
             depthViewDesc.mipNum = 1;
             depthViewDesc.layerNum = 1;
             depthViewDesc.planes = nri::PlaneBits::DEPTH | nri::PlaneBits::STENCIL;
@@ -434,7 +479,7 @@ private:
             swapChainTexture.colorAttachment = colorAttachment;
             swapChainTexture.depthTexture = depthTexture;
             swapChainTexture.depthAttachment = depthAttachment;
-            swapChainTexture.attachmentFormat = swapChainFormat;
+            swapChainTexture.attachmentFormat = SwapChainFormat;
         }
 
         return true;
@@ -444,7 +489,6 @@ private:
     {
         for (SwapChainTexture& swapChainTexture : SwapChainTextures)
         {
-            // CORREÇÃO: Adicionado '*' para desreferenciar os ponteiros nas funções do NRI
             if (swapChainTexture.acquireSemaphore) ICore.DestroyFence(swapChainTexture.acquireSemaphore);
             if (swapChainTexture.releaseSemaphore) ICore.DestroyFence(swapChainTexture.releaseSemaphore);
             if (swapChainTexture.colorAttachment) ICore.DestroyDescriptor(swapChainTexture.colorAttachment);
@@ -528,6 +572,9 @@ private:
         if (result != nri::Result::SUCCESS)
             return;
 
+        IStreamer.CmdCopyStreamedData(*commandBuffer, *Streamer);
+        if (OnBarrier) OnBarrier(*commandBuffer);
+
         nri::TextureBarrierDesc colorBarrier = {};
         colorBarrier.texture = swapChainTexture.texture;
 
@@ -589,8 +636,27 @@ private:
 
         ICore.CmdBeginRendering(*commandBuffer, renderingDesc);
         {
+            // FIXED: Set Viewport dynamic states right after beginning rendering
+            nri::Viewport viewport = {};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(SwapChainDesc.width);
+            viewport.height = static_cast<float>(SwapChainDesc.height);
+            viewport.depthMin = 0.0f;
+            viewport.depthMax = 1.0f;
+            ICore.CmdSetViewports(*commandBuffer, &viewport, 1);
+
+            // FIXED: Set Scissor dynamic states matching the current resolution
+            nri::Rect scissor = {};
+            scissor.x = 0;
+            scissor.y = 0;
+            scissor.width = SwapChainDesc.width;
+            scissor.height = SwapChainDesc.height;
+            ICore.CmdSetScissors(*commandBuffer, &scissor, 1);
+
             // Draw objects
             {
+                if (OnRender) OnRender(*commandBuffer);
             }
 
             // Draw UI
@@ -656,6 +722,8 @@ private:
         frameFenceSubmitDesc.signalFences = &signalFrame;
         frameFenceSubmitDesc.signalFenceNum = 1;
         ICore.QueueSubmit(*GraphicsQueue, frameFenceSubmitDesc);
+
+        IStreamer.EndStreamerFrame(*Streamer);
 
         FrameIndex++;
     }
