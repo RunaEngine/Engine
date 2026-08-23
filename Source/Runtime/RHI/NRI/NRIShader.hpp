@@ -1,14 +1,14 @@
 #pragma once
 
-#include <filesystem>
-#include <iostream>
-
 #include "Engine/Core/Object.hpp"
 #include "Runtime/Utils/System.hpp"
 #include <NRI.h>
 #include <slang.h>
 #include <vector>
+#include <filesystem>
+#include <iostream>
 
+using namespace slang;
 
 class NRIShader : public Object
 {
@@ -123,6 +123,7 @@ private:
         }
 
         slang::IBlob* compiledBlob = nullptr;
+        
         request->getEntryPointCodeBlob(entryPointIndex, 0, &compiledBlob);
 
         if (compiledBlob)

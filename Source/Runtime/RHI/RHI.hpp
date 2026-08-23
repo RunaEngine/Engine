@@ -347,10 +347,10 @@ private:
         HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
         desc.window.windows.hwnd = hwnd;
 #elif defined(__linux__)
-        void* x11Display = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
-        uint64_t x11Window = (uint64_t)SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-        desc.window.x11.dpy = x11Display;
-        desc.window.x11.window = x11Window;
+        void* waylandDisplay = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
+        void* waylandSurface = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+        desc.window.wayland.display = waylandDisplay;
+        desc.window.wayland.surface = waylandSurface;
 #endif
     }
 
