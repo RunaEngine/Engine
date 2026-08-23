@@ -3,6 +3,9 @@
 #include "Engine/Core/Object.hpp"
 #include "Runtime/Utils/System.hpp"
 #include <NRI.h>
+#ifdef None
+#undef None
+#endif
 #include <slang.h>
 #include <vector>
 #include <filesystem>
@@ -94,8 +97,8 @@ private:
         slang::IGlobalSession* globalSession = nullptr;
         if (SLANG_FAILED(createGlobalSession(&globalSession))) return false;
 
-        slang::SessionDesc sessionDesc = {};
-        slang::TargetDesc targetDesc = {};
+        SessionDesc sessionDesc = {};
+        TargetDesc targetDesc = {};
         targetDesc.format = target;
         targetDesc.profile = target == SLANG_DXIL ? globalSession->findProfile("sm_6_6") : globalSession->findProfile("spirv_1_5");
 
@@ -122,7 +125,7 @@ private:
             return false;
         }
 
-        slang::IBlob* compiledBlob = nullptr;
+        IBlob* compiledBlob = nullptr;
         
         request->getEntryPointCodeBlob(entryPointIndex, 0, &compiledBlob);
 

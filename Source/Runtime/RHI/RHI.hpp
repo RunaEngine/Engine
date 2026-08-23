@@ -20,7 +20,13 @@
 #ifdef _WIN32
 #include <Windows.h>
 #elif defined(__linux__)
-#include <X11/Xlib.h>
+#include <wayland-client-core.h>
+#ifdef None
+#undef None
+#endif
+#ifdef Bool
+#undef Bool
+#endif
 #endif
 
 struct SwapChainTexture

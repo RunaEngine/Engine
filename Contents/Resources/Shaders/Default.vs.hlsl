@@ -2,6 +2,7 @@ struct CameraUniform {
     float4x4 view_proj;
 };
 
+[[vk::binding(0, 1)]]
 ConstantBuffer<CameraUniform> camera : register(b0, space1);
 
 struct VertexInput {

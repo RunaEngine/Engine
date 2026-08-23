@@ -60,6 +60,14 @@ target_link_libraries(Runa
         tomlplusplus::tomlplusplus
 )
 
+if(TARGET slang-glslang)
+        add_custom_command(TARGET Runa POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        $<TARGET_FILE:slang-glslang>
+                        $<TARGET_FILE_DIR:Runa>
+        )
+endif()
+
 #set_target_properties(Runa PROPERTIES FOLDER "Source")
 #[[
 function(copy_target_shared_dlls target)

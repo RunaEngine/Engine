@@ -136,7 +136,6 @@ public:
     {
         if (CameraBufferMemory)
         {
-            CameraBuffer.Unmap();
             CameraBufferMemory = nullptr;
         }
         CameraBuffer.Deinit();

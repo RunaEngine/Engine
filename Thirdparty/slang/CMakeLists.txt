@@ -19,9 +19,9 @@ set(SLANG_ENABLE_EXAMPLES OFF CACHE BOOL "")
 set(SLANG_ENABLE_GFX OFF CACHE BOOL "")
 
 # CRITICAL FIX: Turn these core components ON so header structures resolve perfectly
-set(SLANG_ENABLE_SLANGI ON CACHE BOOL "")
-set(SLANG_ENABLE_SLANGC ON CACHE BOOL "")
-set(SLANG_ENABLE_SLANGD ON CACHE BOOL "")
+set(SLANG_ENABLE_SLANGI OFF CACHE BOOL "")
+set(SLANG_ENABLE_SLANGC OFF CACHE BOOL "")
+set(SLANG_ENABLE_SLANGD OFF CACHE BOOL "")
 set(SLANG_ENABLE_SLANG_GLSLANG ON CACHE BOOL "")
 
 set(SLANG_EMBED_CORE_MODULE_SOURCE ON CACHE BOOL "")
@@ -46,19 +46,6 @@ set_target_properties(slang-dispatcher PROPERTIES FOLDER "Thirdparty/slang")
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(slang-dxil PROPERTIES FOLDER "Thirdparty/slang")
     set_target_properties(slang-proxy PROPERTIES FOLDER "Thirdparty/slang")
-endif()
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    add_compile_definitions(SLANG_LINUX)
-    add_compile_options(-Wno-invalid-constexpr) 
-    include_directories(SYSTEM 
-        ${slang_SOURCE_DIR}
-        ${slang_SOURCE_DIR}/source
-        ${slang_SOURCE_DIR}/include
-    )
-    if(TARGET Runa)
-        target_include_directories(Runa PRIVATE ${slang_SOURCE_DIR}/include)
-        target_link_libraries(Runa PRIVATE slang)
-    endif()
 endif()
 #set_target_properties(slang-common-objects PROPERTIES FOLDER "/Thirdparty/slang")
 #set_target_properties(slangc PROPERTIES FOLDER "/Thirdparty/slang")
