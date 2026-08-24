@@ -4,7 +4,6 @@
 #include "Runtime/Settings.hpp"
 #include "Runtime/RHI/NRI/NRIVertexBuffer.hpp"
 #include "Runtime/RHI/NRI/NRIShader.hpp"
-#include "Runtime/RHI/NRI/NRITexture.hpp"
 #include <NRI.h>
 #include <vector>
 

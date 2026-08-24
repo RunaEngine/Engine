@@ -24,8 +24,9 @@ int main(int argc, char** argv)
 
     auto rhi = MakeUnique<RHI>();
     GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
-    GUserSettings->Anisotropic = ANISOTROPIC_8X;
-    if (!rhi->Init(nri::GraphicsAPI::VK, false, false))
+    GUserSettings->Anisotropic = ANISOTROPIC_16X;
+    GUserSettings->MSAACount = MSAA_8X;
+    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, true))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
@@ -70,10 +71,7 @@ int main(int argc, char** argv)
     };
     rhi->OnGraphicsSettingsChanged = [&]()
     {
-        for (auto& texture : mesh->Material->Textures)
-        {
-            texture->UpdateSampler();
-        }
+        mesh->Material->UpdatePipeline();
     };
     rhi->OnBarrier = [&](nri::CommandBuffer& cmdBuf)
     {
