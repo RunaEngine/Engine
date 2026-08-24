@@ -3,9 +3,9 @@
 #include "Runtime/RHI/NRI/NRIVertexBuffer.hpp"
 #include "Runtime/RHI/NRI/NRITexture.hpp"
 #include "Runtime/RHI/NRI/NRIMaterial.hpp"
+#include "Runtime/RHI/NRI/NRIMesh.hpp"
 #include <iostream>
 
-#include "Runtime/RHI/NRI/NRIMesh.hpp"
 
 int main(int argc, char** argv)
 {
