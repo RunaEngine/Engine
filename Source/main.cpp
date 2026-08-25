@@ -23,10 +23,10 @@ int main(int argc, char** argv)
     };
 
     auto rhi = MakeUnique<RHI>();
-    GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
+    GUserSettings->VSyncMode = VSYNC_ON;
     GUserSettings->Anisotropic = ANISOTROPIC_16X;
     GUserSettings->MSAACount = MSAA_8X;
-    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, true))
+    if (!rhi->Init(nri::GraphicsAPI::VK, false, true))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());

@@ -24,7 +24,7 @@ private:
 public:
     NRIBuffer(nri::CoreInterface& core, nri::Device* device)
         : ICore(core)
-          , Device(device)
+        , Device(device)
     {
     }
 
@@ -81,15 +81,15 @@ public:
 
     void Deinit()
     {
-        if (Memory)
-        {
-            Free();
-        }
-
         if (Buffer)
         {
             ICore.DestroyBuffer(Buffer);
             Buffer = nullptr;
+        }
+
+        if (Memory)
+        {
+            Free();
         }
 
         Capacity = 0;

@@ -239,6 +239,8 @@ public:
             ICore.DeviceWaitIdle(Device.Get());
         }
 
+        GCamera.reset();
+
         for (QueuedFrame& queuedFrame : QueuedFrames)
         {
             if (queuedFrame.commandBuffer) ICore.DestroyCommandBuffer(queuedFrame.commandBuffer);
@@ -532,7 +534,7 @@ private:
         // Configure Depth barrier
         nri::TextureBarrierDesc depthBarrier = {};
         depthBarrier.texture = swapChainTexture.depthTexture.Texture;
-        depthBarrier.before = {nri::AccessBits::NONE, nri::Layout::UNDEFINED, nri::StageBits::NONE};
+        depthBarrier.before = swapChainTexture.depthTexture.CurrentState;
         depthBarrier.after = {
             nri::AccessBits::DEPTH_STENCIL_ATTACHMENT_WRITE, nri::Layout::DEPTH_STENCIL_ATTACHMENT,
             nri::StageBits::DEPTH_STENCIL_ATTACHMENT
@@ -626,6 +628,7 @@ private:
         presentBarrierDesc.textureNum = 1;
         ICore.CmdBarrier(*commandBuffer, presentBarrierDesc);
         if (ICore.EndCommandBuffer(*commandBuffer) != nri::Result::SUCCESS) return;
+
         // Submit
         nri::FenceSubmitDesc waitAcquire = {};
         waitAcquire.fence = swapChainAcquireSemaphore;
@@ -644,6 +647,7 @@ private:
         submitDesc.signalFenceNum = 1;
         if (ICore.QueueSubmit(*GraphicsQueue, submitDesc) != nri::Result::SUCCESS) return;
         ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore);
+        
         // FrameFence tracking
         nri::FenceSubmitDesc signalFrame = {};
         signalFrame.fence = FrameFence;
