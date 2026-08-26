@@ -20,6 +20,21 @@ private:
     nri::Device* Device = nullptr;
     std::vector<uint8_t> Bytecode;
 
+    static slang::IGlobalSession* GetGlobalSession()
+    {
+        static slang::IGlobalSession* globalSession = []() -> slang::IGlobalSession*
+        {
+            slang::IGlobalSession* session = nullptr;
+            if (SLANG_FAILED(slang::createGlobalSession(&session)))
+            {
+                Logs::Error("NRIShader: failed to create Slang global session");
+                return nullptr;
+            }
+            return session;
+        }();
+        return globalSession;
+    }
+
 public:
     nri::ShaderDesc ShaderDesc = {};
 
@@ -31,33 +46,29 @@ public:
         Deinit();
     }
 
-    bool Init(const std::filesystem::path& filepath)
+    bool Init(const std::filesystem::path& filepath, SlangStage stage)
     {
         std::string filename = filepath.filename().string();
         std::string entryPointName;
-        SlangStage stage = SLANG_STAGE_NONE;
 
-        if (filename.find(".vs.") != std::string::npos)
+        if (stage == SLANG_STAGE_VERTEX)
         {
             entryPointName = "vs_main";
-            stage = SLANG_STAGE_VERTEX;
             ShaderDesc.stage = nri::StageBits::VERTEX_SHADER;
         }
-        else if (filename.find(".fs.") != std::string::npos)
+        else if (stage == SLANG_STAGE_FRAGMENT)
         {
             entryPointName = "fs_main";
-            stage = SLANG_STAGE_FRAGMENT;
             ShaderDesc.stage = nri::StageBits::FRAGMENT_SHADER;
         }
-        else if (filename.find(".cs.") != std::string::npos)
+        else if (stage == SLANG_STAGE_COMPUTE)
         {
             entryPointName = "cs_main";
-            stage = SLANG_STAGE_COMPUTE;
             ShaderDesc.stage = nri::StageBits::COMPUTE_SHADER;
         }
         else
         {
-            Logs::Error("Invalid extension in %s", filepath.string().c_str());
+            Logs::Error("Invalid shader stage: %d", stage);
             return false;
         }
 
@@ -94,7 +105,7 @@ public:
 private:
     bool CompileAndExtract(const std::string& shaderSource, const char* entryPointName, SlangStage stage, SlangCompileTarget target)
     {
-        slang::IGlobalSession* globalSession = nullptr;
+        slang::IGlobalSession* globalSession = GetGlobalSession();
         if (SLANG_FAILED(createGlobalSession(&globalSession))) return false;
 
         SessionDesc sessionDesc = {};
@@ -141,7 +152,7 @@ private:
 
         request->release();
         session->release();
-        globalSession->release();
+        //globalSession->release();
 
         return !Bytecode.empty();
     }

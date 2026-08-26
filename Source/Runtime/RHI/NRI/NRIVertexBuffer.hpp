@@ -9,7 +9,7 @@
 #include <vector>
 
 
-struct NRIVertex
+struct alignas(256) NRIVertex
 {
     glm::vec3 Position;
     glm::vec2 TexCoord;

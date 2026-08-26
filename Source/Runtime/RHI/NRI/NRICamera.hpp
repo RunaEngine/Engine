@@ -12,7 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
-struct CameraData
+struct alignas(256) CameraData
 {
     glm::mat4 ViewProj;
 };
@@ -173,11 +173,12 @@ public:
 
         //ProjMatrix[1][1] *= -1;
 
-        glm::mat4 viewProj = ProjMatrix * ViewMatrix;
+        CameraData data = {};
+        data.ViewProj = ProjMatrix * ViewMatrix;
         std::memcpy(
             CameraBufferMemory,
-            &viewProj,
-            sizeof(glm::mat4)
+            &data,
+            sizeof(CameraData)
         );
     }
 

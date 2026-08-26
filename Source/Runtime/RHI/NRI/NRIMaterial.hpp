@@ -3,10 +3,12 @@
 #include "Runtime/RHI/NRI/NRIShader.hpp"
 #include "Runtime/RHI/NRI/NRITexture.hpp"
 #include "Runtime/RHI/NRI/NRIPipeline.hpp"
+#include "Runtime/RHI/NRI/NRIMipmap.hpp"
 #include "Runtime/RHI/NRI/NRICamera.hpp"
 #include "Runtime/RHI/Utils.hpp"
 #include <NRI.h>
 #include <vector>
+
 
 class NRIMaterial : public Object
 {
@@ -21,6 +23,8 @@ private:
     std::vector<nri::DescriptorRangeDesc> CameraRanges;
 
 public:
+    inline static UniquePtr<NRIMipmap> MipmapPipeline = nullptr;
+
     SharedPtr<NRIShader> VertexShader = nullptr;
     SharedPtr<NRIShader> FragmentShader = nullptr;
     UniquePtr<NRIPipeline> Pipeline = nullptr;
@@ -38,6 +42,16 @@ public:
           ColorFormat(colorFormat), DepthFormat(depthFormat),
           VertexShader(vertexShader), FragmentShader(fragmentShader)
     {
+        if (!MipmapPipeline)
+        {
+            MipmapPipeline = MakeUnique<NRIMipmap>(core, device);
+            SharedPtr<NRIShader> shader = MakeShared<NRIShader>(core, device);
+            if (!shader->Init(GetBaseDir().string() + "Resources/Shaders/Mipmap.hlsl", SLANG_STAGE_COMPUTE))
+            {
+                Logs::RuntimeError("Error initializing compute shader for mipmap generation");
+            }
+            MipmapPipeline->Init(shader);
+        }
     }
 
     ~NRIMaterial() override { Deinit(); }
@@ -269,9 +283,8 @@ private:
             // Configuração Dinâmica do Sampler
             nri::DescriptorRangeDesc samplerRange = {};
 
-            // Se for DX12, o sampler começa após o array de texturas (ex: se forem 2 texturas, usa s2)
-            // Se for Vulkan, mantém fixo no binding 1 devido ao [[vk::binding(1, 0)]] do Slang
-            samplerRange.baseRegisterIndex = isD3D12 ? textureCount : 1;
+            // samplerRange.baseRegisterIndex = isD3D12 ? textureCount : 0;
+            samplerRange.baseRegisterIndex = textureCount;
 
             samplerRange.descriptorNum = textureCount;
             samplerRange.descriptorType = nri::DescriptorType::SAMPLER;

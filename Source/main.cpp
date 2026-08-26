@@ -23,18 +23,18 @@ int main(int argc, char** argv)
     };
 
     auto rhi = MakeUnique<RHI>();
-    GUserSettings->VSyncMode = VSYNC_ON;
+    GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_16X;
-    GUserSettings->MSAACount = MSAA_8X;
-    if (!rhi->Init(nri::GraphicsAPI::VK, false, true))
+    GUserSettings->MSAACount = MSAA_4X;
+    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, false))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
-    if (!vertexShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.vs.hlsl"))
+    if (!vertexShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.hlsl", SLANG_STAGE_VERTEX))
         return -1;
 
     SharedPtr<NRIShader> fragmentShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
-    if (!fragmentShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.fs.hlsl"))
+    if (!fragmentShader->Init(GetBaseDir().string() + "Resources/Shaders/Default.hlsl", SLANG_STAGE_FRAGMENT))
         return -1;
 
     SharedPtr<NRITexture> texture = MakeShared<NRITexture>(rhi->ICore, rhi->IHelper, rhi->IStreamer, rhi->Streamer, rhi->Device.Get());
@@ -77,7 +77,10 @@ int main(int argc, char** argv)
     {
         for (auto& texture : mesh->Material->Textures)
         {
-            texture->Barrier(cmdBuf);
+            if (texture->NeedsMipmapGeneration())
+                mesh->Material->MipmapPipeline->GenerateMipmaps(cmdBuf, texture);
+            else
+                texture->Barrier(cmdBuf);
         }
     };
     rhi->OnRender = [&](nri::CommandBuffer& cmdBuf)

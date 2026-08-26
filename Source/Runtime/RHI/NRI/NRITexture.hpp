@@ -65,6 +65,8 @@ public:
         nri::TextureDesc texDesc = {};
         texDesc.type = nri::TextureType::TEXTURE_2D;
         texDesc.usage = nri::TextureUsageBits::SHADER_RESOURCE;
+        if (generateMipmaps)
+            texDesc.usage |= nri::TextureUsageBits::SHADER_RESOURCE_STORAGE;
         texDesc.format = nri::Format::RGBA8_UNORM;
         texDesc.width = (nri::Dim_t)TexWidth;
         texDesc.height = (nri::Dim_t)TexHeight;
@@ -134,6 +136,7 @@ public:
     void Barrier(nri::CommandBuffer& cmdBuffer)
     {
         if (!bIsDirty) return;
+        if (MipLevels > 1) return;
 
         nri::TextureBarrierDesc barrier = {};
         barrier.texture = Texture;
@@ -175,11 +178,15 @@ public:
     }
 
     bool IsValid() const { return Texture != nullptr; }
+    uint32_t GetWidth() const { return (uint32_t)TexWidth; }
+    uint32_t GetHeight() const { return (uint32_t)TexHeight; }
     uint32_t GetMipLevels() const { return MipLevels; }
     bool IsDirty()
     {
         return bIsDirty;
     }
+    bool NeedsMipmapGeneration() const { return bIsDirty && MipLevels > 1; }
+    void ClearDirty() { bIsDirty = false; }
 
 private:
     bool UploadMips(stbi_uc* basePixels)
