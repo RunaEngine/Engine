@@ -22,6 +22,9 @@ set(IMGUI_SOURCES
         ${IMGUI_SOURCE_DIR}/imgui_draw.cpp
         ${IMGUI_SOURCE_DIR}/imgui_tables.cpp
         ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
+
+        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.h
+        ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")

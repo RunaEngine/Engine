@@ -12,6 +12,7 @@
 #include "Runtime/RHI/NRI/NRIDepthTexture.hpp"
 #include "Runtime/RHI/NRI/NRIMultisampleTexture.hpp"
 #include "Runtime/RHI/NRI/NRIMipmap.hpp"
+#include "Runtime/RHI/NRI/NRImGui.hpp"
 #include <NRI.h>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@
 #include <Extensions/NRIHelper.h>
 #include <Extensions/NRIStreamer.h>
 #include <SDL3/SDL.h>
+
 
 
 #ifdef _WIN32
@@ -53,6 +55,7 @@ class RHI : public Object
 public:
     SharedPtr<NRICamera> GCamera = nullptr;
     UniquePtr<NRIMipmap> GMipmapPipeline = nullptr;
+    UniquePtr<NRImGui> GImGui= nullptr;
 
     nri::CoreInterface ICore = {};
     nri::HelperInterface IHelper = {};
@@ -82,6 +85,7 @@ public:
     std::function<void(nri::CommandBuffer& commandBuffer)> OnBarrier;
     std::function<void()> OnGraphicsSettingsChanged;
     std::function<void(nri::CommandBuffer& commandBuffer)> OnRender;
+    std::function<void(nri::CommandBuffer& commandBuffer)> OnImgui;
 
     RHI() : Device(ICore)
     {
@@ -252,6 +256,16 @@ public:
             return false;
         }
 
+        GImGui = MakeUnique<NRImGui>(ICore, Device.Get());
+        if (useImgui)
+        {
+            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue))
+            {
+                Logs::Error("Failed to initialize engine debug interface.");
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -264,6 +278,11 @@ public:
 
         GMipmapPipeline->Deinit();
         GCamera->Deinit();
+        if (GImGui)
+        {
+            GImGui->Deinit();
+            GImGui = nullptr;
+        }
 
         for (QueuedFrame& queuedFrame : QueuedFrames)
         {
@@ -325,7 +344,7 @@ public:
             PreviousAnisotropic = GUserSettings->Anisotropic;
         }
 
-        GEvent->Run();
+        GEvent->Run(GImGui->IsInitialized());
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
         Render();
@@ -607,6 +626,13 @@ private:
             ICore.CmdSetScissors(*commandBuffer, &scissor, 1);
 
             if (OnRender) OnRender(*commandBuffer);
+
+            if (GImGui->IsInitialized())
+            {
+                GImGui->BeginFrame();
+                if (OnImgui) OnImgui(*commandBuffer);
+                GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, SwapChainDesc.width, SwapChainDesc.height);
+            }
         }
         ICore.CmdEndRendering(*commandBuffer);
 
@@ -671,6 +697,12 @@ private:
         submitDesc.signalFenceNum = 1;
         if (ICore.QueueSubmit(*GraphicsQueue, submitDesc) != nri::Result::SUCCESS) return;
         ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore);
+
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
         
         // FrameFence tracking
         nri::FenceSubmitDesc signalFrame = {};

@@ -2,6 +2,7 @@
 
 #include "Engine/Core/Object.hpp"
 #include <SDL3/SDL.h>
+#include <imgui_impl_sdl3.h>
 #include <functional>
 
 enum EEventMode : uint8_t
@@ -18,18 +19,22 @@ public:
 
     Event() = default;
 
-    void Run()
+    void Run(bool processImguiEvent = false)
     {
         if (EventMode == EPool)
         {
             while (SDL_PollEvent(&e))
             {
+                if (processImguiEvent)
+                    ImGui_ImplSDL3_ProcessEvent(&e);
                 if (OnEvent) OnEvent(e);
             }
             return;
         }
         while (SDL_WaitEvent(&e))
         {
+            if (processImguiEvent)
+                ImGui_ImplSDL3_ProcessEvent(&e);
             if (OnEvent) OnEvent(e);
         }
     }

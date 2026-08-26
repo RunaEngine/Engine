@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_16X;
     GUserSettings->MSAACount = MSAA_4X;
-    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, false))
+    if (!rhi->Init(nri::GraphicsAPI::D3D12, true, false))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
@@ -56,7 +56,6 @@ int main(int argc, char** argv)
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
     {
-        rhi->UpdateSurface(e);
         switch (e.type)
         {
         case SDL_EVENT_QUIT:
@@ -82,6 +81,12 @@ int main(int argc, char** argv)
             else
                 texture->Barrier(cmdBuf);
         }
+    };
+    rhi->OnImgui = [&](nri::CommandBuffer& cmdBuf)
+    {
+        ImGui::Begin("Visualizador da Scene");
+        ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
+        ImGui::End();
     };
     rhi->OnRender = [&](nri::CommandBuffer& cmdBuf)
     {

@@ -6,6 +6,8 @@
 #include <string>
 #include <iostream>
 
+#include "Extensions/NRIWrapperD3D12.h"
+
 class NRIDevice : Object
 {
 private:
@@ -31,7 +33,6 @@ public:
         customCallback.userArg = nullptr;
 
         deviceDesc.callbackInterface = customCallback;
-
         return nri::nriCreateDevice(deviceDesc, Device);
     }
 
