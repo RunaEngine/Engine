@@ -106,7 +106,7 @@ private:
     bool CompileAndExtract(const std::string& shaderSource, const char* entryPointName, SlangStage stage, SlangCompileTarget target)
     {
         slang::IGlobalSession* globalSession = GetGlobalSession();
-        if (SLANG_FAILED(createGlobalSession(&globalSession))) return false;
+        if (!globalSession) return false;
 
         SessionDesc sessionDesc = {};
         TargetDesc targetDesc = {};

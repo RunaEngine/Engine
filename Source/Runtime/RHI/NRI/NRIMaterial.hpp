@@ -23,8 +23,6 @@ private:
     std::vector<nri::DescriptorRangeDesc> CameraRanges;
 
 public:
-    inline static UniquePtr<NRIMipmap> MipmapPipeline = nullptr;
-
     SharedPtr<NRIShader> VertexShader = nullptr;
     SharedPtr<NRIShader> FragmentShader = nullptr;
     UniquePtr<NRIPipeline> Pipeline = nullptr;
@@ -42,16 +40,6 @@ public:
           ColorFormat(colorFormat), DepthFormat(depthFormat),
           VertexShader(vertexShader), FragmentShader(fragmentShader)
     {
-        if (!MipmapPipeline)
-        {
-            MipmapPipeline = MakeUnique<NRIMipmap>(core, device);
-            SharedPtr<NRIShader> shader = MakeShared<NRIShader>(core, device);
-            if (!shader->Init(GetBaseDir().string() + "Resources/Shaders/Mipmap.hlsl", SLANG_STAGE_COMPUTE))
-            {
-                Logs::RuntimeError("Error initializing compute shader for mipmap generation");
-            }
-            MipmapPipeline->Init(shader);
-        }
     }
 
     ~NRIMaterial() override { Deinit(); }

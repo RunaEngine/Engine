@@ -116,6 +116,8 @@ public:
         uint32_t width = texture->GetWidth();
         uint32_t height = texture->GetHeight();
 
+        nri::DescriptorSet* set = nullptr;
+        ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
         for (uint32_t mip = 1; mip < mipCount; mip++)
         {
             width = std::max(1u, width / 2);
@@ -147,8 +149,8 @@ public:
             barrierDesc.textureNum = 2;
             ICore.CmdBarrier(cmdBuffer, barrierDesc);
 
-            nri::DescriptorSet* set = nullptr;
-            ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
+            //nri::DescriptorSet* set = nullptr;
+            //ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
 
             nri::UpdateDescriptorRangeDesc updates[2] = {};
             updates[0] = { set, 0, 0, &srcView, 1 };

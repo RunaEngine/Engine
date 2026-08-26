@@ -11,6 +11,7 @@
 #include "Runtime/RHI/NRI/NRIColorTexture.hpp"
 #include "Runtime/RHI/NRI/NRIDepthTexture.hpp"
 #include "Runtime/RHI/NRI/NRIMultisampleTexture.hpp"
+#include "Runtime/RHI/NRI/NRIMipmap.hpp"
 #include <NRI.h>
 #include <string>
 #include <vector>
@@ -18,6 +19,7 @@
 #include <Extensions/NRIHelper.h>
 #include <Extensions/NRIStreamer.h>
 #include <SDL3/SDL.h>
+
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -50,6 +52,7 @@ class RHI : public Object
 {
 public:
     SharedPtr<NRICamera> GCamera = nullptr;
+    UniquePtr<NRIMipmap> GMipmapPipeline = nullptr;
 
     nri::CoreInterface ICore = {};
     nri::HelperInterface IHelper = {};
@@ -226,8 +229,28 @@ public:
             }
         }
 
+        SharedPtr<NRIShader> mipmapShader = MakeShared<NRIShader>(ICore, Device.Get());
+        if (!mipmapShader->Init("Resources/Shaders/Mipmap.hlsl", SLANG_STAGE_COMPUTE))
+        {
+            Logs::Error("Failed to load mipmap compute shader");
+            Deinit();
+            return false;
+        }
+        GMipmapPipeline = MakeUnique<NRIMipmap>(ICore, Device.Get());
+        if (!GMipmapPipeline->Init(mipmapShader))
+        {
+            Logs::Error("Failed to initialize mipmap pipeline");
+            Deinit();
+            return false;
+        }
+
         GCamera = MakeShared<NRICamera>(ICore, Device.Get(), Window);
-        GCamera->Init();
+        if (!GCamera->Init())
+        {
+            Logs::Error("Failed to initialize global camera");
+            Deinit();
+            return false;
+        }
 
         return true;
     }
@@ -239,7 +262,8 @@ public:
             ICore.DeviceWaitIdle(Device.Get());
         }
 
-        GCamera.reset();
+        GMipmapPipeline->Deinit();
+        GCamera->Deinit();
 
         for (QueuedFrame& queuedFrame : QueuedFrames)
         {

@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         for (auto& texture : mesh->Material->Textures)
         {
             if (texture->NeedsMipmapGeneration())
-                mesh->Material->MipmapPipeline->GenerateMipmaps(cmdBuf, texture);
+                rhi->GMipmapPipeline->GenerateMipmaps(cmdBuf, texture);
             else
                 texture->Barrier(cmdBuf);
         }
