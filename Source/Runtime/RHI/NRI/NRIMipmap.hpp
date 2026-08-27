@@ -95,7 +95,7 @@ public:
     }
 
     // Called from the command buffer recording thread, not from the main thread.
-    void GenerateMipmaps(nri::CommandBuffer& cmdBuffer, SharedPtr<NRITexture> texture)
+    void GenerateMipmaps(nri::CommandBuffer* cmdBuffer, SharedPtr<NRITexture> texture)
     {
         uint32_t mipCount = texture->GetMipLevels();
         if (mipCount <= 1 || !ComputePipeline) return;
@@ -105,9 +105,9 @@ public:
             return;
         }
 
-        ICore.CmdSetPipelineLayout(cmdBuffer, nri::BindPoint::COMPUTE, *MipmapLayout);
-        ICore.CmdSetPipeline(cmdBuffer, *ComputePipeline);
-        ICore.CmdSetDescriptorPool(cmdBuffer, *DescriptorPool);
+        ICore.CmdSetPipelineLayout(*cmdBuffer, nri::BindPoint::COMPUTE, *MipmapLayout);
+        ICore.CmdSetPipeline(*cmdBuffer, *ComputePipeline);
+        ICore.CmdSetDescriptorPool(*cmdBuffer, *DescriptorPool);
 
         nri::Descriptor* srcView = CreateStorageView(texture, 0);
 
@@ -145,7 +145,7 @@ public:
             nri::BarrierDesc barrierDesc = {};
             barrierDesc.textures = barriers;
             barrierDesc.textureNum = 2;
-            ICore.CmdBarrier(cmdBuffer, barrierDesc);
+            ICore.CmdBarrier(*cmdBuffer, barrierDesc);
 
             //nri::DescriptorSet* set = nullptr;
             //ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
@@ -158,11 +158,11 @@ public:
             nri::SetDescriptorSetDesc setBindDesc = {};
             setBindDesc.setIndex = 0;
             setBindDesc.descriptorSet = set;
-            ICore.CmdSetDescriptorSet(cmdBuffer, setBindDesc);
+            ICore.CmdSetDescriptorSet(*cmdBuffer, setBindDesc);
 
             uint32_t dispatchX = (width + 15) / 16;
             uint32_t dispatchY = (height + 15) / 16;
-            ICore.CmdDispatch(cmdBuffer, { dispatchX, dispatchY, 1 });
+            ICore.CmdDispatch(*cmdBuffer, { dispatchX, dispatchY, 1 });
 
             ICore.DestroyDescriptor(srcView);
             srcView = dstView;
@@ -182,7 +182,7 @@ public:
         nri::BarrierDesc finalBarrierDesc = {};
         finalBarrierDesc.textures = &finalBarrier;
         finalBarrierDesc.textureNum = 1;
-        ICore.CmdBarrier(cmdBuffer, finalBarrierDesc);
+        ICore.CmdBarrier(*cmdBuffer, finalBarrierDesc);
 
         texture->ClearDirty();
     }

@@ -119,17 +119,17 @@ public:
         CreateCameraDescriptorSet();
     }
 
-    void Bind(nri::CommandBuffer& commandBuffer)
+    void Bind(nri::CommandBuffer* commandBuffer)
     {
         if (!Pipeline || !Pipeline->Pipeline) return;
 
         if (DescriptorPool)
         {
-            ICore.CmdSetDescriptorPool(commandBuffer, *DescriptorPool);
+            ICore.CmdSetDescriptorPool(*commandBuffer, *DescriptorPool);
         }
 
-        ICore.CmdSetPipelineLayout(commandBuffer, nri::BindPoint::GRAPHICS, *Pipeline->PipelineLayout);
-        ICore.CmdSetPipeline(commandBuffer, *Pipeline->Pipeline);
+        ICore.CmdSetPipelineLayout(*commandBuffer, nri::BindPoint::GRAPHICS, *Pipeline->PipelineLayout);
+        ICore.CmdSetPipeline(*commandBuffer, *Pipeline->Pipeline);
 
         // Index 0 matches registerSpace = 0 (Texture/Sampler)
         if (TextureDescriptorSet)
@@ -137,7 +137,7 @@ public:
             nri::SetDescriptorSetDesc setDesc = {};
             setDesc.setIndex = 0;
             setDesc.descriptorSet = TextureDescriptorSet;
-            ICore.CmdSetDescriptorSet(commandBuffer, setDesc);
+            ICore.CmdSetDescriptorSet(*commandBuffer, setDesc);
         }
 
         // Index 1 matches registerSpace = 1 (Camera Buffer)
@@ -146,7 +146,7 @@ public:
             nri::SetDescriptorSetDesc setDesc = {};
             setDesc.setIndex = 1;
             setDesc.descriptorSet = CameraDescriptorSet;
-            ICore.CmdSetDescriptorSet(commandBuffer, setDesc);
+            ICore.CmdSetDescriptorSet(*commandBuffer, setDesc);
         }
     }
 

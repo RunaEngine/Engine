@@ -133,7 +133,7 @@ public:
         CreateSampler();
     }
 
-    void Barrier(nri::CommandBuffer& cmdBuffer)
+    void Barrier(nri::CommandBuffer* cmdBuffer)
     {
         if (!bIsDirty) return;
         if (MipLevels > 1) return;
@@ -146,21 +146,21 @@ public:
         barrier.layerNum = 1;
 
         barrier.before = {
-            nri::AccessBits::COPY_DESTINATION,  // ← estava NONE
-            nri::Layout::COPY_DESTINATION,       // ← estava cast(0) inválido
-            nri::StageBits::COPY
+            .access = nri::AccessBits::COPY_DESTINATION,  // ← estava NONE
+            .layout = nri::Layout::COPY_DESTINATION,       // ← estava cast(0) inválido
+            .stages = nri::StageBits::COPY
         };
         barrier.after = {
-            nri::AccessBits::SHADER_RESOURCE,
-            nri::Layout::SHADER_RESOURCE,
-            nri::StageBits::FRAGMENT_SHADER
+            .access = nri::AccessBits::SHADER_RESOURCE,
+            .layout = nri::Layout::SHADER_RESOURCE,
+            .stages = nri::StageBits::FRAGMENT_SHADER
         };
 
         nri::BarrierDesc barrierDesc = {};
         barrierDesc.textures = &barrier;
         barrierDesc.textureNum = 1;
 
-        ICore.CmdBarrier(cmdBuffer, barrierDesc);
+        ICore.CmdBarrier(*cmdBuffer, barrierDesc);
 
         bIsDirty = false;
     }

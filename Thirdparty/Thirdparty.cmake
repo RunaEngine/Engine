@@ -14,7 +14,6 @@ set(FETCHCONTENT_QUIET OFF)
 add_subdirectory(${THIRDPARTY_DIR}/sdl)
 add_subdirectory(${THIRDPARTY_DIR}/nri)
 add_subdirectory(${THIRDPARTY_DIR}/vulkan)
-add_subdirectory(${THIRDPARTY_DIR}/vma)
 add_subdirectory(${THIRDPARTY_DIR}/slang)
 add_subdirectory(${THIRDPARTY_DIR}/glm)
 

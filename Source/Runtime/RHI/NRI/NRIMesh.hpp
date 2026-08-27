@@ -16,7 +16,7 @@ public:
 
     ~NRIMesh() override = default;
 
-    void Draw(nri::CoreInterface& core, nri::CommandBuffer& commandBuffer)
+    void Draw(nri::CoreInterface& core, nri::CommandBuffer* commandBuffer)
     {
         if (!Material || !VertexBuffer || !Material->Pipeline || !Material->Pipeline->Pipeline) return;
 
@@ -31,10 +31,10 @@ public:
         vbDesc.buffer = buffer;
         vbDesc.offset = VertexBuffer->VertexOffset;
         vbDesc.stride = sizeof(NRIVertex);
-        core.CmdSetVertexBuffers(commandBuffer, 0, &vbDesc, 1);
+        core.CmdSetVertexBuffers(*commandBuffer, 0, &vbDesc, 1);
 
         // Set Index Buffer
-        core.CmdSetIndexBuffer(commandBuffer, *buffer, VertexBuffer->IndexOffset, nri::IndexType::UINT32);
+        core.CmdSetIndexBuffer(*commandBuffer, *buffer, VertexBuffer->IndexOffset, nri::IndexType::UINT32);
 
         // Draw Geometry
         // Fixed: Adjusted to match the exact signature: void(* CmdDrawIndexed)(CommandBuffer&, const DrawIndexedDesc&)
@@ -45,6 +45,6 @@ public:
         drawDesc.baseVertex = 0;
         drawDesc.baseInstance = 0;
 
-        core.CmdDrawIndexed(commandBuffer, drawDesc);
+        core.CmdDrawIndexed(*commandBuffer, drawDesc);
     }
 };

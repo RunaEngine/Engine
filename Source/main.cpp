@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_16X;
     GUserSettings->MSAACount = MSAA_4X;
-    if (!rhi->Init(nri::GraphicsAPI::D3D12, true, false))
+    if (!rhi->Init(nri::GraphicsAPI::VK, true, false))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     {
         mesh->Material->UpdatePipeline();
     };
-    rhi->OnBarrier = [&](nri::CommandBuffer& cmdBuf)
+    rhi->OnBarrier = [&](nri::CommandBuffer* cmdBuf)
     {
         for (auto& texture : mesh->Material->Textures)
         {
@@ -82,13 +82,13 @@ int main(int argc, char** argv)
                 texture->Barrier(cmdBuf);
         }
     };
-    rhi->OnImgui = [&](nri::CommandBuffer& cmdBuf)
+    rhi->OnImgui = [&](nri::CommandBuffer* cmdBuf)
     {
         ImGui::Begin("Visualizador da Scene");
         ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
         ImGui::End();
     };
-    rhi->OnRender = [&](nri::CommandBuffer& cmdBuf)
+    rhi->OnRender = [&](nri::CommandBuffer* cmdBuf)
     {
         mesh->Draw(rhi->ICore, cmdBuf);
     };

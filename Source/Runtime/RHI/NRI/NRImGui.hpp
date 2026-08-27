@@ -163,7 +163,7 @@ public:
             nri::WrapperVKInterface* nriVK = nullptr;
             nri::Result result = nri::nriGetInterface(*Device, NRI_INTERFACE(nri::WrapperVKInterface), &nriVK);
 
-            if (result != nri::Result::SUCCESS || !nriVK)
+            if (result != nri::Result::SUCCESS || !nriVK || !nriVK->GetInstanceVK || !nriVK->GetPhysicalDeviceVK || !nriVK->GetQueueFamilyIndexVK)
             {
                 Logs::Error("NRImGui: falha ao obter NRI WrapperVKInterface.");
                 ImGui_ImplSDL3_Shutdown();
@@ -172,8 +172,12 @@ public:
             }
 
             VkDevice vkDevice = static_cast<VkDevice>(ICore.GetDeviceNativeObject(Device));
-            VkInstance nativeInstance = static_cast<VkInstance>(nriVK->GetInstanceVK(*Device));
             VkQueue vkQueue = static_cast<VkQueue>(ICore.GetQueueNativeObject(queue));
+            Logs::Warning("GetInstanceVK=%p GetPhysicalDeviceVK=%p GetQueueFamilyIndexVK=%p",
+                (void*)nriVK->GetInstanceVK,
+                (void*)nriVK->GetPhysicalDeviceVK,
+                (void*)nriVK->GetQueueFamilyIndexVK);
+            VkInstance vkInstance = static_cast<VkInstance>(nriVK->GetInstanceVK(*Device));
 
             if (!vkDevice || !vkQueue)
             {
@@ -183,7 +187,7 @@ public:
                 return false;
             }
 
-            if (!CreateVulkanDescriptorPool(vkDevice, nativeInstance))
+            if (!CreateVulkanDescriptorPool(vkDevice, vkInstance))
             {
                 ImGui_ImplSDL3_Shutdown();
                 ImGui::DestroyContext();
@@ -194,7 +198,7 @@ public:
 
             ImGui_ImplVulkan_InitInfo initInfo = {};
             initInfo.ApiVersion = VK_API_VERSION_1_3;
-            initInfo.Instance = static_cast<VkInstance>(nriVK->GetInstanceVK(*Device));
+            initInfo.Instance = vkInstance;
             initInfo.PhysicalDevice = static_cast<VkPhysicalDevice>(nriVK->GetPhysicalDeviceVK(*Device));
             initInfo.Device = vkDevice;
             initInfo.QueueFamily = nriVK->GetQueueFamilyIndexVK(*queue);
@@ -210,7 +214,7 @@ public:
                 Logs::Error("NRImGui: Failed to initialize Vulkan backend.");
 
                 PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-                PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool_Ptr = (PFN_vkDestroyDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkDestroyDescriptorPool");
+                PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool_Ptr = (PFN_vkDestroyDescriptorPool)vkGetInstanceProcAddr_Ptr(vkInstance, "vkDestroyDescriptorPool");
                 vkDestroyDescriptorPool_Ptr(vkDevice, VKDescriptorPool, nullptr);
                 VKDescriptorPool = VK_NULL_HANDLE;
 
@@ -404,13 +408,23 @@ private:
         poolInfo.poolSizeCount = static_cast<uint32_t>(std::size(poolSizes));
         poolInfo.pPoolSizes = poolSizes;
 
-        PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr_SDL = (PFN_vkGetDeviceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr = (PFN_vkGetInstanceProcAddr)vkGetDeviceProcAddr_SDL;
-        PFN_vkCreateDescriptorPool vkCreateDescriptorPool_Ptr = (PFN_vkCreateDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkCreateDescriptorPool");
+        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr =
+            (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+        PFN_vkCreateDescriptorPool vkCreateDescriptorPool_Ptr =
+            (PFN_vkCreateDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkCreateDescriptorPool");
 
         if (!vkCreateDescriptorPool_Ptr)
         {
-            Logs::Error("Failed to create descriptor pool for imgui.");
+            Logs::Error("Failed to resolve vkCreateDescriptorPool for imgui.");
+            VKDescriptorPool = VK_NULL_HANDLE;
+            return false;
+        }
+
+        // FIX: faltava chamar a função de verdade
+        VkResult vr = vkCreateDescriptorPool_Ptr(vkDevice, &poolInfo, nullptr, &VKDescriptorPool);
+        if (vr != VK_SUCCESS)
+        {
+            Logs::Error("Failed to create descriptor pool for imgui (VkResult: %d)", (int)vr);
             VKDescriptorPool = VK_NULL_HANDLE;
             return false;
         }
