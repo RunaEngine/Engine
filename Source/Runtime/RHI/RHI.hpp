@@ -259,7 +259,8 @@ public:
         GImGui = MakeUnique<NRImGui>(ICore, Device.Get());
         if (useImgui)
         {
-            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue))
+            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue,
+                static_cast<uint8_t>(GUserSettings->MSAACount)))
             {
                 Logs::Error("Failed to initialize engine debug interface.");
                 return false;
@@ -402,8 +403,9 @@ private:
     {
         PopulateSwapChainWindow(desc);
 
-        int outWidth, outHeight;
-        SDL_GetWindowSize(Window, &outWidth, &outHeight);
+        int outWidth = 0;
+        int outHeight = 0;
+        SDL_GetWindowSizeInPixels(Window, &outWidth, &outHeight);
 
         desc.queue = GraphicsQueue;
         desc.format = nri::SwapChainFormat::BT709_G22_8BIT;
@@ -643,17 +645,6 @@ private:
             int pixelWidth = 0;
             int pixelHeight = 0;
             SDL_GetWindowSizeInPixels(Window, &pixelWidth, &pixelHeight);
-
-            ImGuiIO& io = ImGui::GetIO();
-            io.DisplaySize = ImVec2((float)pixelWidth, (float)pixelHeight);
-
-            if (SwapChainDesc.width > 0 && SwapChainDesc.height > 0)
-            {
-                io.DisplayFramebufferScale = ImVec2(
-                    (float)pixelWidth / (float)SwapChainDesc.width,
-                    (float)pixelHeight / (float)SwapChainDesc.height
-                );
-            }
 
             GImGui->BeginFrame();
             if (OnImgui) OnImgui(commandBuffer);

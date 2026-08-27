@@ -49,7 +49,8 @@ public:
     NRImGui(const NRImGui&) = delete;
     NRImGui& operator=(const NRImGui&) = delete;
 
-    bool Init(SDL_Window* window, nri::Format swapChainFormat, uint32_t queuedFrameNum, nri::Queue* queue)
+    bool Init(SDL_Window* window, nri::Format swapChainFormat, uint32_t queuedFrameNum, nri::Queue* queue,
+        uint8_t msaaSampleCount)
     {
         if (bIsInitialized) return true;
 
@@ -226,6 +227,7 @@ public:
             initInfo.ImageCount = queuedFrameNum;
             initInfo.UseDynamicRendering = true;
             initInfo.PipelineInfoMain.PipelineRenderingCreateInfo = pipelineRenderingInfo;
+            initInfo.PipelineInfoMain.MSAASamples = ToVkSampleCount(msaaSampleCount);
 
             if (!ImGui_ImplVulkan_Init(&initInfo))
             {
@@ -413,6 +415,21 @@ private:
         default:
             Logs::Warning("NRImGui: formato NRI nao mapeado para VkFormat. Usando RGBA8_UNORM.");
             return VK_FORMAT_R8G8B8A8_UNORM;
+        }
+    }
+
+    static VkSampleCountFlagBits ToVkSampleCount(uint8_t sampleCount)
+    {
+        switch (sampleCount)
+        {
+        case 2:
+            return VK_SAMPLE_COUNT_2_BIT;
+        case 4:
+            return VK_SAMPLE_COUNT_4_BIT;
+        case 8:
+            return VK_SAMPLE_COUNT_8_BIT;
+        default:
+            return VK_SAMPLE_COUNT_1_BIT;
         }
     }
 
