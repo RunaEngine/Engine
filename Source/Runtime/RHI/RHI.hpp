@@ -21,8 +21,6 @@
 #include <Extensions/NRIStreamer.h>
 #include <SDL3/SDL.h>
 
-
-
 #ifdef _WIN32
 #include <Windows.h>
 #elif defined(__linux__)
@@ -55,7 +53,7 @@ class RHI : public Object
 public:
     SharedPtr<NRICamera> GCamera = nullptr;
     UniquePtr<NRIMipmap> GMipmapPipeline = nullptr;
-    UniquePtr<NRImGui> GImGui= nullptr;
+    UniquePtr<NRImGui> GImGui = nullptr;
 
     nri::CoreInterface ICore = {};
     nri::HelperInterface IHelper = {};
@@ -68,7 +66,7 @@ public:
     nri::SwapChain* SwapChain = nullptr;
     nri::Queue* GraphicsQueue = nullptr;
     nri::Fence* FrameFence = nullptr;
-    nri::Color32f ClearColor = {0.0f, 1.0f, 0.0f, 1.0f}; // verde
+    nri::Color32f ClearColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 
     std::vector<QueuedFrame> QueuedFrames;
     std::vector<SwapChainTexture> SwapChainTextures;
@@ -97,7 +95,7 @@ public:
     }
 
     bool Init(nri::GraphicsAPI graphicsAPI = nri::GraphicsAPI::NONE, bool useImgui = true,
-              bool useValidationLayers = false)
+        bool useValidationLayers = false)
     {
         nri::Result result = nri::Result::SUCCESS;
 
@@ -176,9 +174,9 @@ public:
         nri::StreamerDesc streamerDesc = {};
         streamerDesc.dynamicBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
         streamerDesc.dynamicBufferDesc = {
-            0, 0,
-            nri::BufferUsageBits::VERTEX_BUFFER |
-            nri::BufferUsageBits::INDEX_BUFFER
+            .size = 0,
+            .structureStride = 0,
+            .usage = nri::BufferUsageBits::VERTEX_BUFFER | nri::BufferUsageBits::INDEX_BUFFER
         };
         streamerDesc.constantBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
         streamerDesc.constantBufferSize = 1 * 1024 * 1024;
@@ -233,6 +231,7 @@ public:
             }
         }
 
+        // Globals
         SharedPtr<NRIShader> mipmapShader = MakeShared<NRIShader>(ICore, Device.Get());
         if (!mipmapShader->Init("Resources/Shaders/Mipmap.hlsl", SLANG_STAGE_COMPUTE))
         {
@@ -243,7 +242,6 @@ public:
         GMipmapPipeline = MakeUnique<NRIMipmap>(ICore, Device.Get());
         if (!GMipmapPipeline->Init(mipmapShader))
         {
-            Logs::Error("Failed to initialize mipmap pipeline");
             Deinit();
             return false;
         }
@@ -251,7 +249,6 @@ public:
         GCamera = MakeShared<NRICamera>(ICore, Device.Get(), Window);
         if (!GCamera->Init())
         {
-            Logs::Error("Failed to initialize global camera");
             Deinit();
             return false;
         }
@@ -436,7 +433,7 @@ private:
                 return false;
 
             if (!swapChainTexture.depthTexture.Create(ICore, IHelper, *Device.Get(), SwapChainDesc.width,
-                                                      SwapChainDesc.height))
+                SwapChainDesc.height))
                 return false;
 
             DepthFormat = swapChainTexture.depthTexture.Format;
@@ -445,7 +442,7 @@ private:
             {
                 uint8_t samples = static_cast<uint8_t>(GUserSettings->MSAACount);
                 if (!swapChainTexture.msaaTexture.Create(ICore, IHelper, *Device.Get(), SwapChainDesc.width,
-                                                         SwapChainDesc.height, SwapChainFormat, samples))
+                    SwapChainDesc.height, SwapChainFormat, samples))
                     return false;
             }
 
@@ -512,8 +509,7 @@ private:
         uint32_t recycledSemaphoreIndex = (uint32_t)(FrameIndex % SwapChainTextures.size());
         nri::Fence* swapChainAcquireSemaphore = SwapChainTextures[recycledSemaphoreIndex].acquireSemaphore;
         uint32_t currentSwapChainTextureIndex = 0;
-        nri::Result result = ISwapChain.AcquireNextTexture(*SwapChain, *swapChainAcquireSemaphore,
-                                                           currentSwapChainTextureIndex);
+        nri::Result result = ISwapChain.AcquireNextTexture(*SwapChain, *swapChainAcquireSemaphore, currentSwapChainTextureIndex);
 
         if (result != nri::Result::SUCCESS) return;
 
@@ -526,119 +522,130 @@ private:
         IStreamer.CmdCopyStreamedData(*commandBuffer, *Streamer);
         if (OnBarrier) OnBarrier(*commandBuffer);
 
-        // ==========================================
-        // STEP 1: INITIAL BARRIERS CONFIGURATION
-        // ==========================================
-        std::vector<nri::TextureBarrierDesc> initialBarriers;
-
-        // Configure barrier for the Main Color Target
-        nri::TextureBarrierDesc colorBarrier = {};
-        colorBarrier.texture = swapChainTexture.colorTexture.Texture;
-
-        // FIX: Always discard the swapchain image's previous layout on acquire —
-        // we don't own this resource, so we can't safely trust CurrentState across
-        // present cycles. LoadOp::CLEAR makes this safe.
-        colorBarrier.before = nri::AccessLayoutStage{
-            nri::AccessBits::NONE, nri::Layout::UNDEFINED, nri::StageBits::NONE
-        };
-        colorBarrier.mipNum = 1;
-        colorBarrier.layerNum = 1;
-
-        if (useMSAA)
+        // Step 1: Initial barriers configuration
         {
-            // If MSAA is enabled, the SwapChain will only receive the copy from the resolve at the end
-            colorBarrier.after = {
-                nri::AccessBits::RESOLVE_DESTINATION, nri::Layout::RESOLVE_DESTINATION, nri::StageBits::RESOLVE
+            std::vector<nri::TextureBarrierDesc> initialBarriers;
+
+            // Configure barrier for the Main Color Target
+            nri::TextureBarrierDesc colorBarrier = {};
+            colorBarrier.texture = swapChainTexture.colorTexture.Texture;
+
+            // present cycles. LoadOp::CLEAR makes this safe.
+            colorBarrier.before = nri::AccessLayoutStage{
+                .access = nri::AccessBits::NONE,
+                .layout = nri::Layout::UNDEFINED,
+                .stages = nri::StageBits::NONE
             };
-            initialBarriers.push_back(colorBarrier);
+            colorBarrier.mipNum = 1;
+            colorBarrier.layerNum = 1;
 
-            // Configure the barrier for the MSAA texture that will receive the rendering
-            nri::TextureBarrierDesc msaaBarrier = {};
-            msaaBarrier.texture = swapChainTexture.msaaTexture.Texture;
-            msaaBarrier.before = swapChainTexture.msaaTexture.CurrentState;
-            msaaBarrier.after = {
-                nri::AccessBits::COLOR_ATTACHMENT_WRITE, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT
-            };
-            msaaBarrier.mipNum = 1;
-            msaaBarrier.layerNum = 1;
-            swapChainTexture.msaaTexture.CurrentState = msaaBarrier.after;
-            initialBarriers.push_back(msaaBarrier);
-        }
-        else
-        {
-            // Normal flow: Render directly to the SwapChain
-            colorBarrier.after = {
-                nri::AccessBits::COLOR_ATTACHMENT_WRITE, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT
-            };
-            initialBarriers.push_back(colorBarrier);
-        }
-        swapChainTexture.colorTexture.CurrentState = colorBarrier.after;
-
-        // Configure Depth barrier
-        nri::TextureBarrierDesc depthBarrier = {};
-        depthBarrier.texture = swapChainTexture.depthTexture.Texture;
-        depthBarrier.before = swapChainTexture.depthTexture.CurrentState;
-        depthBarrier.after = {
-            nri::AccessBits::DEPTH_STENCIL_ATTACHMENT_WRITE, nri::Layout::DEPTH_STENCIL_ATTACHMENT,
-            nri::StageBits::DEPTH_STENCIL_ATTACHMENT
-        };
-        depthBarrier.planes = nri::PlaneBits::DEPTH | nri::PlaneBits::STENCIL;
-        depthBarrier.mipNum = 1;
-        depthBarrier.layerNum = 1;
-        initialBarriers.push_back(depthBarrier);
-
-        nri::BarrierDesc barrierDesc = {};
-        barrierDesc.textures = initialBarriers.data();
-        barrierDesc.textureNum = (uint32_t)initialBarriers.size();
-        ICore.CmdBarrier(*commandBuffer, barrierDesc);
-
-        // ==========================================
-        // STEP 2: RENDER PASS
-        // ==========================================
-        nri::AttachmentDesc colorAttachment = {};
-        colorAttachment.descriptor = useMSAA
-                                         ? swapChainTexture.msaaTexture.ColorAttachment
-                                         : swapChainTexture.colorTexture.ColorAttachment;
-        colorAttachment.clearValue.color.f = ClearColor;
-        colorAttachment.loadOp = nri::LoadOp::CLEAR;
-        colorAttachment.storeOp = nri::StoreOp::STORE;
-
-        nri::AttachmentDesc depthAttachment = {};
-        depthAttachment.descriptor = swapChainTexture.depthTexture.DepthAttachment;
-        depthAttachment.clearValue.depthStencil = {1.0f, 0};
-        depthAttachment.loadOp = nri::LoadOp::CLEAR;
-        depthAttachment.storeOp = nri::StoreOp::DISCARD;
-
-        nri::RenderingDesc renderingDesc = {};
-        renderingDesc.colors = &colorAttachment;
-        renderingDesc.colorNum = 1;
-        renderingDesc.depth = depthAttachment;
-
-        ICore.CmdBeginRendering(*commandBuffer, renderingDesc);
-        {
-            nri::Viewport viewport = {
-                0.0f, 0.0f, static_cast<float>(SwapChainDesc.width), static_cast<float>(SwapChainDesc.height), 0.0f,
-                1.0f
-            };
-            ICore.CmdSetViewports(*commandBuffer, &viewport, 1);
-
-            nri::Rect scissor = {0, 0, SwapChainDesc.width, SwapChainDesc.height};
-            ICore.CmdSetScissors(*commandBuffer, &scissor, 1);
-
-            if (OnRender) OnRender(*commandBuffer);
-
-            if (GImGui->IsInitialized())
+            if (useMSAA)
             {
-                GImGui->BeginFrame();
-                if (OnImgui) OnImgui(*commandBuffer);
-                GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, SwapChainDesc.width, SwapChainDesc.height);
-            }
-        }
-        ICore.CmdEndRendering(*commandBuffer);
+                // If MSAA is enabled, the SwapChain will only receive the copy from the resolve at the end
+                colorBarrier.after = {
+                    .access = nri::AccessBits::RESOLVE_DESTINATION,
+                    .layout = nri::Layout::RESOLVE_DESTINATION,
+                    .stages = nri::StageBits::RESOLVE
+                };
+                initialBarriers.push_back(colorBarrier);
 
-        // ==========================================
-        // STEP 3: MSAA RESOLVE (IF ENABLED)
-        // ==========================================
+                // Configure the barrier for the MSAA texture that will receive the rendering
+                nri::TextureBarrierDesc msaaBarrier = {};
+                msaaBarrier.texture = swapChainTexture.msaaTexture.Texture;
+                msaaBarrier.before = swapChainTexture.msaaTexture.CurrentState;
+                msaaBarrier.after = {
+                    .access = nri::AccessBits::COLOR_ATTACHMENT_WRITE,
+                    .layout = nri::Layout::COLOR_ATTACHMENT,
+                    .stages = nri::StageBits::COLOR_ATTACHMENT
+                };
+                msaaBarrier.mipNum = 1;
+                msaaBarrier.layerNum = 1;
+                swapChainTexture.msaaTexture.CurrentState = msaaBarrier.after;
+                initialBarriers.push_back(msaaBarrier);
+            }
+            else
+            {
+                // Normal flow: Render directly to the SwapChain
+                colorBarrier.after = {
+                    .access = nri::AccessBits::COLOR_ATTACHMENT_WRITE,
+                    .layout = nri::Layout::COLOR_ATTACHMENT,
+                    .stages = nri::StageBits::COLOR_ATTACHMENT
+                };
+                initialBarriers.push_back(colorBarrier);
+            }
+            swapChainTexture.colorTexture.CurrentState = colorBarrier.after;
+
+            // Configure Depth barrier
+            nri::TextureBarrierDesc depthBarrier = {};
+            depthBarrier.texture = swapChainTexture.depthTexture.Texture;
+            depthBarrier.before = swapChainTexture.depthTexture.CurrentState;
+            depthBarrier.after = {
+                .access = nri::AccessBits::DEPTH_STENCIL_ATTACHMENT_WRITE,
+                .layout = nri::Layout::DEPTH_STENCIL_ATTACHMENT,
+                .stages = nri::StageBits::DEPTH_STENCIL_ATTACHMENT
+            };
+            depthBarrier.planes = nri::PlaneBits::DEPTH | nri::PlaneBits::STENCIL;
+            depthBarrier.mipNum = 1;
+            depthBarrier.layerNum = 1;
+            initialBarriers.push_back(depthBarrier);
+
+            nri::BarrierDesc barrierDesc = {};
+            barrierDesc.textures = initialBarriers.data();
+            barrierDesc.textureNum = (uint32_t)initialBarriers.size();
+            ICore.CmdBarrier(*commandBuffer, barrierDesc);
+        }
+
+        // Step 2: Render Pass
+        {
+            nri::AttachmentDesc colorAttachment = {};
+            colorAttachment.descriptor = useMSAA ? swapChainTexture.msaaTexture.ColorAttachment : swapChainTexture.colorTexture.ColorAttachment;
+            colorAttachment.clearValue.color.f = ClearColor;
+            colorAttachment.loadOp = nri::LoadOp::CLEAR;
+            colorAttachment.storeOp = nri::StoreOp::STORE;
+
+            nri::AttachmentDesc depthAttachment = {};
+            depthAttachment.descriptor = swapChainTexture.depthTexture.DepthAttachment;
+            depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
+            depthAttachment.loadOp = nri::LoadOp::CLEAR;
+            depthAttachment.storeOp = nri::StoreOp::DISCARD;
+
+            nri::RenderingDesc renderingDesc = {};
+            renderingDesc.colors = &colorAttachment;
+            renderingDesc.colorNum = 1;
+            renderingDesc.depth = depthAttachment;
+
+            ICore.CmdBeginRendering(*commandBuffer, renderingDesc);
+            {
+                nri::Viewport viewport = {
+                    .x = 0.0f,
+                    .y = 0.0f, .width = static_cast<float>(SwapChainDesc.width),
+                    .height = static_cast<float>(SwapChainDesc.height),
+                    .depthMin = 0.0f,
+                    .depthMax = 1.0f
+                };
+                ICore.CmdSetViewports(*commandBuffer, &viewport, 1);
+
+                nri::Rect scissor = {
+                    .x = 0,
+                    .y = 0,
+                    .width = static_cast<uint32_t>(SwapChainDesc.width),
+                    .height = static_cast<uint32_t>(SwapChainDesc.height)
+                };
+                ICore.CmdSetScissors(*commandBuffer, &scissor, 1);
+
+                if (OnRender) OnRender(*commandBuffer);
+
+                if (GImGui->IsInitialized())
+                {
+                    GImGui->BeginFrame();
+                    if (OnImgui) OnImgui(*commandBuffer);
+                    GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, SwapChainDesc.width, SwapChainDesc.height);
+                }
+            }
+            ICore.CmdEndRendering(*commandBuffer);
+        }
+
+        // Step 3: MSAA Resolve (if enabled)
         if (useMSAA)
         {
             nri::TextureBarrierDesc msaaResolveBarrier = {};
@@ -657,63 +664,65 @@ private:
             ICore.CmdBarrier(*commandBuffer, resolveBarrierGroup);
 
             ICore.CmdResolveTexture(*commandBuffer, *swapChainTexture.colorTexture.Texture, nullptr,
-                                    *swapChainTexture.msaaTexture.Texture, nullptr, nri::ResolveOp::AVERAGE);
+                *swapChainTexture.msaaTexture.Texture, nullptr, nri::ResolveOp::AVERAGE);
         }
 
-        // ==========================================
-        // STEP 4: PREPARATION FOR PRESENT
-        // ==========================================
-        nri::TextureBarrierDesc presentBarrier = {};
-        presentBarrier.texture = swapChainTexture.colorTexture.Texture;
-        presentBarrier.before = swapChainTexture.colorTexture.CurrentState;
-
-        presentBarrier.after = {
-            nri::AccessBits::NONE, nri::Layout::PRESENT, nri::StageBits::NONE
-        };
-        presentBarrier.mipNum = 1;
-        presentBarrier.layerNum = 1;
-        swapChainTexture.colorTexture.CurrentState = presentBarrier.after;
-        nri::BarrierDesc presentBarrierDesc = {};
-        presentBarrierDesc.textures = &presentBarrier;
-        presentBarrierDesc.textureNum = 1;
-        ICore.CmdBarrier(*commandBuffer, presentBarrierDesc);
-        if (ICore.EndCommandBuffer(*commandBuffer) != nri::Result::SUCCESS) return;
-
-        // Submit
-        nri::FenceSubmitDesc waitAcquire = {};
-        waitAcquire.fence = swapChainAcquireSemaphore;
-        waitAcquire.stages = useMSAA ? nri::StageBits::RESOLVE : nri::StageBits::COLOR_ATTACHMENT;
-        waitAcquire.value = 0;
-        nri::FenceSubmitDesc signalRelease = {};
-        signalRelease.fence = swapChainTexture.releaseSemaphore;
-        signalRelease.stages = nri::StageBits::NONE;
-        signalRelease.value = 0;
-        nri::QueueSubmitDesc submitDesc = {};
-        submitDesc.waitFences = &waitAcquire;
-        submitDesc.waitFenceNum = 1;
-        submitDesc.commandBuffers = &commandBuffer;
-        submitDesc.commandBufferNum = 1;
-        submitDesc.signalFences = &signalRelease;
-        submitDesc.signalFenceNum = 1;
-        if (ICore.QueueSubmit(*GraphicsQueue, submitDesc) != nri::Result::SUCCESS) return;
-        ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore);
-
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        // Step 4: Preparation for present
         {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
+            nri::TextureBarrierDesc presentBarrier = {};
+            presentBarrier.texture = swapChainTexture.colorTexture.Texture;
+            presentBarrier.before = swapChainTexture.colorTexture.CurrentState;
+
+            presentBarrier.after = {
+                .access = nri::AccessBits::NONE,
+                .layout = nri::Layout::PRESENT,
+                .stages = nri::StageBits::NONE
+            };
+            presentBarrier.mipNum = 1;
+            presentBarrier.layerNum = 1;
+            swapChainTexture.colorTexture.CurrentState = presentBarrier.after;
+            nri::BarrierDesc presentBarrierDesc = {};
+            presentBarrierDesc.textures = &presentBarrier;
+            presentBarrierDesc.textureNum = 1;
+            ICore.CmdBarrier(*commandBuffer, presentBarrierDesc);
+            if (ICore.EndCommandBuffer(*commandBuffer) != nri::Result::SUCCESS) return;
+
+            // Submit
+            nri::FenceSubmitDesc waitAcquire = {};
+            waitAcquire.fence = swapChainAcquireSemaphore;
+            waitAcquire.stages = useMSAA ? nri::StageBits::RESOLVE : nri::StageBits::COLOR_ATTACHMENT;
+            waitAcquire.value = 0;
+            nri::FenceSubmitDesc signalRelease = {};
+            signalRelease.fence = swapChainTexture.releaseSemaphore;
+            signalRelease.stages = nri::StageBits::NONE;
+            signalRelease.value = 0;
+            nri::QueueSubmitDesc submitDesc = {};
+            submitDesc.waitFences = &waitAcquire;
+            submitDesc.waitFenceNum = 1;
+            submitDesc.commandBuffers = &commandBuffer;
+            submitDesc.commandBufferNum = 1;
+            submitDesc.signalFences = &signalRelease;
+            submitDesc.signalFenceNum = 1;
+            if (ICore.QueueSubmit(*GraphicsQueue, submitDesc) != nri::Result::SUCCESS) return;
+            ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore);
+
+            if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+            }
+
+            // FrameFence tracking
+            nri::FenceSubmitDesc signalFrame = {};
+            signalFrame.fence = FrameFence;
+            signalFrame.stages = nri::StageBits::NONE;
+            signalFrame.value = 1 + FrameIndex;
+            nri::QueueSubmitDesc frameFenceSubmitDesc = {};
+            frameFenceSubmitDesc.signalFences = &signalFrame;
+            frameFenceSubmitDesc.signalFenceNum = 1;
+            ICore.QueueSubmit(*GraphicsQueue, frameFenceSubmitDesc);
+            IStreamer.EndStreamerFrame(*Streamer);
+            FrameIndex++;
         }
-        
-        // FrameFence tracking
-        nri::FenceSubmitDesc signalFrame = {};
-        signalFrame.fence = FrameFence;
-        signalFrame.stages = nri::StageBits::NONE;
-        signalFrame.value = 1 + FrameIndex;
-        nri::QueueSubmitDesc frameFenceSubmitDesc = {};
-        frameFenceSubmitDesc.signalFences = &signalFrame;
-        frameFenceSubmitDesc.signalFenceNum = 1;
-        ICore.QueueSubmit(*GraphicsQueue, frameFenceSubmitDesc);
-        IStreamer.EndStreamerFrame(*Streamer);
-        FrameIndex++;
     }
 };

@@ -11,9 +11,9 @@ public:
     nri::Format Format = nri::Format::UNKNOWN;
 
     nri::AccessLayoutStage CurrentState = {
-        nri::AccessBits::NONE,
-        nri::Layout::UNDEFINED,
-        nri::StageBits::NONE
+        .access = nri::AccessBits::NONE,
+        .layout = nri::Layout::UNDEFINED,
+        .stages = nri::StageBits::NONE
     };
 
     NRIColorTexture() = default;

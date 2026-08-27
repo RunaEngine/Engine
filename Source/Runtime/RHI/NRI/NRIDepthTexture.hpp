@@ -16,9 +16,9 @@ public:
     std::vector<nri::Memory*> MemoryAllocations;
 
     nri::AccessLayoutStage CurrentState = {
-        nri::AccessBits::NONE,
-        nri::Layout::UNDEFINED,
-        nri::StageBits::NONE
+        .access = nri::AccessBits::NONE,
+        .layout = nri::Layout::UNDEFINED,
+        .stages = nri::StageBits::NONE
     };
 
     bool Create(nri::CoreInterface& core, nri::HelperInterface& helper, nri::Device& device, uint32_t width,

@@ -94,9 +94,7 @@ public:
         if (MipmapLayout) { ICore.DestroyPipelineLayout(MipmapLayout); MipmapLayout = nullptr; }
     }
 
-    // Chamar DENTRO do command buffer do frame, logo depois de
-    // IStreamer.CmdCopyStreamedData(...) — precisa que o mip 0 já esteja
-    // fisicamente copiado na GPU antes do compute rodar.
+    // Called from the command buffer recording thread, not from the main thread.
     void GenerateMipmaps(nri::CommandBuffer& cmdBuffer, SharedPtr<NRITexture> texture)
     {
         uint32_t mipCount = texture->GetMipLevels();
@@ -125,8 +123,8 @@ public:
 
             nri::Descriptor* dstView = CreateStorageView(texture, mip);
 
-            // Barrier: mip anterior (recém escrito, ou recém copiado no caso do mip0)
-            // vira leitura; mip atual vira escrita.
+            // Barrier: before mip
+            // turn to read
             nri::TextureBarrierDesc barriers[2] = {};
             barriers[0].texture = texture->Texture;
             barriers[0].before = (mip == 1)
@@ -172,7 +170,7 @@ public:
 
         ICore.DestroyDescriptor(srcView);
 
-        // Barrier final: cadeia inteira de mips volta pro estado normal de leitura (sampler)
+        // End barrier
         nri::TextureBarrierDesc finalBarrier = {};
         finalBarrier.texture = texture->Texture;
         finalBarrier.before = { nri::AccessBits::SHADER_RESOURCE_STORAGE, nri::Layout::SHADER_RESOURCE_STORAGE, nri::StageBits::COMPUTE_SHADER };

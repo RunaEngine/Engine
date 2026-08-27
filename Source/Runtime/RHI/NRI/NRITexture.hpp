@@ -228,8 +228,8 @@ private:
             streamDesc.dataChunkNum = 1;
             streamDesc.placementAlignment = 1;
 
-            // dstTexture = nullptr: streaming pra buffer de staging,
-            // depois CmdCopyStreamedData faz a cópia pra textura
+            // dstTexture = nullptr: streaming to staging buffer
+            // after CmdCopyStreamedData
             nri::TextureRegionDesc region = {};
             region.mipOffset = (nri::Dim_t)mip;
             region.layerOffset = 0;

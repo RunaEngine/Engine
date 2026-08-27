@@ -18,7 +18,6 @@ private:
     nri::Format& ColorFormat;
     nri::Format& DepthFormat;
 
-    // Fixed: Permanent storage for ranges to prevent memory corruption (dangling pointers) during Pipeline creation
     std::vector<nri::DescriptorRangeDesc> TextureRanges;
     std::vector<nri::DescriptorRangeDesc> CameraRanges;
 
@@ -27,7 +26,7 @@ public:
     SharedPtr<NRIShader> FragmentShader = nullptr;
     UniquePtr<NRIPipeline> Pipeline = nullptr;
     std::vector<SharedPtr<NRITexture>> Textures;
-    SharedPtr<NRICamera> Camera = nullptr; // Fixed: Added missing Camera member pointer
+    SharedPtr<NRICamera> Camera = nullptr;
 
     nri::DescriptorPool* DescriptorPool = nullptr;
     nri::DescriptorSet* TextureDescriptorSet = nullptr;
@@ -49,9 +48,8 @@ public:
     {
         Deinit();
         Textures = textures;
-        Camera = camera; // Fixed: Save the camera pointer into the member variable
+        Camera = camera;
 
-        // Fixed: Pass the correct camera pointer to build layouts safely
         std::vector<nri::DescriptorSetDesc> descriptorSets = BuildDescriptorSetDescs(Camera);
 
         Pipeline = MakeUnique<NRIPipeline>(ICore, Device, ColorFormat, DepthFormat);
@@ -125,7 +123,6 @@ public:
     {
         if (!Pipeline || !Pipeline->Pipeline) return;
 
-        // FIXED: You must bind the active Descriptor Pool to the command list BEFORE binding any Descriptor Sets
         if (DescriptorPool)
         {
             ICore.CmdSetDescriptorPool(commandBuffer, *DescriptorPool);
