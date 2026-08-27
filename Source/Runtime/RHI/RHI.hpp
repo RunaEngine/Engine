@@ -110,7 +110,7 @@ public:
             return false;
         }
 
-        SDL_WindowFlags windowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
+        SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
 
         std::string platformName = SDL_GetPlatform();
         if (graphicsAPI == nri::GraphicsAPI::NONE)
@@ -361,12 +361,16 @@ public:
     {
         switch (e.type)
         {
-        case SDL_EVENT_WINDOW_RESIZED:
-            if (e.window.data1 > 0 && e.window.data2 > 0 &&
-                (SwapChainDesc.width != e.window.data1 || SwapChainDesc.height != e.window.data2))
+        case SDL_EVENT_WINDOW_RESIZED: {
+            int pixelWidth = 0;
+            int pixelHeight = 0;
+            SDL_GetWindowSizeInPixels(Window, &pixelWidth, &pixelHeight);
+
+            if (pixelWidth > 0 && pixelHeight > 0 && (SwapChainDesc.width != pixelWidth || SwapChainDesc.height != pixelHeight))
             {
-                ResizeSwapChain((uint32_t)e.window.data1, (uint32_t)e.window.data2);
+                ResizeSwapChain((uint32_t)pixelWidth, (uint32_t)pixelHeight);
             }
+        }
             break;
         default:
             break;
@@ -627,8 +631,8 @@ private:
         nri::Rect scissor = {
             .x = 0,
             .y = 0,
-            .width = static_cast<uint32_t>(SwapChainDesc.width),
-            .height = static_cast<uint32_t>(SwapChainDesc.height)
+            .width = SwapChainDesc.width,
+            .height = SwapChainDesc.height
         };
         ICore.CmdSetScissors(*commandBuffer, &scissor, 1);
 
@@ -636,9 +640,24 @@ private:
 
         if (GImGui->IsInitialized())
         {
+            int pixelWidth = 0;
+            int pixelHeight = 0;
+            SDL_GetWindowSizeInPixels(Window, &pixelWidth, &pixelHeight);
+
+            ImGuiIO& io = ImGui::GetIO();
+            io.DisplaySize = ImVec2((float)pixelWidth, (float)pixelHeight);
+
+            if (SwapChainDesc.width > 0 && SwapChainDesc.height > 0)
+            {
+                io.DisplayFramebufferScale = ImVec2(
+                    (float)pixelWidth / (float)SwapChainDesc.width,
+                    (float)pixelHeight / (float)SwapChainDesc.height
+                );
+            }
+
             GImGui->BeginFrame();
             if (OnImgui) OnImgui(commandBuffer);
-            GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, SwapChainDesc.width, SwapChainDesc.height);
+            GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, pixelWidth, pixelHeight);
         }
         ICore.CmdEndRendering(*commandBuffer);
 

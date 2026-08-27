@@ -56,6 +56,7 @@ int main(int argc, char** argv)
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
     {
+        ImGui_ImplSDL3_ProcessEvent(&e);
         switch (e.type)
         {
         case SDL_EVENT_QUIT:
@@ -96,6 +97,15 @@ int main(int argc, char** argv)
     {
         rhi->Pool();
     }
+
+    mesh.reset();
+    vertexBuffer.reset();
+    material.reset();
+    texture.reset();
+    vertexShader.reset();
+    fragmentShader.reset();
+
+    rhi.reset();
 
     return 0;
 }

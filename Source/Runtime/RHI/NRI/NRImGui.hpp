@@ -160,24 +160,19 @@ public:
         }
         else if (deviceDesc.graphicsAPI == nri::GraphicsAPI::VK)
         {
-            nri::WrapperVKInterface* nriVK = nullptr;
+            nri::WrapperVKInterface nriVK = {};
             nri::Result result = nri::nriGetInterface(*Device, NRI_INTERFACE(nri::WrapperVKInterface), &nriVK);
 
-            if (result != nri::Result::SUCCESS || !nriVK || !nriVK->GetInstanceVK || !nriVK->GetPhysicalDeviceVK || !nriVK->GetQueueFamilyIndexVK)
+            if (result != nri::Result::SUCCESS)
             {
                 Logs::Error("NRImGui: falha ao obter NRI WrapperVKInterface.");
                 ImGui_ImplSDL3_Shutdown();
                 ImGui::DestroyContext();
                 return false;
             }
-
             VkDevice vkDevice = static_cast<VkDevice>(ICore.GetDeviceNativeObject(Device));
             VkQueue vkQueue = static_cast<VkQueue>(ICore.GetQueueNativeObject(queue));
-            Logs::Warning("GetInstanceVK=%p GetPhysicalDeviceVK=%p GetQueueFamilyIndexVK=%p",
-                (void*)nriVK->GetInstanceVK,
-                (void*)nriVK->GetPhysicalDeviceVK,
-                (void*)nriVK->GetQueueFamilyIndexVK);
-            VkInstance vkInstance = static_cast<VkInstance>(nriVK->GetInstanceVK(*Device));
+            VkInstance vkInstance = static_cast<VkInstance>(nriVK.GetInstanceVK(*Device));
 
             if (!vkDevice || !vkQueue)
             {
@@ -194,20 +189,43 @@ public:
                 return false;
             }
 
+            PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+
+            auto loaderFunc = [](const char* functionName, void* userData) -> PFN_vkVoidFunction
+            {
+                PFN_vkGetInstanceProcAddr getProcAddr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+                return getProcAddr(static_cast<VkInstance>(userData), functionName);
+            };
+
+            if (!ImGui_ImplVulkan_LoadFunctions(VK_API_VERSION_1_3, loaderFunc, vkInstance))
+            {
+                Logs::Error("NRImGui: Failed to load Vulkan functions for ImGui.");
+                ImGui_ImplSDL3_Shutdown();
+                ImGui::DestroyContext();
+                return false;
+            }
+
             VKColorFormat = ToVkFormat(swapChainFormat);
+
+            VkPipelineRenderingCreateInfoKHR pipelineRenderingInfo = {};
+            pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+            pipelineRenderingInfo.colorAttachmentCount = 1;
+            pipelineRenderingInfo.pColorAttachmentFormats = &VKColorFormat;
+            pipelineRenderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
 
             ImGui_ImplVulkan_InitInfo initInfo = {};
             initInfo.ApiVersion = VK_API_VERSION_1_3;
             initInfo.Instance = vkInstance;
-            initInfo.PhysicalDevice = static_cast<VkPhysicalDevice>(nriVK->GetPhysicalDeviceVK(*Device));
+            initInfo.PhysicalDevice = static_cast<VkPhysicalDevice>(nriVK.GetPhysicalDeviceVK(*Device));
             initInfo.Device = vkDevice;
-            initInfo.QueueFamily = nriVK->GetQueueFamilyIndexVK(*queue);
+            initInfo.QueueFamily = nriVK.GetQueueFamilyIndexVK(*queue);
             initInfo.Queue = vkQueue;
             initInfo.PipelineCache = VK_NULL_HANDLE;
             initInfo.DescriptorPool = VKDescriptorPool;
             initInfo.MinImageCount = queuedFrameNum;
             initInfo.ImageCount = queuedFrameNum;
             initInfo.UseDynamicRendering = true;
+            initInfo.PipelineInfoMain.PipelineRenderingCreateInfo = pipelineRenderingInfo;
 
             if (!ImGui_ImplVulkan_Init(&initInfo))
             {
@@ -258,23 +276,27 @@ public:
         }
         else if (deviceDesc.graphicsAPI == nri::GraphicsAPI::VK)
         {
-            ImGui_ImplVulkan_Shutdown();
-
-            nri::WrapperVKInterface* nriVK = nullptr;
+            nri::WrapperVKInterface nriVK = {};
             nri::Result result = nri::nriGetInterface(*Device, NRI_INTERFACE(nri::WrapperVKInterface), &nriVK);
+
             if (result == nri::Result::SUCCESS)
             {
-                VkInstance nativeInstance = static_cast<VkInstance>(nriVK->GetInstanceVK(*Device));
+                VkInstance nativeInstance = static_cast<VkInstance>(nriVK.GetInstanceVK(*Device));
                 VkDevice vkDevice = static_cast<VkDevice>(ICore.GetDeviceNativeObject(Device));
+
+                ImGui_ImplVulkan_Shutdown();
 
                 if (VKDescriptorPool != VK_NULL_HANDLE)
                 {
                     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
                     PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool_Ptr = (PFN_vkDestroyDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkDestroyDescriptorPool");
-                    vkDestroyDescriptorPool_Ptr(vkDevice, VKDescriptorPool, nullptr);
+
+                    if (vkDestroyDescriptorPool_Ptr)
+                    {
+                        vkDestroyDescriptorPool_Ptr(vkDevice, VKDescriptorPool, nullptr);
+                    }
                 }
             }
-
             VKDescriptorPool = VK_NULL_HANDLE;
             VKColorFormat = VK_FORMAT_UNDEFINED;
         }
@@ -408,10 +430,8 @@ private:
         poolInfo.poolSizeCount = static_cast<uint32_t>(std::size(poolSizes));
         poolInfo.pPoolSizes = poolSizes;
 
-        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr =
-            (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-        PFN_vkCreateDescriptorPool vkCreateDescriptorPool_Ptr =
-            (PFN_vkCreateDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkCreateDescriptorPool");
+        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr_Ptr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+        PFN_vkCreateDescriptorPool vkCreateDescriptorPool_Ptr = (PFN_vkCreateDescriptorPool)vkGetInstanceProcAddr_Ptr(nativeInstance, "vkCreateDescriptorPool");
 
         if (!vkCreateDescriptorPool_Ptr)
         {
@@ -420,7 +440,6 @@ private:
             return false;
         }
 
-        // FIX: faltava chamar a função de verdade
         VkResult vr = vkCreateDescriptorPool_Ptr(vkDevice, &poolInfo, nullptr, &VKDescriptorPool);
         if (vr != VK_SUCCESS)
         {
