@@ -165,8 +165,8 @@ public:
         barrier.layerNum = 1;
 
         barrier.before = {
-            .access = nri::AccessBits::COPY_DESTINATION,  // ← estava NONE
-            .layout = nri::Layout::COPY_DESTINATION,       // ← estava cast(0) inválido
+            .access = nri::AccessBits::COPY_DESTINATION,
+            .layout = nri::Layout::COPY_DESTINATION,
             .stages = nri::StageBits::COPY
         };
         barrier.after = {
@@ -182,6 +182,31 @@ public:
         ICore.CmdBarrier(*cmdBuffer, barrierDesc);
 
         bIsDirty = false;
+    }
+
+    void PrepareUploadBarrier(nri::CommandBuffer* cmdBuffer)
+    {
+        if (!bIsDirty) return;
+
+        nri::TextureBarrierDesc barrier = {};
+        barrier.texture = Texture;
+        barrier.before = {
+            .access = nri::AccessBits::NONE,
+            .layout = nri::Layout::UNDEFINED,
+            .stages = nri::StageBits::NONE
+        };
+        barrier.after = {
+            .access = nri::AccessBits::COPY_DESTINATION,
+            .layout = nri::Layout::COPY_DESTINATION,
+            .stages = nri::StageBits::COPY
+        };
+        barrier.mipNum = (nri::Dim_t)MipLevels;
+        barrier.layerNum = 1;
+
+        nri::BarrierDesc barrierDesc = {};
+        barrierDesc.textures = &barrier;
+        barrierDesc.textureNum = 1;
+        ICore.CmdBarrier(*cmdBuffer, barrierDesc);
     }
 
     void Deinit()

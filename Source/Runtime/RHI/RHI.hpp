@@ -81,6 +81,7 @@ public:
     EAnisotropic PreviousAnisotropic = ANISOTROPIC_DISABLED;
 
     std::function<void(nri::CommandBuffer* commandBuffer)> OnBarrier;
+    std::function<void(nri::CommandBuffer* commandBuffer)> OnUploadBarrier;
     std::function<void()> OnGraphicsSettingsChanged;
     std::function<void(nri::CommandBuffer* commandBuffer)> OnRender;
     std::function<void(nri::CommandBuffer* commandBuffer)> OnImgui;
@@ -256,11 +257,10 @@ public:
             return false;
         }
 
-        GImGui = MakeUnique<NRImGui>(ICore, Device.Get());
         if (useImgui)
         {
-            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue,
-                static_cast<uint8_t>(GUserSettings->MSAACount)))
+            GImGui = MakeUnique<NRImGui>(ICore, Device.Get());
+            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue, static_cast<uint8_t>(GUserSettings->MSAACount)))
             {
                 Logs::Error("Failed to initialize engine debug interface.");
                 return false;
@@ -335,6 +335,12 @@ public:
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
 
+    void WaitIdle()
+    {
+        if (ICore.DeviceWaitIdle && Device.Get())
+            ICore.DeviceWaitIdle(Device.Get());
+    }
+
     void Pool()
     {
         GTick->UpdateCurrentTick();
@@ -354,8 +360,12 @@ public:
                 PreviousAnisotropic = GUserSettings->Anisotropic;
             }
         }
-
-        GEvent->Run(GImGui->IsInitialized());
+        bool processImguiEvent = false;
+        if (GImGui)
+        {
+            processImguiEvent = GImGui->IsInitialized();
+        }
+        GEvent->Run(processImguiEvent);
         GCamera->Tick(GTick->Delta());
         GCamera->UpdateMatrix();
         Render();
@@ -422,8 +432,7 @@ private:
         desc.width = (uint16_t)outWidth;
         desc.height = (uint16_t)outHeight;
 
-        desc.flags = (GUserSettings->VSyncMode == VSYNC_ON ? nri::SwapChainBits::VSYNC : nri::SwapChainBits::NONE) |
-            nri::SwapChainBits::ALLOW_TEARING;
+        desc.flags = (GUserSettings->VSyncMode == VSYNC_ON ? nri::SwapChainBits::VSYNC : nri::SwapChainBits::NONE) | nri::SwapChainBits::ALLOW_TEARING;
         desc.textureNum = GUserSettings->VSyncMode == VSYNC_TRIPLE_BUFFERED ? 3 : 2;
         desc.queuedFrameNum = GUserSettings->VSyncMode == VSYNC_TRIPLE_BUFFERED ? 3 : 2;
     }
@@ -538,10 +547,13 @@ private:
             return false;
         }
 
-        if (!GImGui || !GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue, static_cast<uint8_t>(GUserSettings->MSAACount)))
+        if (GImGui)
         {
-            Logs::Error("Failed to reinitialize engine debug interface.");
-            return false;
+            if (!GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue, static_cast<uint8_t>(GUserSettings->MSAACount)))
+            {
+                Logs::Error("Failed to reinitialize engine debug interface.");
+                return false;
+            }
         }
 
         return true;
@@ -574,6 +586,7 @@ private:
         nri::CommandBuffer* commandBuffer = queuedFrame.commandBuffer;
         if (ICore.BeginCommandBuffer(*commandBuffer, nullptr) != nri::Result::SUCCESS) return;
 
+        if (OnUploadBarrier) OnUploadBarrier(commandBuffer);
         IStreamer.CmdCopyStreamedData(*commandBuffer, *Streamer);
         if (OnBarrier) OnBarrier(commandBuffer);
 
@@ -642,6 +655,7 @@ private:
         depthBarrier.mipNum = 1;
         depthBarrier.layerNum = 1;
         initialBarriers.push_back(depthBarrier);
+        swapChainTexture.depthTexture.CurrentState = depthBarrier.after;
 
         nri::BarrierDesc barrierDesc = {};
         barrierDesc.textures = initialBarriers.data();
@@ -686,16 +700,15 @@ private:
 
         if (OnRender) OnRender(commandBuffer);
 
-        if (GImGui->IsInitialized())
+        if (GImGui)
         {
-            int pixelWidth = 0;
-            int pixelHeight = 0;
-            SDL_GetWindowSizeInPixels(Window, &pixelWidth, &pixelHeight);
-
-            GImGui->BeginFrame();
-            if (OnImgui) OnImgui(commandBuffer);
-            GImGui->EndAndRender(commandBuffer, colorAttachment.descriptor, pixelWidth, pixelHeight);
+            if (GImGui->IsInitialized())
+            {
+                GImGui->BeginFrame();
+                if (OnImgui) OnImgui(commandBuffer);
+            }
         }
+
         ICore.CmdEndRendering(*commandBuffer);
 
         // Step 3: MSAA Resolve (if enabled)
@@ -718,6 +731,43 @@ private:
 
             ICore.CmdResolveTexture(*commandBuffer, *swapChainTexture.colorTexture.Texture, nullptr,
                 *swapChainTexture.msaaTexture.Texture, nullptr, nri::ResolveOp::AVERAGE);
+
+            nri::TextureBarrierDesc imguiColorBarrier = {};
+            imguiColorBarrier.texture = swapChainTexture.colorTexture.Texture;
+            imguiColorBarrier.before = swapChainTexture.colorTexture.CurrentState;
+            imguiColorBarrier.after = {
+                nri::AccessBits::COLOR_ATTACHMENT_WRITE,
+                nri::Layout::COLOR_ATTACHMENT,
+                nri::StageBits::COLOR_ATTACHMENT
+            };
+            imguiColorBarrier.mipNum = 1;
+            imguiColorBarrier.layerNum = 1;
+
+            nri::BarrierDesc imguiColorBarrierDesc = {};
+            imguiColorBarrierDesc.textures = &imguiColorBarrier;
+            imguiColorBarrierDesc.textureNum = 1;
+            ICore.CmdBarrier(*commandBuffer, imguiColorBarrierDesc);
+            swapChainTexture.colorTexture.CurrentState = imguiColorBarrier.after;
+        }
+
+        if (GImGui && GImGui->IsInitialized())
+        {
+            nri::AttachmentDesc imguiColorAttachment = {};
+            imguiColorAttachment.descriptor = swapChainTexture.colorTexture.ColorAttachment;
+            imguiColorAttachment.loadOp = nri::LoadOp::LOAD;
+            imguiColorAttachment.storeOp = nri::StoreOp::STORE;
+
+            nri::RenderingDesc imguiRenderingDesc = {};
+            imguiRenderingDesc.colors = &imguiColorAttachment;
+            imguiRenderingDesc.colorNum = 1;
+            ICore.CmdBeginRendering(*commandBuffer, imguiRenderingDesc);
+
+            int pixelWidth = 0;
+            int pixelHeight = 0;
+            SDL_GetWindowSizeInPixels(Window, &pixelWidth, &pixelHeight);
+            GImGui->EndAndRender(commandBuffer, imguiColorAttachment.descriptor, pixelWidth, pixelHeight);
+
+            ICore.CmdEndRendering(*commandBuffer);
         }
 
         // Step 4: Preparation for present
@@ -765,9 +815,9 @@ private:
         if (ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore) != nri::Result::SUCCESS)
             return;
 
-        if (GImGui->IsInitialized())
+        if (GImGui)
         {
-            if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            if (GImGui->IsInitialized() && ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 ImGui::UpdatePlatformWindows();
                 ImGui::RenderPlatformWindowsDefault();

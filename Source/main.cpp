@@ -23,10 +23,10 @@ int main(int argc, char** argv)
     };
 
     auto rhi = MakeUnique<RHI>();
-    GUserSettings->VSyncMode = VSYNC_ON;
+    GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_8X;
     GUserSettings->MSAACount = MSAA_4X;
-    if (!rhi->Init(nri::GraphicsAPI::VK, false, false))
+    if (!rhi->Init(nri::GraphicsAPI::VK, false, true))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
@@ -56,7 +56,6 @@ int main(int argc, char** argv)
     bool shouldClose = false;
     GEvent->OnEvent = [&](SDL_Event& e)
     {
-        ImGui_ImplSDL3_ProcessEvent(&e);
         switch (e.type)
         {
         case SDL_EVENT_QUIT:
@@ -83,6 +82,11 @@ int main(int argc, char** argv)
                 texture->Barrier(cmdBuf);
         }
     };
+    rhi->OnUploadBarrier = [&](nri::CommandBuffer* cmdBuf)
+    {
+        for (auto& texture : mesh->Material->Textures)
+            texture->PrepareUploadBarrier(cmdBuf);
+    };
     rhi->OnImgui = [&](nri::CommandBuffer* cmdBuf)
     {
         ImGui::Begin("Visualizador da Scene");
@@ -97,6 +101,8 @@ int main(int argc, char** argv)
     {
         rhi->Pool();
     }
+
+    rhi->WaitIdle();
 
     mesh.reset();
     vertexBuffer.reset();

@@ -130,7 +130,7 @@ public:
             barriers[0].layerNum = 1;
 
             barriers[1].texture = texture->Texture;
-            barriers[1].before = { nri::AccessBits::NONE, nri::Layout::UNDEFINED, nri::StageBits::NONE };
+            barriers[1].before = { nri::AccessBits::COPY_DESTINATION, nri::Layout::COPY_DESTINATION, nri::StageBits::COPY };
             barriers[1].after = { nri::AccessBits::SHADER_RESOURCE_STORAGE, nri::Layout::SHADER_RESOURCE_STORAGE, nri::StageBits::COMPUTE_SHADER };
             barriers[1].mipOffset = mip;
             barriers[1].mipNum = 1;

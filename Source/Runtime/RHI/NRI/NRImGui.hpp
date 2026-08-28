@@ -226,7 +226,7 @@ public:
             initInfo.ImageCount = queuedFrameNum;
             initInfo.UseDynamicRendering = true;
             initInfo.PipelineInfoMain.PipelineRenderingCreateInfo = pipelineRenderingInfo;
-            initInfo.PipelineInfoMain.MSAASamples = ToVkSampleCount(msaaSampleCount);
+            initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
             if (!ImGui_ImplVulkan_Init(&initInfo))
             {
@@ -437,6 +437,7 @@ private:
         VkDescriptorPoolSize poolSizes[] =
         {
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1024 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1024 },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024 },
         };
 
