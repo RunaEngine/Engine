@@ -538,8 +538,7 @@ private:
             return false;
         }
 
-        if (!GImGui || !GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue,
-                static_cast<uint8_t>(GUserSettings->MSAACount)))
+        if (!GImGui || !GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue, static_cast<uint8_t>(GUserSettings->MSAACount)))
         {
             Logs::Error("Failed to reinitialize engine debug interface.");
             return false;

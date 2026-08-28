@@ -109,19 +109,13 @@ public:
         ICore.CmdSetPipeline(*cmdBuffer, *ComputePipeline);
         ICore.CmdSetDescriptorPool(*cmdBuffer, *DescriptorPool);
 
-        nri::Descriptor* srcView = CreateStorageView(texture, 0);
-
         uint32_t width = texture->GetWidth();
         uint32_t height = texture->GetHeight();
 
-        nri::DescriptorSet* set = nullptr;
-        ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
         for (uint32_t mip = 1; mip < mipCount; mip++)
         {
             width = std::max(1u, width / 2);
             height = std::max(1u, height / 2);
-
-            nri::Descriptor* dstView = CreateStorageView(texture, mip);
 
             // Barrier: before mip
             // turn to read
@@ -147,10 +141,22 @@ public:
             barrierDesc.textureNum = 2;
             ICore.CmdBarrier(*cmdBuffer, barrierDesc);
 
-            //nri::DescriptorSet* set = nullptr;
-            //ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0);
+            nri::DescriptorSet* set = nullptr;
+            if (ICore.AllocateDescriptorSets(*DescriptorPool, *MipmapLayout, 0, &set, 1, 0) != nri::Result::SUCCESS)
+            {
+                Logs::Error("NRIMipmap: failed to allocate descriptor set");
+                return;
+            }
 
-            nri::UpdateDescriptorRangeDesc updates[2] = {};
+            nri::Descriptor* srcView = texture->GetStorageView(mip - 1);
+            nri::Descriptor* dstView = texture->GetStorageView(mip);
+            if (!srcView || !dstView)
+            {
+                Logs::Error("NRIMipmap: failed to get storage view");
+                return;
+            }
+
+            nri::UpdateDescriptorRangeDesc updates[2] = {}; 
             updates[0] = { set, 0, 0, &srcView, 1 };
             updates[1] = { set, 1, 0, &dstView, 1 };
             ICore.UpdateDescriptorRanges(updates, 2);
@@ -163,12 +169,7 @@ public:
             uint32_t dispatchX = (width + 15) / 16;
             uint32_t dispatchY = (height + 15) / 16;
             ICore.CmdDispatch(*cmdBuffer, { dispatchX, dispatchY, 1 });
-
-            ICore.DestroyDescriptor(srcView);
-            srcView = dstView;
         }
-
-        ICore.DestroyDescriptor(srcView);
 
         // End barrier
         nri::TextureBarrierDesc finalBarrier = {};
@@ -185,21 +186,5 @@ public:
         ICore.CmdBarrier(*cmdBuffer, finalBarrierDesc);
 
         texture->ClearDirty();
-    }
-
-private:
-    nri::Descriptor* CreateStorageView(SharedPtr<NRITexture> texture, uint32_t mip)
-    {
-        nri::TextureViewDesc viewDesc = {};
-        viewDesc.texture = texture->Texture;
-        viewDesc.type = nri::TextureView::STORAGE_TEXTURE;
-        viewDesc.format = nri::Format::RGBA8_UNORM;
-        viewDesc.mipOffset = mip;
-        viewDesc.mipNum = 1;
-        viewDesc.layerNum = 1;
-
-        nri::Descriptor* view = nullptr;
-        ICore.CreateTextureView(viewDesc, view);
-        return view;
     }
 };

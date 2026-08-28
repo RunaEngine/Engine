@@ -19,6 +19,7 @@ private:
     nri::Device* Device = nullptr;
     nri::Streamer* Streamer = nullptr;
     std::vector<nri::Memory*> Memory;
+    std::vector<nri::Descriptor*> StorageViews;
 
     int TexWidth = 0, TexHeight = 0;
     uint32_t MipLevels = 1;
@@ -117,6 +118,24 @@ public:
             return false;
         }
 
+        StorageViews.resize(MipLevels, nullptr);
+        for (uint32_t mip = 0; mip < MipLevels; mip++)
+        {
+            nri::TextureViewDesc storageViewDesc = {};
+            storageViewDesc.texture = Texture;
+            storageViewDesc.type = nri::TextureView::STORAGE_TEXTURE;
+            storageViewDesc.format = nri::Format::RGBA8_UNORM;
+            storageViewDesc.mipOffset = mip;
+            storageViewDesc.mipNum = 1;
+            storageViewDesc.layerNum = 1;
+
+            if (ICore.CreateTextureView(storageViewDesc, StorageViews[mip]) != nri::Result::SUCCESS)
+            {
+                Deinit();
+                return false;
+            }
+        }
+
         // 5. Sampler
         if (!CreateSampler())
         {
@@ -169,6 +188,9 @@ public:
     {
         if (Sampler) { ICore.DestroyDescriptor(Sampler);      Sampler = nullptr; }
         if (TextureView) { ICore.DestroyDescriptor(TextureView);  TextureView = nullptr; }
+        for (nri::Descriptor* storageView : StorageViews)
+            if (storageView) ICore.DestroyDescriptor(storageView);
+        StorageViews.clear();
         if (Texture) { ICore.DestroyTexture(Texture);         Texture = nullptr; }
         for (nri::Memory* m : Memory) if (m) ICore.FreeMemory(m);
         Memory.clear();
@@ -181,6 +203,10 @@ public:
     uint32_t GetWidth() const { return (uint32_t)TexWidth; }
     uint32_t GetHeight() const { return (uint32_t)TexHeight; }
     uint32_t GetMipLevels() const { return MipLevels; }
+    nri::Descriptor* GetStorageView(uint32_t mip) const
+    {
+        return mip < StorageViews.size() ? StorageViews[mip] : nullptr;
+    }
     bool IsDirty()
     {
         return bIsDirty;

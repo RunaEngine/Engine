@@ -24,7 +24,7 @@ public:
     {
         nri::DeviceCreationDesc deviceDesc = {};
         deviceDesc.graphicsAPI = graphicsAPI;
-        // deviceDesc.enableGraphicsAPIValidation = enableValidation;
+        deviceDesc.enableGraphicsAPIValidation = enableValidation;
         deviceDesc.enableNRIValidation = enableValidation;
         deviceDesc.disableD3D12EnhancedBarriers = true;
 

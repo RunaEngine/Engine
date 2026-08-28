@@ -49,8 +49,7 @@ public:
     NRImGui(const NRImGui&) = delete;
     NRImGui& operator=(const NRImGui&) = delete;
 
-    bool Init(SDL_Window* window, nri::Format swapChainFormat, uint32_t queuedFrameNum, nri::Queue* queue,
-        uint8_t msaaSampleCount)
+    bool Init(SDL_Window* window, nri::Format swapChainFormat, uint32_t queuedFrameNum, nri::Queue* queue, uint8_t msaaSampleCount)
     {
         if (bIsInitialized) return true;
 
@@ -437,6 +436,7 @@ private:
     {
         VkDescriptorPoolSize poolSizes[] =
         {
+            { VK_DESCRIPTOR_TYPE_SAMPLER, 1024 },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024 },
         };
 
