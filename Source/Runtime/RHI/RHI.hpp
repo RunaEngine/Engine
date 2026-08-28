@@ -277,8 +277,16 @@ public:
             ICore.DeviceWaitIdle(Device.Get());
         }
 
-        GMipmapPipeline->Deinit();
-        GCamera->Deinit();
+        if (GMipmapPipeline)
+        {
+            GMipmapPipeline->Deinit();
+            GMipmapPipeline = nullptr;
+        }
+        if (GCamera)
+        {
+            GCamera->Deinit();
+            GCamera = nullptr;
+        }
         if (GImGui)
         {
             GImGui->Deinit();
@@ -339,10 +347,12 @@ public:
 
         if (GUserSettings->MSAACount != PreviousMSAACount || GUserSettings->Anisotropic != PreviousAnisotropic)
         {
-            ResizeSwapChain(SwapChainDesc.width, SwapChainDesc.height);
-            if (OnGraphicsSettingsChanged) OnGraphicsSettingsChanged();
-            PreviousMSAACount = GUserSettings->MSAACount;
-            PreviousAnisotropic = GUserSettings->Anisotropic;
+            if (ResizeSwapChain(SwapChainDesc.width, SwapChainDesc.height))
+            {
+                if (OnGraphicsSettingsChanged) OnGraphicsSettingsChanged();
+                PreviousMSAACount = GUserSettings->MSAACount;
+                PreviousAnisotropic = GUserSettings->Anisotropic;
+            }
         }
 
         GEvent->Run(GImGui->IsInitialized());
@@ -455,8 +465,19 @@ private:
                     return false;
             }
 
-            ICore.CreateFence(*Device.Get(), nri::SWAPCHAIN_SEMAPHORE, swapChainTexture.acquireSemaphore);
-            ICore.CreateFence(*Device.Get(), nri::SWAPCHAIN_SEMAPHORE, swapChainTexture.releaseSemaphore);
+            result = ICore.CreateFence(*Device.Get(), nri::SWAPCHAIN_SEMAPHORE, swapChainTexture.acquireSemaphore);
+            if (result != nri::Result::SUCCESS)
+            {
+                Logs::RuntimeError("Failed to create swap chain acquire semaphore: %d", (int)result);
+                return false;
+            }
+
+            result = ICore.CreateFence(*Device.Get(), nri::SWAPCHAIN_SEMAPHORE, swapChainTexture.releaseSemaphore);
+            if (result != nri::Result::SUCCESS)
+            {
+                Logs::RuntimeError("Failed to create swap chain release semaphore: %d", (int)result);
+                return false;
+            }
         }
 
         return true;
@@ -478,8 +499,21 @@ private:
 
     bool ResizeSwapChain(uint32_t width, uint32_t height)
     {
-        if (ICore.DeviceWaitIdle) ICore.DeviceWaitIdle(Device.Get());
+        if (width == 0 || height == 0 || !Device.Get() || !ICore.DeviceWaitIdle)
+            return false;
+
+        nri::Result result = ICore.DeviceWaitIdle(Device.Get());
+        if (result != nri::Result::SUCCESS)
+        {
+            Logs::RuntimeError("Failed to wait for the device before swap chain resize: %d", (int)result);
+            return false;
+        }
+
         DestroySwapChainResources();
+        if (GImGui && GImGui->IsInitialized())
+        {
+            GImGui->Deinit();
+        }
         if (SwapChain) { ISwapChain.DestroySwapChain(SwapChain); SwapChain = nullptr; }
 
         SwapChainDesc.width = (uint16_t)width;
@@ -497,15 +531,28 @@ private:
             FrameFence = nullptr;
         }
 
-        nri::Result result = ICore.CreateFence(*Device.Get(), 0, FrameFence);
+        result = ICore.CreateFence(*Device.Get(), 0, FrameFence);
         if (result != nri::Result::SUCCESS)
-            Logs::Error("Failed to recreate FrameFence during resize");
+        {
+            Logs::RuntimeError("Failed to recreate FrameFence during resize: %d", (int)result);
+            return false;
+        }
+
+        if (!GImGui || !GImGui->Init(Window, SwapChainFormat, GetQueuedFrameNum(), GraphicsQueue,
+                static_cast<uint8_t>(GUserSettings->MSAACount)))
+        {
+            Logs::Error("Failed to reinitialize engine debug interface.");
+            return false;
+        }
 
         return true;
     }
 
     void Render()
     {
+        if (!SwapChain || SwapChainTextures.empty() || !FrameFence)
+            return;
+
         uint32_t queuedFrameNum = GetQueuedFrameNum();
         uint32_t queuedFrameIndex = (uint32_t)(FrameIndex % queuedFrameNum);
         const QueuedFrame& queuedFrame = QueuedFrames[queuedFrameIndex];
@@ -702,15 +749,22 @@ private:
         signalRelease.fence = swapChainTexture.releaseSemaphore;
         signalRelease.stages = nri::StageBits::NONE;
         signalRelease.value = 0;
+        nri::FenceSubmitDesc signalFrame = {};
+        signalFrame.fence = FrameFence;
+        signalFrame.stages = nri::StageBits::NONE;
+        signalFrame.value = 1 + FrameIndex;
+        nri::FenceSubmitDesc signalFences[] = { signalRelease, signalFrame };
+
         nri::QueueSubmitDesc submitDesc = {};
         submitDesc.waitFences = &waitAcquire;
         submitDesc.waitFenceNum = 1;
         submitDesc.commandBuffers = &commandBuffer;
         submitDesc.commandBufferNum = 1;
-        submitDesc.signalFences = &signalRelease;
-        submitDesc.signalFenceNum = 1;
+        submitDesc.signalFences = signalFences;
+        submitDesc.signalFenceNum = 2;
         if (ICore.QueueSubmit(*GraphicsQueue, submitDesc) != nri::Result::SUCCESS) return;
-        ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore);
+        if (ISwapChain.QueuePresent(*SwapChain, *swapChainTexture.releaseSemaphore) != nri::Result::SUCCESS)
+            return;
 
         if (GImGui->IsInitialized())
         {
@@ -721,15 +775,6 @@ private:
             }
         }
 
-        // FrameFence tracking
-        nri::FenceSubmitDesc signalFrame = {};
-        signalFrame.fence = FrameFence;
-        signalFrame.stages = nri::StageBits::NONE;
-        signalFrame.value = 1 + FrameIndex;
-        nri::QueueSubmitDesc frameFenceSubmitDesc = {};
-        frameFenceSubmitDesc.signalFences = &signalFrame;
-        frameFenceSubmitDesc.signalFenceNum = 1;
-        ICore.QueueSubmit(*GraphicsQueue, frameFenceSubmitDesc);
         IStreamer.EndStreamerFrame(*Streamer);
         FrameIndex++;
     }
