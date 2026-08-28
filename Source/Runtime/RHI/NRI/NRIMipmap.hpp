@@ -94,6 +94,12 @@ public:
         if (MipmapLayout) { ICore.DestroyPipelineLayout(MipmapLayout); MipmapLayout = nullptr; }
     }
 
+    void ResetDescriptorPool()
+    {
+        if (DescriptorPool)
+            ICore.ResetDescriptorPool(*DescriptorPool);
+    }
+
     // Called from the command buffer recording thread, not from the main thread.
     void GenerateMipmaps(nri::CommandBuffer* cmdBuffer, SharedPtr<NRITexture> texture)
     {

@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_8X;
     GUserSettings->MSAACount = MSAA_4X;
-    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, true))
+    if (!rhi->Init(nri::GraphicsAPI::NONE, true, true))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
@@ -103,15 +103,6 @@ int main(int argc, char** argv)
     }
 
     rhi->WaitIdle();
-
-    mesh.reset();
-    vertexBuffer.reset();
-    material.reset();
-    texture.reset();
-    vertexShader.reset();
-    fragmentShader.reset();
-
-    rhi.reset();
 
     return 0;
 }

@@ -571,6 +571,8 @@ private:
         // Pacing: wait for the GPU to release this slot before resetting the allocator
         ICore.Wait(*FrameFence, FrameIndex >= queuedFrameNum ? 1 + FrameIndex - queuedFrameNum : 0);
         ICore.ResetCommandAllocator(*queuedFrame.commandAllocator);
+        if (GMipmapPipeline)
+            GMipmapPipeline->ResetDescriptorPool();
 
         // Acquire
         uint32_t recycledSemaphoreIndex = (uint32_t)(FrameIndex % SwapChainTextures.size());
@@ -591,7 +593,9 @@ private:
         if (OnBarrier) OnBarrier(commandBuffer);
 
         // Step 1: Initial barriers configuration
-        std::vector<nri::TextureBarrierDesc> initialBarriers;
+        //std::vector<nri::TextureBarrierDesc> initialBarriers;
+        nri::TextureBarrierDesc initialBarriers[3] = {};
+        uint32_t barrierCount = 0;
 
         // Configure barrier for the Main Color Target
         nri::TextureBarrierDesc colorBarrier = {};
@@ -614,7 +618,7 @@ private:
                 .layout = nri::Layout::RESOLVE_DESTINATION,
                 .stages = nri::StageBits::RESOLVE
             };
-            initialBarriers.push_back(colorBarrier);
+            initialBarriers[barrierCount++] = colorBarrier;
 
             // Configure the barrier for the MSAA texture that will receive the rendering
             nri::TextureBarrierDesc msaaBarrier = {};
@@ -628,7 +632,7 @@ private:
             msaaBarrier.mipNum = 1;
             msaaBarrier.layerNum = 1;
             swapChainTexture.msaaTexture.CurrentState = msaaBarrier.after;
-            initialBarriers.push_back(msaaBarrier);
+            initialBarriers[barrierCount++] = msaaBarrier;
         }
         else
         {
@@ -638,7 +642,7 @@ private:
                 .layout = nri::Layout::COLOR_ATTACHMENT,
                 .stages = nri::StageBits::COLOR_ATTACHMENT
             };
-            initialBarriers.push_back(colorBarrier);
+            initialBarriers[barrierCount++] = colorBarrier;
         }
         swapChainTexture.colorTexture.CurrentState = colorBarrier.after;
 
@@ -654,12 +658,12 @@ private:
         depthBarrier.planes = nri::PlaneBits::DEPTH | nri::PlaneBits::STENCIL;
         depthBarrier.mipNum = 1;
         depthBarrier.layerNum = 1;
-        initialBarriers.push_back(depthBarrier);
+        initialBarriers[barrierCount++] = depthBarrier;
         swapChainTexture.depthTexture.CurrentState = depthBarrier.after;
 
         nri::BarrierDesc barrierDesc = {};
-        barrierDesc.textures = initialBarriers.data();
-        barrierDesc.textureNum = (uint32_t)initialBarriers.size();
+        barrierDesc.textures = initialBarriers;
+        barrierDesc.textureNum = barrierCount;
         ICore.CmdBarrier(*commandBuffer, barrierDesc);
 
         // Step 2: Render Pass
