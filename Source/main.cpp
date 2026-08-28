@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     GUserSettings->VSyncMode = VSYNC_TRIPLE_BUFFERED;
     GUserSettings->Anisotropic = ANISOTROPIC_8X;
     GUserSettings->MSAACount = MSAA_4X;
-    if (!rhi->Init(nri::GraphicsAPI::VK, false, true))
+    if (!rhi->Init(nri::GraphicsAPI::D3D12, false, true))
         return -1;
 
     SharedPtr<NRIShader> vertexShader = MakeShared<NRIShader>(rhi->ICore, rhi->Device.Get());
